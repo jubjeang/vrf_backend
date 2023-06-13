@@ -1,5 +1,6 @@
 var config = require("../server/dbconfig");
 const sql = require("mssql");
+const moment = require('moment-timezone');
 
 async function get_meeting_area(user_id) {
   try {
@@ -366,6 +367,67 @@ async function getBranchForCash(CustomerID, CCT, user_id) {
     // .input('customerID', sql.NVarChar, CustomerID)
     // .query( sql_ );
     //return T_Branch.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_search_vrf(
+  tbDateF,
+  tbDateT,
+  requestor_id,
+  area_id,
+  requestor_dept_id,
+  department_id,
+  branch_id
+) 
+{ 
+ 
+  let tbDateF_;
+  let formattedtbDateF;
+  let tbDateT_;
+  let formattedtbDateT;
+  if( (tbDateF !== null && tbDateT !== null) && (tbDateF !== undefined && tbDateT !== undefined) && (tbDateF !== '' && tbDateT !== '') )
+  {
+    tbDateF_ = moment.tz(tbDateF, 'Asia/Bangkok');
+     formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
+     tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
+     formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
+  }
+  else
+  {
+    tbDateF_ = '';
+    formattedtbDateF = '';
+    tbDateT_ = '';
+    formattedtbDateT = '';
+  }
+  
+  let requestor_id_ = ( requestor_id !== undefined  &&  requestor_id !== ''  &&  requestor_id !== null ) ? parseInt(requestor_id) : null
+  let area_id_ = ( area_id !== undefined  &&  area_id !== '' && area_id !== null )  ? parseInt(area_id) : null
+  let requestor_dept_id_ = ( requestor_dept_id !== undefined  &&  requestor_dept_id !== '' && requestor_dept_id !==null) ? parseInt(requestor_dept_id) : null
+
+  console.log('/get_search_vrf formattedtbDateF: ', formattedtbDateF
+  , 'formattedtbDateT: ', formattedtbDateT
+  , 'requestor_id_: ', requestor_id_ 
+  , 'area_id_: ', area_id_
+  , 'requestor_dept_id_: ', requestor_dept_id_
+  , 'department_id: ', department_id
+  , 'branch_id: ', branch_id   ) 
+  try {
+    let pool = await sql.connect(config);
+    
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let spGet_search_vrf = await pool
+      .request()
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)
+      .input("tbDateF", sql.VarChar, formattedtbDateF )
+      .input("tbDateT", sql.VarChar, formattedtbDateT )    
+      .input("requestor_id", sql.Int, requestor_id_)
+      .input("area_id", sql.Int, area_id_)
+      .input("requestor_dept_id", sql.Int, requestor_dept_id_)      
+      .execute("spGet_search_vrf");
+    return spGet_search_vrf.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -1530,6 +1592,55 @@ async function add_approveProc(data) {
   }
   //return add_manual_order.recordsets
 }
+async function set_manual_update_vrf_det(obj_json) {
+  try { 
+    console.log('obj_json: ', obj_json )
+    console.log('obj_json.length: ', Object.keys(obj_json).length)    
+    for (let index in obj_json) { 
+      let pool = await sql.connect(config);
+      let sp_set_manual_update_vrf_det = await pool
+      .request()
+      .input("id", sql.Int, obj_json[index].id)
+      .input("date_from", sql.DateTime, obj_json[index].date_from ) 
+      .input("date_to", sql.DateTime, obj_json[index].date_to )
+      .input("fullname", sql.NVarChar, obj_json[index].fullname )
+      .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id )
+      .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)          
+      .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration )
+      .input("card_no", sql.NVarChar, obj_json[index].card_no)
+      .input("ModifyBy", sql.Int, obj_json[index].user_id )
+      .execute("sp_set_manual_update_vrf_det");  
+      let output_ = sp_set_manual_update_vrf_det.recordsets;   
+    } 
+    //retu
+    return ({status:'success'})//sp_set_manual_update_vrf_det.recordsets;
+  } catch (err) {
+    console.log(err);
+  }  
+}
+async function set_manual_update_vrf(obj_json) { 
+  try {
+    let pool = await sql.connect(config);
+    let sp_set_manual_update_vrf = await pool
+      .request()
+      .input("id", sql.Int, obj_json["id"])
+      .input("template_name", sql.NVarChar, obj_json["template_name"])
+      .input("reason", sql.NVarChar, obj_json["reason"])
+      .input("contactor", sql.NVarChar, obj_json["contactor"])
+      .input("requestor", sql.Int, obj_json["requestor"]) 
+      .input("requestor_position", sql.Int, obj_json["requestor_position"])     
+      .input("requestor_dept", sql.Int, obj_json["requestor_dept"])
+      .input("requestor_phone", sql.NVarChar, obj_json["requestor_phone"])
+      .input("navigator", sql.Int, obj_json["navigator"])
+      .input("area", sql.Int, obj_json["area"])
+      .input("ModifyBy", sql.Int, obj_json["user_id"])
+      .execute("sp_set_manual_update_vrf");
+    return sp_set_manual_update_vrf.recordsets;
+  } catch (err) {
+    console.log(err);
+  }
+  
+}
 async function update_order(gfccp_order) {
   let NULL_ = null;
   let FLOAT_NULL_ = 0;
@@ -2387,21 +2498,24 @@ async function delete_app_proc_det(Id, user_id) {
     console.log(err);
   }
 }
-async function update_cashstatus_order(Id, Type_, user_id) {
+async function update_vrftatus(Id, Type_, user_id) {
   try {
     let pool = await sql.connect(config);
-    let update_cashstatus_order = await pool
+    let update_vrftatus = await pool
       .request()
       .input("Id_", sql.Int, Id)
       .input("Type_", sql.NVarChar, Type_)
       .input("user_id", sql.NVarChar, user_id)
-      .execute("update_cashstatus_order");
-    return update_cashstatus_order.recordsets;
+      .execute("spUpdate_vrftatus");
+    return update_vrftatus.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log(err); 
   }
 }
-module.exports = {
+module.exports = { 
+  get_search_vrf: get_search_vrf,
+  set_manual_update_vrf_det: set_manual_update_vrf_det,
+  set_manual_update_vrf: set_manual_update_vrf,
   get_templete_vrf_det: get_templete_vrf_det, 
   get_templete_vrf: get_templete_vrf,
   get_templete_vrf_list: get_templete_vrf_list,
@@ -2429,7 +2543,7 @@ module.exports = {
   add_manual_order: add_manual_order,
   getuserinfo: getuserinfo,
   getCashOrder: getCashOrder,
-  update_cashstatus_order: update_cashstatus_order,
+  update_vrftatus: update_vrftatus,
   update_order: update_order,
   get_pbi_url: get_pbi_url,
   getApproveList: getApproveList,

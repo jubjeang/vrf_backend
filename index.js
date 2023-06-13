@@ -1308,6 +1308,27 @@ app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
             }
         })
 })
+app.get('/get_search_vrf', urlencodedParser, (req, res) => {
+       
+    dboperations.get_search_vrf(
+        req.query['tbDateF']
+        , req.query['tbDateT']
+        , req.query['requestor_id']
+        , req.query['area_id']
+        , req.query['requestor_dept_id']
+        , req.query['department_id']
+        , req.query['branch_id']
+       ).then((result, err) => {
+            if (err) {
+                console.log('error: ', err)
+                res.json({ error: err })
+            }
+            else { 
+                console.log('result: ', result)
+                res.json(result[0])
+            }
+        })
+})
 app.get('/orderlist', urlencodedParser, (req, res) => {
     console.log('/orderlist req.query[RoleId]: ', req.query['RoleId']
         , 'req.query[CustomerID]: ', req.query['CustomerID']
@@ -1864,6 +1885,44 @@ app.post('/manual_add_order', urlencodedParser, (req, res) => {
         }
     })
 })
+app.post('/set_manual_update_vrf_det', urlencodedParser, (req, res) => {
+    let data_ = req.body
+    let obj = null
+    for (let x in data_) {
+        obj = x
+    }
+    console.log('obj.length: ', obj.length)
+    let obj_json = JSON.parse(obj)    
+
+    dboperations.set_manual_update_vrf_det(obj_json).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+             res.json(result[0])
+        }
+    })
+ 
+})
+app.post('/set_manual_update_vrf', urlencodedParser, (req, res) => {
+    let data_ = req.body
+    let obj = null
+    for (let x in data_) {
+        obj = x
+    }
+    let obj_json = JSON.parse(obj)    
+    dboperations.set_manual_update_vrf(obj_json).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+             res.json(result[0])
+        }
+    })
+ 
+})
 app.post('/edit_order', urlencodedParser, (req, res) => {
     let data_ = req.body
     let obj = null
@@ -2252,15 +2311,15 @@ app.get('/getcashorder', urlencodedParser, (req, res) => {
         }
     })
 })
-app.get('/update_cashstatus_order_all', urlencodedParser, (req, res) => {
-    console.log('update_cashstatus_order_all req.query[Id]:', req.query['Id'])
-    console.log('update_cashstatus_order_all req.query[Id].length:', req.query['Id'].length)
-    console.log('update_cashstatus_order_all req.query[Type_]:', req.query['Type_'])
+app.get('/update_vrftatus_all', urlencodedParser, (req, res) => {
+    console.log('update_vrftatus_all req.query[Id]:', req.query['Id'])
+    console.log('update_vrftatus_all req.query[Id].length:', req.query['Id'].length)
+    console.log('update_vrftatus_all req.query[Type_]:', req.query['Type_'])
     let output = null
     req.query['Id'].forEach((item) => {
         // console.log(item)
-        console.log('update_cashstatus_order_all in array Id: ', parseInt(item))
-        dboperations.update_cashstatus_order(parseInt(item), req.query['Type_'], req.query['user_id']).then((result, err) => {
+        console.log('update_vrftatus_all in array Id: ', parseInt(item))
+        dboperations.update_vrftatus(parseInt(item), req.query['Type_'], req.query['user_id']).then((result, err) => {
             if (err) {
                 console.log('error: ', err)
             }
@@ -2271,7 +2330,7 @@ app.get('/update_cashstatus_order_all', urlencodedParser, (req, res) => {
         })
     })
     res.json(output)
-    // dboperations.update_cashstatus_order(req.query['Id'], req.query['Type_'], req.query['user_id']).then((result, err) => {
+    // dboperations.update_vrftatus(req.query['Id'], req.query['Type_'], req.query['user_id']).then((result, err) => {
     //     if (err) {
     //         console.log('error: ', err)
     //     }
@@ -2280,10 +2339,10 @@ app.get('/update_cashstatus_order_all', urlencodedParser, (req, res) => {
     //     }
     // })
 })
-app.get('/update_cashstatus_order', urlencodedParser, (req, res) => {
+app.get('/update_vrftatus', urlencodedParser, (req, res) => {
     // console.log(req.query['Id'])
     // console.log(req.query['Type_'])
-    dboperations.update_cashstatus_order(req.query['Id'], req.query['Type_'], req.query['user_id']).then((result, err) => {
+    dboperations.update_vrftatus(req.query['Id'], req.query['Type_'], req.query['user_id']).then((result, err) => {
         if (err) {
             console.log('error: ', err)
         }
