@@ -1,4 +1,3 @@
-// import xlsxFile from 'read-excel-file'
 const xlsxFile = require('read-excel-file/node');
 const dboperations = require('./controllers/dboperations');
 const path = require('path');
@@ -16,11 +15,10 @@ const sql = require('mssql');
 const cors = require('cors')
 const ActiveDirectory = require('activedirectory2');
 var bodyParser = require('body-parser');
+const nodemailer = require("nodemailer");
 require('dotenv').config()
-app.use(cors()) 
+app.use(cors())
 // const ldap = require('ldapjs');
-
-
 const setordernumber = (value) => {
     const now = new Date()
     const day = ('0' + now.getDate()).slice(-2)
@@ -39,14 +37,14 @@ const setordernumber = (value) => {
 
 }
 const storage = multer.diskStorage({
-    filename: function (req, file, cb) { 
-                //console.log('storage filename req.body.reason: ', req.body.reason)     
+    filename: function (req, file, cb) {
+        //console.log('storage filename req.body.reason: ', req.body.reason)     
         const originalName = path.basename(file.originalname, path.extname(file.originalname));
         const extension = path.extname(file.originalname);
         fileName = `${originalName}_${Date.now()}${extension}`;
         cb(null, fileName)
     },
-    destination: function (req, file, cb) {         
+    destination: function (req, file, cb) {
         cb(null, './uploads')
     }
 })
@@ -60,8 +58,8 @@ const storage = multer.diskStorage({
 //         cb(null, './uploads')
 //     }
 // })
-const upload = multer({ 
-   
+const upload = multer({
+
     // dest: './uploads'
     storage: storage
 })
@@ -321,21 +319,21 @@ const check_pcs = (value_, type_) => {
     }
     return returnValue
 }
-app.post('/set_manual_add_vrf_trans', upload.single('file'), (req, res) => { 
+app.post('/set_manual_add_vrf_trans', upload.single('file'), (req, res) => {
     console.log('set_manual_add_vrf_trans req.body: ', req.body)
     console.log('req.file : ', req.file)
     let file_originalname_ = req.file === undefined ? '' : req.file.originalname
     let filename_ = req.file === undefined ? '' : req.file.filename
-    let data_ = req.body 
-    let obj = null
-    for (let x in data_) {
-        obj = x
-    }
+    let data_ = req.body
+    // let obj = null
+    // for (let x in data_) {
+    //     obj = x
+    // }
     console.log('file: ', req.file)
     console.log('req.file.originalname: ', file_originalname_)
     console.log('req.body.reason: ', req.body.reason)
     // let obj_json = JSON.parse(obj)
-    let  data = {
+    let data = {
         reason: req.body.reason,
         file_originalname: file_originalname_,
         file_name: filename_,
@@ -346,26 +344,27 @@ app.post('/set_manual_add_vrf_trans', upload.single('file'), (req, res) => {
         requestor_phone: req.body.requestor_phone,
         navigator: req.body.navigator,
         area: req.body.area,
+        templete_id: req.body.templete_id,
         createby: req.body.user_id
     }
-    
     dboperations.set_manual_add_vrf_trans(data).then((result, err) => {
         if (err) {
             console.log('error: ', err)
-            res.json({ error: err }) 
+            res.json({ error: err })
         }
         else {
             res.json(result)
         }
-    })   
+    })
 })
 //i want to check filename compare req.body.attach_file_primitive before upload
 
-app.post('/set_manual_update_vrf_trans', upload.single('file'), (req, res) => { 
+app.post('/set_manual_update_vrf_trans', upload.single('file'), (req, res) => {
     // console.log(req.file)    
     let originalname = req.file !== undefined ? req.file.originalname : ''
     let filename_ = req.file !== undefined ? req.file.filename : ''
-    let  data = { 
+    let old_file = (req.body.attach_file_primitive !== undefined) && (req.body.attach_file_primitive !== '') ? req.body.attach_file_primitive : ''
+    let data = {
         vrf_id: req.body.id,
         attach_file_origin: originalname,
         attach_file: filename_,
@@ -377,7 +376,7 @@ app.post('/set_manual_update_vrf_trans', upload.single('file'), (req, res) => {
         requestor_phone: req.body.requestor_phone,
         navigator: req.body.navigator,
         area: req.body.area,
-        createby: req.body.user_id 
+        createby: req.body.user_id
     }
     //console.log('data: ', data)
     dboperations.set_manual_update_vrf_trans(data).then((result, err) => {
@@ -385,24 +384,23 @@ app.post('/set_manual_update_vrf_trans', upload.single('file'), (req, res) => {
             console.log('error: ', err)
             res.json({ error: err })
         }
-        else { 
-            if(filename_ !== '')
-            {   
+        else {
+            if (old_file !== '') {
                 // ใช้ fs.stat
-                fs.stat('./uploads/'+req.body.attach_file_primitive, (err, stats) => {
+                fs.stat('./uploads/' + req.body.attach_file_primitive, (err, stats) => {
                     if (err) {
                         console.log(`ไม่พบไฟล์: ${req.body.attach_file_primitive}`);
                     } else {
-                        fs.unlink('./uploads/'+req.body.attach_file_primitive, (err) => {
+                        fs.unlink('./uploads/' + req.body.attach_file_primitive, (err) => {
                             if (err) throw err;
-                            console.log(req.body.attach_file_primitive+' ถูกลบแล้ว');
-                          });
+                            console.log(req.body.attach_file_primitive + ' ถูกลบแล้ว');
+                        });
                     }
-                    });
-            }            
-             res.json(result[0])
+                });
+            }
+            res.json(result[0])
         }
-    }) 
+    })
 })
 app.post('/upload', upload.single('file'), (req, res) => {
     res.json({
@@ -848,112 +846,149 @@ app.get('/ordertrackinglist', (req, res) => {
 // create application/x-www-form-urlencoded parser
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
-
-app.get('/get_meeting_area', urlencodedParser, (req, res) => {  
-    // console.log('req.query[department_id]: ',req.query['department_id'])
-    dboperations.get_meeting_area( req.query['user_id'] ).then((result, err) => {
+app.get('/get_complete_word', urlencodedParser, (req, res) => {
+   
+    dboperations.get_complete_word(req.query['search'], req.query['type']).then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
-        } 
+        }
         else {
-            res.json(result[0]) 
+            res.json(result[0])
         }
     })
 })
-app.get('/get_navigator', urlencodedParser, (req, res) => {  
-    // console.log('req.query[department_id]: ',req.query['department_id'])
-    dboperations.get_navigator( req.query['user_id'] ).then((result, err) => {
+app.get('/get_meeting_area', urlencodedParser, (req, res) => {
+    
+    dboperations.get_meeting_area(req.query['user_id']).then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
-        } 
+        }
         else {
-            res.json(result[0]) 
+            res.json(result[0])
         }
     })
 })
-app.get('/get_dept', urlencodedParser, (req, res) => {  
-    // console.log('req.query[department_id]: ',req.query['department_id'])
+app.get('/get_navigator', urlencodedParser, (req, res) => {
+    
+    dboperations.get_navigator(req.query['user_id']).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.get('/get_dept', urlencodedParser, (req, res) => {
+    
     dboperations.get_dept(req.query['division_id']
-    ,req.query['branch_id']
+        , req.query['branch_id']
     ).then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
-        } 
+        }
         else {
-            res.json(result[0]) 
+            res.json(result[0])
         }
     })
 })
-app.get('/get_position', urlencodedParser, (req, res) => {  
-    //console.log('req.query[department_id]: ',req.query['department_id'])
+app.get('/get_dept_by_branch', urlencodedParser, (req, res) => {
+    
+    dboperations.get_dept_by_branch(req.query['division_id']
+        , req.query['branch_id']
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.get('/get_position', urlencodedParser, (req, res) => {
+    
     dboperations.get_position().then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
-        } 
+        }
         else {
-            res.json(result[0]) 
+            res.json(result[0])
         }
     })
 })
-app.get('/get_user', urlencodedParser, (req, res) => {  
-    console.log('req.query[department_id]: ',req.query['department_id'])
+app.get('/get_user_by_branch', urlencodedParser, (req, res) => {
+    console.log('req.query[branch_id]: ', req.query['branch_id'])
+    dboperations.get_user_by_branch(req.query['branch_id']).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.get('/get_user', urlencodedParser, (req, res) => {
+    
     dboperations.get_user(req.query['department_id']).then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
-        } 
+        }
         else {
-            res.json(result[0]) 
+            res.json(result[0])
         }
     })
 })
-app.get('/get_templete', urlencodedParser, (req, res) => {  
+app.get('/get_templete', urlencodedParser, (req, res) => {
     dboperations.get_templete(req.query['branch_id']
-    ,req.query['department_id']).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        } 
-        else {
-            res.json(result[0]) 
-        }
-    })
+        , req.query['department_id']).then((result, err) => {
+            if (err) {
+                console.log('error: ', err)
+                res.json({ error: err })
+            }
+            else {
+                res.json(result[0])
+            }
+        })
 })
-app.get('/get_templete_det', urlencodedParser, (req, res) => {  
+app.get('/get_templete_det', urlencodedParser, (req, res) => {
     dboperations.get_templete_det(req.query['templete_id']
     ).then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
-        } 
+        }
         else {
-            res.json(result[0]) 
+            res.json(result[0])
         }
     })
 })
-app.get('/get_vehicle_color', urlencodedParser, (req, res) => {  
+app.get('/get_vehicle_color', urlencodedParser, (req, res) => {
     dboperations.get_vehicle_color().then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
-        } 
+        }
         else {
-            res.json(result[0]) 
+            res.json(result[0])
         }
     })
 })
-app.get('/get_vehicle_brand', urlencodedParser, (req, res) => {  
+app.get('/get_vehicle_brand', urlencodedParser, (req, res) => {
     dboperations.get_vehicle_brand().then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
-        } 
+        }
         else {
-            res.json(result[0]) 
+            res.json(result[0])
         }
     })
 })
@@ -997,21 +1032,12 @@ app.post('/authenticate', urlencodedParser, (req, res) => {
         }
     });
 });
-app.get('/getOrder_status', urlencodedParser, (req, res) => {
-    // console.log('/getOrder_status req: ', req)
-    console.log('/getOrder_status user_id: ', req.query['user_id'])
-    console.log('/getOrder_status customerID:', req.query['customerID'])
-    console.log('/getOrder_status orderId:', req.query['orderId'])
-    console.log('/getOrder_status activity_type:', req.query['activity_type'])
-    console.log('/getOrder_status service_type:', req.query['service_type'])
-    //activity_type:BankBranch,BOT
-    //service_type:Deposit,Withdraw  
 
-    dboperations.getOrder_status(req.query['user_id'],
-        req.query['customerID'],
-        req.query['orderId'],
-        req.query['activity_type'],
-        req.query['service_type']
+app.get('/get_permission_access', urlencodedParser, (req, res) => {
+
+    dboperations.get_permission_access(req.query['user_id']
+        , req.query['user_role_id']
+        , req.query['user_role']
     ).then((result, err) => {
         if (err) {
             console.log('error: ', err)
@@ -1019,21 +1045,6 @@ app.get('/getOrder_status', urlencodedParser, (req, res) => {
         }
         else {
             res.json(result[0])
-        }
-    })
-})
-app.get('/get_permission_access', urlencodedParser, (req, res) => { 
- 
-    dboperations.get_permission_access(req.query['user_id']
-    ,req.query['user_role_id'] 
-    ,req.query['user_role']  
-    ).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        } 
-        else {
-            res.json(result[0]) 
         }
     })
 })
@@ -1098,14 +1109,14 @@ app.post('/getuserinfo', urlencodedParser, (req, res) => {
             'jobid': obj_json['jobid'].toLowerCase(),
             'password': obj_json['password'],
         }
-        console.log('data_all: ',data_all)
+        console.log('data_all: ', data_all)
         dboperations.getuserinfo(data_all).then((result, err) => {
             if (err) {
                 console.log('error: ', err)
                 res.json({ error: err })
             }
-            else { 
-                console.log('output: ',result[0])
+            else {
+                console.log('output: ', result[0])
                 res.json(result[0])
             }
         })
@@ -1166,17 +1177,7 @@ app.post("/generateXLS", urlencodedParser, async (req, res) => {
         destroy(filestream)
     })
 })
-app.get('/getcct_data', urlencodedParser, async (req, res) => {
-    dboperations.getCCT_Data(req.query['CustomerID'], req.query['user_id']).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
-            res.json(result[0])
-        }
-    })
-})
+
 app.get('/getActitySelectd', urlencodedParser, async (req, res) => {
     dboperations.getActitySelectd(req.query['user_id'], req.query['customerID']).then((result, err) => {
         if (err) {
@@ -1291,6 +1292,90 @@ const getReportFilename = (path_) => {
     return output
 }
 //------------getrole 
+app.get('/set_sendmail', urlencodedParser, (req, res) => {
+    // let id = req.body['id']
+    let output 
+    console.log('set_sendmail req.query[id]: ', req.query['id_']
+        , 'req.query[department_id]: ', req.query['department_id']
+        , 'req.query[branch_id]: ', req.query['branch_id']
+        , 'req.query[division_id]: ', req.query['division_id']
+    )
+    dboperations.get_mail_vrf_info(req.query['id_']
+        , req.query['department_id']
+        , req.query['branch_id']
+        , req.query['division_id']
+    ).then((result, err) => { 
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else { 
+            try {
+                //`<div style="text-align: right;">${value}</div>`
+                output = result[0]
+                console.log(' output[0].email: ', output[0].email)
+                let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC`
+                let body = `วันที่: ${output[0].CreateDate}<br>
+            พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
+            ผู้ร้องขอ: ${output[0].requestor}<br>
+            ตำแหน่งผู้ร้องขอ: ${output[0].position}<br>
+            กดลิงค์ด้านล่างเพื่อ อนุมัติ หรือ ปฏิเสธ<br><br>
+            (<a href="http://localhost:443/approvevrflst">link</a>)`;
+
+                let transporter = nodemailer.createTransport({
+                    host: process.env.smtp_server,
+                    port: process.env.smtp_server_port,
+                    secure: false,
+                    auth: {
+                        user: process.env.mail_user_sender,
+                        pass: process.env.mail_pass_sender,
+                    },
+                    connectionTimeout: 3000000 // New timeout duration
+                });
+                let mailOptions
+                if (output[0].attach_file === '' || output[0].attach_file === null) {
+                    mailOptions = {
+                        from: `VRF <${process.env.mail_user_sender}>`,
+                        to: output[0].email,
+                        subject,
+                        html: body
+                    };
+
+                }
+                else {
+                    mailOptions = {
+                        from: `VRF <${process.env.mail_user_sender}>`,
+                        to: output[0].email,
+                        subject,
+                        html: body, // use html instead of text
+                        attachments: [
+                            {
+                                // Path is now relative to your current directory
+                                path: `./uploads/${output[0].attach_file}`
+                            }
+                        ]
+                    };
+                }
+                transporter.sendMail(mailOptions, function (error, info) {
+                    if (error) {
+                        console.log(error);
+                    } else {
+                        console.log('Email sent: ' + info.response);
+                    }
+                }); 
+                // res.send("Email sent");            
+                // console.log('set_sendmail output: ', output[0].reason)
+                res.json(result)
+            } catch (error) {
+                res.json({ error: error })
+                console.error(error)
+                // Expected output: ReferenceError: nonExistentFunction is not defined
+                // (Note: the exact output may be browser-dependent)
+            }
+        }
+    })
+
+})
 app.get('/getrole', urlencodedParser, (req, res) => {
     // let type_ = ''
     // type_ = req.query['type_']
@@ -1351,103 +1436,79 @@ app.get('/getuserEdit', urlencodedParser, (req, res) => {
         }
     })
 })
-app.get('/getcashcenterdata', urlencodedParser, (req, res) => {
-    // console.log(req.query['CustomerID'])
-    let type_ = ''
-    type_ = req.query['type_']
-    if (type_ === 'BOT') {
-        dboperations.getCashCenterBOT(req.query['CustomerID'], req.query['user_id']).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
-                res.json({ error: err })
-            }
-            else {
-                res.json(result[0])
-            }
-        })
-    }
-    else {
-        dboperations.getCashCenterData(req.query['CustomerID'], req.query['user_id']).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
-                res.json({ error: err })
-            }
-            else {
-                res.json(result[0])
-            }
-        })
-    }
-})
-app.get('/getbotbranch', urlencodedParser, (req, res) => {
-    dboperations.getBOT_Branch(req.query['user_id'], req.query['CustomerID']).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
-            res.json(result[0])
-        }
-    })
-})
-app.get('/getbranchdata', urlencodedParser, (req, res) => {
-    // console.log(req.query['CustomerID'])
-    dboperations.getBranchData(req.query['CustomerID'], req.query['user_id']).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
-            res.json(result[0])
-        }
-    })
-})
-app.get('/getbranchforcash', urlencodedParser, (req, res) => {
-    dboperations.getBranchForCash(req.query['CustomerID'], req.query['CCT'], req.query['user_id']).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
-            res.json(result[0])
-        }
-    })
-
-})
-
 app.get('/get_vrf_list', urlencodedParser, (req, res) => {
-    console.log('/get_vrf_list department_id: ', req.query['department_id']
-        , 'branch_id: ', req.query['branch_id'] )    
+    // console.log('/get_vrf_list department_id: ', req.query['department_id']
+    //     , 'branch_id: ', req.query['branch_id'])
     dboperations.get_vrf_list(
         req.query['department_id']
         , req.query['branch_id']
-       ).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
-                res.json({ error: err })
-            }
-            else {
-                res.json(result[0])
-            }
-        })
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
 })
+app.get('/get_vrf_lst_for_security', urlencodedParser, (req, res) => {
+    console.log('/get_vrf_list department_id: ', req.query['department_id']
+        , 'branch_id: ', req.query['branch_id'])
+    dboperations.get_vrf_lst_for_security(
+        req.query['department_id']
+        , req.query['branch_id']
+        , req.query['role_id']
+        , req.query['division_id']
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.get('/get_vrf_approve_list', urlencodedParser, (req, res) => {
+    console.log('/get_vrf_approve_list department_id: ', req.query['department_id']
+        , 'branch_id: ', req.query['branch_id']
+        , 'role_id: ', req.query['role_id']
+        , 'division_id: ', req.query['division_id'])
+    dboperations.get_vrf_approve_list(
+        req.query['department_id']
+        , req.query['branch_id']
+        , req.query['role_id']
+        , req.query['division_id']
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.ge
 app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
     console.log('/get_templete_vrf_list department_id: ', req.query['department_id']
-        , 'branch_id: ', req.query['branch_id'] )    
+        , 'branch_id: ', req.query['branch_id'])
     dboperations.get_templete_vrf_list(
         req.query['department_id']
         , req.query['branch_id']
-       ).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
-                res.json({ error: err })
-            }
-            else {
-                res.json(result[0])
-            }
-        })
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
 })
 app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
-       
+
     dboperations.get_search_vrf_trans(
         req.query['tbDateF']
         , req.query['tbDateT']
@@ -1456,19 +1517,19 @@ app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
         , req.query['requestor_dept_id']
         , req.query['department_id']
         , req.query['branch_id']
-       ).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
-                res.json({ error: err })
-            }
-            else { 
-                console.log('result: ', result)
-                res.json(result[0]) 
-            }
-        })
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            console.log('result: ', result)
+            res.json(result[0])
+        }
+    })
 })
 app.get('/get_search_vrf', urlencodedParser, (req, res) => {
-       
+
     dboperations.get_search_vrf(
         req.query['tbDateF']
         , req.query['tbDateT']
@@ -1477,38 +1538,18 @@ app.get('/get_search_vrf', urlencodedParser, (req, res) => {
         , req.query['requestor_dept_id']
         , req.query['department_id']
         , req.query['branch_id']
-       ).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
-                res.json({ error: err })
-            }
-            else { 
-                console.log('result: ', result)
-                res.json(result[0])
-            }
-        })
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            console.log('result: ', result)
+            res.json(result[0])
+        }
+    })
 })
-app.get('/orderlist', urlencodedParser, (req, res) => {
-    console.log('/orderlist req.query[RoleId]: ', req.query['RoleId']
-        , 'req.query[CustomerID]: ', req.query['CustomerID']
-        , 'req.query[user_id]: ', req.query['user_id']
-        , 'req.query[approve_setting_id]: ', req.query['approve_setting_id']
-        , 'req.query[approve_setting_version]: ', req.query['approve_setting_version']
-    )    
-    dboperations.getOrdersList(req.query['RoleId']
-        , req.query['CustomerID']
-        , req.query['user_id']
-        , req.query['approve_setting_id']
-        , req.query['approve_setting_version']).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
-                res.json({ error: err })
-            }
-            else {
-                res.json(result[0])
-            }
-        })
-})
+
 // app.get('/getcctbranch', urlencodedParser, (req, res) => {  
 //     dboperations.getCashCenterData( req.query['CustomerID']  ).then((result, err) => {
 //         if (err) {
@@ -1635,18 +1676,7 @@ app.get('/get_pbi_url', urlencodedParser, (req, res) => {
         }
     })
 })
-app.get('/getbanktypedata', urlencodedParser, (req, res) => {
-    console.log('req.query[user_id]: ', req.query['user_id'])
-    dboperations.getBankTypeData(req.query['user_id']).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
-            res.json(result[0])
-        }
-    })
-})
+
 app.get('/getdownloadlink', urlencodedParser, (req, res) => {
     console.log('req.query[user_id]: ', req.query['user_id'])
     dboperations.getDownloadLink(req.query['user_id']).then((result, err) => {
@@ -1678,32 +1708,32 @@ app.post('/add_approveProc', urlencodedParser, (req, res) => {
         }
     })
 })
-app.post('/set_manual_add_vrf_trans', urlencodedParser, (req, res) => {
-    let data_ = req.body 
-    let obj = null
-    for (let x in data_) {
-        obj = x
-    }
-    let obj_json = JSON.parse(obj)
-   // console.log('obj_json: ', obj_json)
-    dboperations.set_manual_add_vrf_trans(obj_json).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
-            res.json(result)
-        }
-    })   
-})
+// app.post('/set_manual_add_vrf_trans', urlencodedParser, (req, res) => {
+//     let data_ = req.body 
+//     let obj = null
+//     for (let x in data_) {
+//         obj = x
+//     }
+//     let obj_json = JSON.parse(obj)
+//    // console.log('obj_json: ', obj_json)
+//     dboperations.set_manual_add_vrf_trans(obj_json).then((result, err) => {
+//         if (err) {
+//             console.log('error: ', err)
+//             res.json({ error: err })
+//         }
+//         else {
+//             res.json(result)
+//         }
+//     })   
+// })
 app.post('/set_manual_add_vrf', urlencodedParser, (req, res) => {
-    let data_ = req.body 
+    let data_ = req.body
     let obj = null
     for (let x in data_) {
         obj = x
     }
     let obj_json = JSON.parse(obj)
-   // console.log('obj_json: ', obj_json)
+    // console.log('obj_json: ', obj_json)
     dboperations.set_manual_add_vrf(obj_json).then((result, err) => {
         if (err) {
             console.log('error: ', err)
@@ -1712,16 +1742,32 @@ app.post('/set_manual_add_vrf', urlencodedParser, (req, res) => {
         else {
             res.json(result)
         }
-    })   
+    })
 })
+app.post('/set_reject_vrf', bodyParser.json(), (req, res) => {
+    console.log('req.body: ', req.body);
+    console.log('req.body[reject_reason]: ', req.body.reject_reason);
+    dboperations.set_reject_vrf(req.body.vrf_id_for_reject
+        , req.body.reject_reason
+        , req.body.RejectBy).then((result, err) => {
+            if (err) {
+                console.log('error: ', err)
+                res.json({ error: err })
+            }
+            else {
+                res.json({ message: 'success' })
+            }
+        })
+
+});
 app.post('/set_manual_add_vrf_trans_det', urlencodedParser, (req, res) => {
-    let data_ = req.body 
+    let data_ = req.body
     let obj = null
     for (let x in data_) {
         obj = x
     }
     let obj_json = JSON.parse(obj)
-   // console.log('obj_json: ', obj_json)
+    // console.log('obj_json: ', obj_json)
     dboperations.set_manual_add_vrf_trans_det(obj_json).then((result, err) => {
         if (err) {
             console.log('error: ', err)
@@ -1731,16 +1777,16 @@ app.post('/set_manual_add_vrf_trans_det', urlencodedParser, (req, res) => {
             res.json(result)
         }
     })
-   
+
 })
 app.post('/set_manual_add_vrf_det', urlencodedParser, (req, res) => {
-    let data_ = req.body 
+    let data_ = req.body
     let obj = null
     for (let x in data_) {
         obj = x
     }
     let obj_json = JSON.parse(obj)
-   // console.log('obj_json: ', obj_json)
+    // console.log('obj_json: ', obj_json)
     dboperations.set_manual_add_vrf_det(obj_json).then((result, err) => {
         if (err) {
             console.log('error: ', err)
@@ -1750,335 +1796,7 @@ app.post('/set_manual_add_vrf_det', urlencodedParser, (req, res) => {
             res.json(result)
         }
     })
-   
-})
-app.post('/manual_add_order', urlencodedParser, (req, res) => {
-    let data_ = req.body
-    let obj = null
-    for (let x in data_) {
-        obj = x
-    }
-    let obj_json = JSON.parse(obj)
-    let data_all = {
-        'customerID': obj_json['CustomerID'],
-        'approve_setting_id': obj_json['approve_setting_id'],
-        'approve_setting_version': obj_json['approve_setting_version'],
-        'roleid': obj_json['roleid'],
-        'order_category': obj_json['OrderCategoryNew'],
-        'servicetype': obj_json['OrderTypeNew'],
-        'refno': obj_json['RefNo'],
-        'order_date': obj_json['JobDateNew'],
-        'branchorigin_name': obj_json['BranchOrigin'],
-        'branchorigin_code': obj_json['BranchOrigin_code'],
-        'branchdest_name': obj_json['BranchDest'],
-        'branchdest_code': obj_json['BranchDest_code'],
-        'remark': obj_json['RemarkNew'],
-        'user_id': obj_json['user_id'],
-    }
-    let AllRowsDet = parseInt(obj_json['AllRowsDet'])
-    // console.log('AllRowsDet: ' + AllRowsDet) 
-    let tbGrandTotalAmount = 0
-    for (var index = 1; index <= AllRowsDet; index++) {
-        //------------------------------------   
-        if (obj_json['ddlMoneyType' + index]) {
-            let ddlMoneyTypeValue_ = obj_json['ddlMoneyType' + index]//ชนิดราคา
-            let ddlQualityMoneyTypeValue_ = obj_json['ddlQualityMoneyType' + index]//คุณภาพเงิน
-            let ddlPackageMoneyTypeValue_ = obj_json['ddlPackageMoneyType' + index]//หน่วย
-            let tbQuantity_ = obj_json['tbQuantity' + index].replaceAll(',', '')//จำนวน tbQuantity
-            let tbAmountValue_ = obj_json['tbAmount' + index].replaceAll(',', '')//ยอดรวม
-            // console.log('tbAmountValue_: ', tbAmountValue_)
-            tbAmountValue_ = parseFloat(tbAmountValue_)
-            tbGrandTotalAmount += tbAmountValue_
-            // coin_unfit_10
-            console.log('index: ', index)
-            console.log('ชนิดราคา: ddlMoneyTypeValue_: ', obj_json['ddlMoneyType' + index])//ชนิดราคา
-            console.log('คุณภาพเงิน: ddlQualityMoneyTypeValue_: ', obj_json['ddlQualityMoneyType' + index])//คุณภาพเงิน
-            console.log('หน่วย: ddlPackageMoneyTypeValue_: ', obj_json['ddlPackageMoneyType' + index])//หน่วย
-            console.log('จำนวน: tbQuantity: ', obj_json['tbQuantity' + index])//จำนวน
-            console.log('ยอดรวม: tbAmountValue_: ', obj_json['tbAmount' + index].replaceAll(',', ''))//จำนวน
-            //------------------------------ 
-            switch (ddlQualityMoneyTypeValue_) {
-                case 'New':
-                    switch (ddlMoneyTypeValue_) {
-                        case '1000':
-                            data_all.note_new_1000 = tbAmountValue_
-                            data_all.unit_note_new_1000 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_new_1000 = tbQuantity_
-                            // console.log(data_all)
-                            break;
-                        case '500':
-                            data_all.note_new_500 = tbAmountValue_
-                            data_all.unit_note_new_500 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_new_500 = tbQuantity_
-                            break;
-                        case '100':
-                            data_all.note_new_100 = tbAmountValue_
-                            data_all.unit_note_new_100 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_new_100 = tbQuantity_
-                            break;
-                        case '20':
-                            data_all.note_new_20 = tbAmountValue_
-                            data_all.unit_note_new_20 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_new_20 = tbQuantity_
-                            break;
-                        case '10':
-                            switch (ddlPackageMoneyTypeValue_) {
-                                case 'Coin':
-                                    data_all.coin_new_10 = tbAmountValue_
-                                    data_all.unit_coin_new_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_coin_new_10 = tbQuantity_
-                                    break;
-                                default:
-                                    data_all.note_new_10 = tbAmountValue_
-                                    data_all.unit_note_new_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_note_new_10 = tbQuantity_
-                            }
-                            break;
-                        case '5':
-                            data_all.coin_new_5 = tbAmountValue_
-                            data_all.unit_coin_new_5 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_5 = tbQuantity_
-                            break;
-                        case '2':
-                            data_all.coin_new_2 = tbAmountValue_
-                            data_all.unit_coin_new_2 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_2 = tbQuantity_
-                            break;
-                        case '1':
-                            data_all.coin_new_1 = tbAmountValue_
-                            data_all.unit_coin_new_1 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_1 = tbQuantity_
-                            break;
-                        case '0.5':
-                            data_all.coin_new_05 = tbAmountValue_
-                            data_all.unit_coin_new_05 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_05 = tbQuantity_
-                            break;
-                        case '0.25':
-                            data_all.coin_new_025 = tbAmountValue_
-                            data_all.unit_coin_new_025 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_025 = tbQuantity_
-                            break;
-                        default:
-                            console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-                    }
-                    break;//---end New
-                case 'Fit':
-                    switch (ddlMoneyTypeValue_) {
-                        case '1000':
-                            data_all.note_fit_1000 = tbAmountValue_
-                            data_all.unit_note_fit_1000 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_fit_1000 = tbQuantity_
-                            break;
-                        case '500':
-                            data_all.note_fit_500 = tbAmountValue_
-                            data_all.unit_note_fit_500 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_fit_500 = tbQuantity_
-                            break;
-                        case '100':
-                            data_all.note_fit_100 = tbAmountValue_
-                            data_all.unit_note_fit_100 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_fit_100 = tbQuantity_
-                            break;
-                        case '20':
-                            data_all.note_fit_20 = tbAmountValue_
-                            data_all.unit_note_fit_20 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_fit_20 = tbQuantity_
-                            break;
-                        case '10':
-                            switch (ddlPackageMoneyTypeValue_) {
-                                case 'Coin':
-                                    data_all.coin_fit_10 = tbAmountValue_
-                                    data_all.unit_coin_fit_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_coin_fit_10 = tbQuantity_
-                                    break;
-                                default:
-                                    data_all.note_fit_10 = tbAmountValue_
-                                    data_all.unit_note_fit_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_note_fit_10 = tbQuantity_
-                            }
-                            break;
-                        case '5':
-                            data_all.coin_fit_5 = tbAmountValue_
-                            data_all.unit_coin_fit_5 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_5 = tbQuantity_
-                            break;
-                        case '2':
-                            data_all.coin_fit_2 = tbAmountValue_
-                            data_all.unit_coin_fit_2 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_2 = tbQuantity_
-                            break;
-                        case '1':
-                            data_all.coin_fit_1 = tbAmountValue_
-                            data_all.unit_coin_fit_1 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_1 = tbQuantity_
-                            break;
-                        case '0.5':
-                            data_all.coin_fit_05 = tbAmountValue_
-                            data_all.unit_coin_fit_05 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_05 = tbQuantity_
-                            break;
-                        case '0.25':
-                            data_all.coin_fit_025 = tbAmountValue_
-                            data_all.unit_coin_fit_025 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_025 = tbQuantity_
-                            break;
-                        default:
-                            console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-                    }
-                    break;//---end Good
-                case 'Uncount':
-                    switch (ddlMoneyTypeValue_) {
-                        case '1000':
-                            data_all.note_uncount_1000 = tbAmountValue_
-                            data_all.unit_note_uncount_1000 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_uncount_1000 = tbQuantity_
-                            break;
-                        case '500':
-                            data_all.note_uncount_500 = tbAmountValue_
-                            data_all.unit_note_uncount_500 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_uncount_500 = tbQuantity_
-                            break;
-                        case '100':
-                            data_all.note_uncount_100 = tbAmountValue_
-                            data_all.unit_note_uncount_100 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_uncount_100 = tbQuantity_
-                            break;
-                        case '20':
-                            data_all.note_uncount_20 = tbAmountValue_
-                            data_all.unit_note_uncount_20 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_uncount_20 = tbQuantity_
-                            break;
-                        case '10':
-                            switch (ddlPackageMoneyTypeValue_) {
-                                case 'Coin':
-                                    data_all.coin_uncount_10 = tbAmountValue_
-                                    data_all.unit_coin_uncount_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_coin_uncount_10 = tbQuantity_
-                                    break;
-                                default:
-                                    data_all.note_uncount_10 = tbAmountValue_
-                                    data_all.unit_note_uncount_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_note_uncount_10 = tbQuantity_
-                            }
-                            break;
-                        case '5':
-                            data_all.coin_uncount_5 = tbAmountValue_
-                            data_all.unit_coin_uncount_5 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_5 = tbQuantity_
-                            break;
-                        case '2':
-                            data_all.coin_uncount_2 = tbAmountValue_
-                            data_all.unit_coin_uncount_2 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_2 = tbQuantity_
-                            break;
-                        case '1':
-                            data_all.coin_uncount_1 = tbAmountValue_
-                            data_all.unit_coin_uncount_1 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_1 = tbQuantity_
-                            break;
-                        case '0.5':
-                            data_all.coin_uncount_05 = tbAmountValue_
-                            data_all.unit_coin_uncount_05 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_05 = tbQuantity_
-                            break;
-                        case '0.25':
-                            data_all.coin_uncount_025 = tbAmountValue_
-                            data_all.unit_coin_uncount_025 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_025 = tbQuantity_
-                            break;
-                        default:
-                            console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-                    }
-                    break;//-
-                case 'Unfit':
-                    switch (ddlMoneyTypeValue_) {
-                        case '1000':
-                            data_all.note_unfit_1000 = tbAmountValue_
-                            data_all.unit_note_unfit_1000 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_unfit_1000 = tbQuantity_
-                            break;
-                        case '500':
-                            data_all.note_unfit_500 = tbAmountValue_
-                            data_all.unit_note_unfit_500 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_unfit_500 = tbQuantity_
-                            break;
-                        case '100':
-                            data_all.note_unfit_100 = tbAmountValue_
-                            data_all.unit_note_unfit_100 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_unfit_100 = tbQuantity_
-                            // console.log('data_all.pcs_note_unfit_100')
-                            // console.log(data_all)
-                            break;
-                        case '20':
-                            data_all.note_unfit_20 = tbAmountValue_
-                            data_all.unit_note_unfit_20 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_unfit_20 = tbQuantity_
-                            break;
-                        case '10':
-                            switch (ddlPackageMoneyTypeValue_) {
-                                case 'Coin':
-                                    // console.log('------------------------------------------')
-                                    // console.log('ddlQualityMoneyTypeValue_: ', ddlQualityMoneyTypeValue_)
-                                    // console.log('ddlMoneyTypeValue_: ', ddlMoneyTypeValue_)
-                                    // console.log('ddlPackageMoneyTypeValue_: ', ddlPackageMoneyTypeValue_)
-                                    data_all.coin_unfit_10 = tbAmountValue_
-                                    data_all.unit_coin_unfit_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_coin_unfit_10 = tbQuantity_
-                                    break;
-                                default:
-                                    data_all.note_unfit_10 = tbAmountValue_
-                                    data_all.unit_note_unfit_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_note_unfit_10 = tbQuantity_
-                            }
-                            break;
-                        case '5':
-                            data_all.coin_unfit_5 = tbAmountValue_
-                            data_all.unit_coin_unfit_5 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_5 = tbQuantity_
-                            break;
-                        case '2':
-                            data_all.coin_unfit_2 = tbAmountValue_
-                            data_all.unit_coin_unfit_2 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_2 = tbQuantity_
-                            break;
-                        case '1':
-                            data_all.coin_unfit_1 = tbAmountValue_
-                            data_all.unit_coin_unfit_1 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_1 = tbQuantity_
-                            break;
-                        case '0.5':
-                            data_all.coin_unfit_05 = tbAmountValue_
-                            data_all.unit_coin_unfit_05 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_05 = tbQuantity_
-                            break;
-                        case '0.25':
-                            data_all.coin_unfit_025 = tbAmountValue_
-                            data_all.unit_coin_unfit_025 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_025 = tbQuantity_
-                            break;
-                        default:
-                            console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-                    }
-                    break;//---end Unsort
-                default:
-                    console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-            }//switch (ddlQualityMoneyTypeValue_) {
-        }
-        //------------------------------
-    }
-    data_all.tbGrandTotalAmount = tbGrandTotalAmount
-    // console.log('data_all final')
-    // console.log(data_all)
-    dboperations.add_manual_order(data_all).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
-            res.json(result[0])
-        }
-    })
+
 })
 app.post('/set_manual_update_vrf_det_trans', urlencodedParser, (req, res) => {
     let data_ = req.body
@@ -2087,7 +1805,7 @@ app.post('/set_manual_update_vrf_det_trans', urlencodedParser, (req, res) => {
         obj = x
     }
     console.log('obj.length: ', obj.length)
-    let obj_json = JSON.parse(obj)    
+    let obj_json = JSON.parse(obj)
 
     dboperations.set_manual_update_vrf_det_trans(obj_json).then((result, err) => {
         if (err) {
@@ -2095,10 +1813,10 @@ app.post('/set_manual_update_vrf_det_trans', urlencodedParser, (req, res) => {
             res.json({ error: err })
         }
         else {
-             res.json(result[0])
+            res.json(result[0])
         }
     })
- 
+
 })
 app.post('/set_manual_update_vrf_det', urlencodedParser, (req, res) => {
     let data_ = req.body
@@ -2107,7 +1825,7 @@ app.post('/set_manual_update_vrf_det', urlencodedParser, (req, res) => {
         obj = x
     }
     console.log('obj.length: ', obj.length)
-    let obj_json = JSON.parse(obj)    
+    let obj_json = JSON.parse(obj)
 
     dboperations.set_manual_update_vrf_det(obj_json).then((result, err) => {
         if (err) {
@@ -2115,10 +1833,10 @@ app.post('/set_manual_update_vrf_det', urlencodedParser, (req, res) => {
             res.json({ error: err })
         }
         else {
-             res.json(result[0])
+            res.json(result[0])
         }
     })
- 
+
 })
 app.post('/set_manual_update_vrf', urlencodedParser, (req, res) => {
     let data_ = req.body
@@ -2126,367 +1844,19 @@ app.post('/set_manual_update_vrf', urlencodedParser, (req, res) => {
     for (let x in data_) {
         obj = x
     }
-    let obj_json = JSON.parse(obj)    
+    let obj_json = JSON.parse(obj)
     dboperations.set_manual_update_vrf(obj_json).then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
         }
         else {
-             res.json(result[0])
-        }
-    })
- 
-})
-app.post('/edit_order', urlencodedParser, (req, res) => {
-    let data_ = req.body
-    let obj = null
-    for (let x in data_) {
-        obj = x
-    }
-    let obj_json = JSON.parse(obj)
-    let data_all = {
-        'orderId': obj_json['orderId'],
-        'customerID': obj_json['CustomerID'],
-        'order_category': obj_json['OrderCategory'],
-        'servicetype': obj_json['OrderType'],
-        'refno': obj_json['RefNo'],
-        'order_date': obj_json['JobDate'],
-        'branchorigin_name': obj_json['BranchOrigin'],
-        'branchorigin_code': obj_json['BranchOrigin_code'],
-        'branchdest_name': obj_json['BranchDest'],
-        'branchdest_code': obj_json['BranchDest_code'],
-        'remark': obj_json['RemarkNew'],
-        'user_id': obj_json['user_id'],
-    }
-    let AllRowsDet = parseInt(obj_json['AllRowsDet'])
-    // console.log('AllRowsDet: ' + AllRowsDet)
-    let tbGrandTotalAmount = 0
-    for (var index = 1; index <= AllRowsDet; index++) {
-        //------------------------------------   
-        if (obj_json['ddlMoneyType' + index]) {
-            let ddlMoneyTypeValue_ = obj_json['ddlMoneyType' + index]//ชนิดราคา
-            let ddlQualityMoneyTypeValue_ = obj_json['ddlQualityMoneyType' + index]//คุณภาพเงิน
-            let ddlPackageMoneyTypeValue_ = obj_json['ddlPackageMoneyType' + index]//หน่วย
-            let tbQuantity_ = obj_json['tbQuantity' + index].replaceAll(',', '')//จำนวน tbQuantity
-            let tbAmountValue_ = obj_json['tbAmount' + index].replaceAll(',', '')//ยอดรวม
-            // console.log('tbAmountValue_: ', tbAmountValue_)
-            tbAmountValue_ = parseFloat(tbAmountValue_)
-            tbGrandTotalAmount += tbAmountValue_
-            // coin_unfit_10
-            // console.log('index: ', index)
-            // console.log('ชนิดราคา: ddlMoneyTypeValue_: ', obj_json['ddlMoneyType' + index])//ชนิดราคา
-            // console.log('คุณภาพเงิน: ddlQualityMoneyTypeValue_: ', obj_json['ddlQualityMoneyType' + index])//คุณภาพเงิน
-            // console.log('หน่วย: ddlPackageMoneyTypeValue_: ', obj_json['ddlPackageMoneyType' + index])//หน่วย
-            // console.log('จำนวน: tbQuantity: ', obj_json['tbQuantity' + index])//จำนวน
-            // console.log('ยอดรวม: tbAmountValue_: ', obj_json['tbAmount' + index].replaceAll(',', ''))//จำนวน
-            //------------------------------ 
-            switch (ddlQualityMoneyTypeValue_) {
-                case 'New':
-                    switch (ddlMoneyTypeValue_) {
-                        case '1000':
-                            data_all.note_new_1000 = tbAmountValue_
-                            data_all.unit_note_new_1000 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_new_1000 = tbQuantity_
-                            // console.log(data_all)
-                            break;
-                        case '500':
-                            data_all.note_new_500 = tbAmountValue_
-                            data_all.unit_note_new_500 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_new_500 = tbQuantity_
-                            break;
-                        case '100':
-                            data_all.note_new_100 = tbAmountValue_
-                            data_all.unit_note_new_100 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_new_100 = tbQuantity_
-                            break;
-                        case '20':
-                            data_all.note_new_20 = tbAmountValue_
-                            data_all.unit_note_new_20 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_new_20 = tbQuantity_
-                            break;
-                        case '10':
-                            switch (ddlPackageMoneyTypeValue_) {
-                                case 'Coin':
-                                    data_all.coin_new_10 = tbAmountValue_
-                                    data_all.unit_coin_new_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_coin_new_10 = tbQuantity_
-                                    break;
-                                default:
-                                    data_all.note_new_10 = tbAmountValue_
-                                    data_all.unit_note_new_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_note_new_10 = tbQuantity_
-                            }
-                            break;
-                        case '5':
-                            data_all.coin_new_5 = tbAmountValue_
-                            data_all.unit_coin_new_5 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_5 = tbQuantity_
-                            break;
-                        case '2':
-                            data_all.coin_new_2 = tbAmountValue_
-                            data_all.unit_coin_new_2 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_2 = tbQuantity_
-                            break;
-                        case '1':
-                            data_all.coin_new_1 = tbAmountValue_
-                            data_all.unit_coin_new_1 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_1 = tbQuantity_
-                            break;
-                        case '0.5':
-                            data_all.coin_new_05 = tbAmountValue_
-                            data_all.unit_coin_new_05 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_05 = tbQuantity_
-                            break;
-                        case '0.25':
-                            data_all.coin_new_025 = tbAmountValue_
-                            data_all.unit_coin_new_025 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_new_025 = tbQuantity_
-                            break;
-                        default:
-                            console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-                    }
-                    break;//---end New
-                case 'Fit':
-                    switch (ddlMoneyTypeValue_) {
-                        case '1000':
-                            data_all.note_fit_1000 = tbAmountValue_
-                            data_all.unit_note_fit_1000 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_fit_1000 = tbQuantity_
-                            break;
-                        case '500':
-                            data_all.note_fit_500 = tbAmountValue_
-                            data_all.unit_note_fit_500 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_fit_500 = tbQuantity_
-                            break;
-                        case '100':
-                            data_all.note_fit_100 = tbAmountValue_
-                            data_all.unit_note_fit_100 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_fit_100 = tbQuantity_
-                            break;
-                        case '20':
-                            data_all.note_fit_20 = tbAmountValue_
-                            data_all.unit_note_fit_20 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_fit_20 = tbQuantity_
-                            break;
-                        case '10':
-                            switch (ddlPackageMoneyTypeValue_) {
-                                case 'Coin':
-                                    data_all.coin_fit_10 = tbAmountValue_
-                                    data_all.unit_coin_fit_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_coin_fit_10 = tbQuantity_
-                                    break;
-                                default:
-                                    data_all.note_fit_10 = tbAmountValue_
-                                    data_all.unit_note_fit_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_note_fit_10 = tbQuantity_
-                            }
-                            break;
-                        case '5':
-                            data_all.coin_fit_5 = tbAmountValue_
-                            data_all.unit_coin_fit_5 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_5 = tbQuantity_
-                            break;
-                        case '2':
-                            data_all.coin_fit_2 = tbAmountValue_
-                            data_all.unit_coin_fit_2 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_2 = tbQuantity_
-                            break;
-                        case '1':
-                            data_all.coin_fit_1 = tbAmountValue_
-                            data_all.unit_coin_fit_1 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_1 = tbQuantity_
-                            break;
-                        case '0.5':
-                            data_all.coin_fit_05 = tbAmountValue_
-                            data_all.unit_coin_fit_05 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_05 = tbQuantity_
-                            break;
-                        case '0.25':
-                            data_all.coin_fit_025 = tbAmountValue_
-                            data_all.unit_coin_fit_025 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_fit_025 = tbQuantity_
-                            break;
-                        default:
-                            console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-                    }
-                    break;//---end Good
-                case 'Uncount':
-                    switch (ddlMoneyTypeValue_) {
-                        case '1000':
-                            data_all.note_uncount_1000 = tbAmountValue_
-                            data_all.unit_note_uncount_1000 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_uncount_1000 = tbQuantity_
-                            break;
-                        case '500':
-                            data_all.note_uncount_500 = tbAmountValue_
-                            data_all.unit_note_uncount_500 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_uncount_500 = tbQuantity_
-                            break;
-                        case '100':
-                            data_all.note_uncount_100 = tbAmountValue_
-                            data_all.unit_note_uncount_100 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_uncount_100 = tbQuantity_
-                            break;
-                        case '20':
-                            data_all.note_uncount_20 = tbAmountValue_
-                            data_all.unit_note_uncount_20 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_uncount_20 = tbQuantity_
-                            break;
-                        case '10':
-                            switch (ddlPackageMoneyTypeValue_) {
-                                case 'Coin':
-                                    data_all.coin_uncount_10 = tbAmountValue_
-                                    data_all.unit_coin_uncount_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_coin_uncount_10 = tbQuantity_
-                                    break;
-                                default:
-                                    data_all.note_uncount_10 = tbAmountValue_
-                                    data_all.unit_note_uncount_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_note_uncount_10 = tbQuantity_
-                            }
-                            break;
-                        case '5':
-                            data_all.coin_uncount_5 = tbAmountValue_
-                            data_all.unit_coin_uncount_5 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_5 = tbQuantity_
-                            break;
-                        case '2':
-                            data_all.coin_uncount_2 = tbAmountValue_
-                            data_all.unit_coin_uncount_2 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_2 = tbQuantity_
-                            break;
-                        case '1':
-                            data_all.coin_uncount_1 = tbAmountValue_
-                            data_all.unit_coin_uncount_1 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_1 = tbQuantity_
-                            break;
-                        case '0.5':
-                            data_all.coin_uncount_05 = tbAmountValue_
-                            data_all.unit_coin_uncount_05 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_05 = tbQuantity_
-                            break;
-                        case '0.25':
-                            data_all.coin_uncount_025 = tbAmountValue_
-                            data_all.unit_coin_uncount_025 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_uncount_025 = tbQuantity_
-                            break;
-                        default:
-                            console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-                    }
-                    break;//-
-                case 'Unfit':
-                    switch (ddlMoneyTypeValue_) {
-                        case '1000':
-                            data_all.note_unfit_1000 = tbAmountValue_
-                            data_all.unit_note_unfit_1000 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_unfit_1000 = tbQuantity_
-                            break;
-                        case '500':
-                            data_all.note_unfit_500 = tbAmountValue_
-                            data_all.unit_note_unfit_500 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_unfit_500 = tbQuantity_
-                            break;
-                        case '100':
-                            data_all.note_unfit_100 = tbAmountValue_
-                            data_all.unit_note_unfit_100 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_unfit_100 = tbQuantity_
-                            // console.log('data_all.pcs_note_unfit_100')
-                            // console.log(data_all)
-                            break;
-                        case '20':
-                            data_all.note_unfit_20 = tbAmountValue_
-                            data_all.unit_note_unfit_20 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_note_unfit_20 = tbQuantity_
-                            break;
-                        case '10':
-                            switch (ddlPackageMoneyTypeValue_) {
-                                case 'Coin':
-                                    // console.log('------------------------------------------')
-                                    // console.log('ddlQualityMoneyTypeValue_: ', ddlQualityMoneyTypeValue_)
-                                    // console.log('ddlMoneyTypeValue_: ', ddlMoneyTypeValue_)
-                                    // console.log('ddlPackageMoneyTypeValue_: ', ddlPackageMoneyTypeValue_)
-                                    data_all.coin_unfit_10 = tbAmountValue_
-                                    data_all.unit_coin_unfit_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_coin_unfit_10 = tbQuantity_
-                                    break;
-                                default:
-                                    data_all.note_unfit_10 = tbAmountValue_
-                                    data_all.unit_note_unfit_10 = ddlPackageMoneyTypeValue_
-                                    data_all.pcs_note_unfit_10 = tbQuantity_
-                            }
-                            break;
-                        case '5':
-                            data_all.coin_unfit_5 = tbAmountValue_
-                            data_all.unit_coin_unfit_5 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_5 = tbQuantity_
-                            break;
-                        case '2':
-                            data_all.coin_unfit_2 = tbAmountValue_
-                            data_all.unit_coin_unfit_2 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_2 = tbQuantity_
-                            break;
-                        case '1':
-                            data_all.coin_unfit_1 = tbAmountValue_
-                            data_all.unit_coin_unfit_1 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_1 = tbQuantity_
-                            break;
-                        case '0.5':
-                            data_all.coin_unfit_05 = tbAmountValue_
-                            data_all.unit_coin_unfit_05 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_05 = tbQuantity_
-                            break;
-                        case '0.25':
-                            data_all.coin_unfit_025 = tbAmountValue_
-                            data_all.unit_coin_unfit_025 = ddlPackageMoneyTypeValue_
-                            data_all.pcs_coin_unfit_025 = tbQuantity_
-                            break;
-                        default:
-                            console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-                    }
-                    break;//---end Unsort
-                default:
-                    console.log(`Sorry, we are out of ${ddlQualityMoneyTypeValue_}.`);
-            }//switch (ddlQualityMoneyTypeValue_) {
-        }
-        //------------------------------
-    }
-    data_all.tbGrandTotalAmount = tbGrandTotalAmount
-    console.log('edit_order ')
-    console.log('data_all final: ', data_all)
-    // console.log(data_all)
-    dboperations.update_order(data_all).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
             res.json(result[0])
         }
     })
-})
-app.post('/edit_approveproc', urlencodedParser, (req, res) => {
-    let data_ = req.body
-    let obj = null
-    for (let x in data_) {
-        obj = x
-    }
-    let obj_json = JSON.parse(obj)
-    let AllRowsDet = parseInt(obj_json['AllRowsDet'])
-    console.log('obj_json: ', obj_json)
-    console.log('data_all AllRowsDet: ', AllRowsDet)
-    // console.log(data_all)
 
-    dboperations.update_approveproc(obj_json).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
-            res.json(result[0])
-        }
-    })
 })
+
 app.get('/get_templete_vrf', urlencodedParser, (req, res) => {
     //console.log('/getcashorder req.query[Id] :', req.query['Id'])
     dboperations.get_templete_vrf(req.query['Id']).then((result, err) => {
@@ -2512,10 +1882,9 @@ app.get('/get_vrf', urlencodedParser, (req, res) => {
     })
 })
 app.get('/get_vrf_file/:name', (req, res) => {
-  const file = path.resolve(__dirname, 'uploads', req.params.name);
-  res.sendFile(file);
-});  
-
+    const file = path.resolve(__dirname, 'uploads', req.params.name);
+    res.sendFile(file);
+});
 app.get('/get_vrf_det', urlencodedParser, (req, res) => {
     //console.log('/getcashorder req.query[Id] :', req.query['Id'])
     dboperations.get_vrf_det(req.query['Id']).then((result, err) => {
@@ -2540,31 +1909,16 @@ app.get('/get_templete_vrf_det', urlencodedParser, (req, res) => {
         }
     })
 })
-
-app.get('/getcashorder', urlencodedParser, (req, res) => {
-    //let data_ = req.query    
-    // let Id = req.query['Id'] 
-    console.log('/getcashorder req.query[Id] :', req.query['Id'])
-    dboperations.getCashOrder(req.query['Id']).then((result, err) => {
-        if (err) {
-            console.log('error: ', err)
-            res.json({ error: err })
-        }
-        else {
-            res.json(result[0])
-        }
-    })
-})
-
 app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
-    console.log('update_vrfstatus_all req.query[Id]:', req.query['Id'])
-    console.log('update_vrfstatus_all req.query[Id].length:', req.query['Id'].length)
-    console.log('update_vrfstatus_all req.query[Type_]:', req.query['Type_'])
     let output = null
+    let type_ = req.query['Type_']
     req.query['Id'].forEach((item) => {
-        // console.log(item)
-        console.log('update_vrf_trans_status_all in array Id: ', parseInt(item))
-        dboperations.update_vrf_trans_status(parseInt(item), req.query['Type_'], req.query['user_id']).then((result, err) => {
+        dboperations.update_vrf_trans_status(parseInt(item)
+            , req.query['Type_']
+            , req.query['user_id']
+            , req.query['role_id']
+            , req.query['work_flow_id']
+        ).then((result, err) => {
             if (err) {
                 console.log('error: ', err)
             }
@@ -2573,34 +1927,35 @@ app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
                 output = result[0]
             }
         })
-        dboperations.get_upload_filename( parseInt(item) ).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
-            }
-            else {
-                console.log('result[0]: ', result[0][0].attach_file )   
-
-                if ( (result[0][0].attach_file !== '') 
-                && (result[0][0].attach_file !== null) 
-                && (result[0][0].attach_file !== undefined) 
-                && (result[0][0].attach_file !== 'undefined')            
-                )
-                {   
-                    // ใช้ fs.stat
-                    fs.stat('./uploads/'+result[0][0].attach_file, (err, stats) => {
-                    if (err) {
-                        console.log(`ไม่พบไฟล์: ${result[0][0].attach_file}`);
-                    } else {
-                        fs.unlink('./uploads/'+result[0][0].attach_file, (err) => {
-                            if (err) throw err;
-                            console.log(result[0][0].attach_file+' ถูกลบแล้ว');
-                          });
-                    }
-                    });
+        if (type_ === 'cancel') {
+            dboperations.get_upload_filename(parseInt(item)).then((result, err) => {
+                if (err) {
+                    console.log('error: ', err)
                 }
-                output = result[0]
-            }
-        })
+                else {
+                    console.log('result[0]: ', result[0][0].attach_file)
+                    if ((result[0][0].attach_file !== '')
+                        && (result[0][0].attach_file !== null)
+                        && (result[0][0].attach_file !== undefined)
+                        && (result[0][0].attach_file !== 'undefined')
+                    ) {
+                        // ใช้ fs.stat
+                        fs.stat('./uploads/' + result[0][0].attach_file, (err, stats) => {
+                            if (err) {
+                                console.log(`ไม่พบไฟล์: ${result[0][0].attach_file}`);
+                            } else {
+                                fs.unlink('./uploads/' + result[0][0].attach_file, (err) => {
+                                    if (err) throw err;
+                                    console.log(result[0][0].attach_file + ' ถูกลบแล้ว');
+                                });
+                            }
+                        });
+                    }
+                    output = result[0]
+                }
+            })
+        }
+
     })
     res.json(output)
 })
@@ -2632,39 +1987,157 @@ app.get('/update_vrfstatus_all', urlencodedParser, (req, res) => {
     //     }
     // })
 })
-app.get('/update_vrf_trans_status', urlencodedParser, (req, res) => {
-    // console.log(req.query['Id'])
-    // console.log(req.query['Type_'])
-    let attach_file_primitive = req.query['attach_file_primitive']
-    dboperations.update_vrf_trans_status(req.query['Id']
-    , req.query['Type_']
-    , req.query['user_id']
-    , req.query['attach_file_primitive']).then((result, err) => {
+app.get('/update_vrf_trans_approve_status', urlencodedParser, (req, res) => {
+    console.log('/update_vrf_trans_approve_status req.query[Id]:', req.query['Id']
+        , 'req.query[department_id]:', req.query['department_id']
+        , 'req.query[branch_id]:', req.query['branch_id']
+        , 'req.query[division_id]:', req.query['division_id']
+    )
+    dboperations.update_vrf_trans_approve_status(req.query['Id']
+        , req.query['Type_']
+        , req.query['user_id']
+        , req.query['role_id']
+        , req.query['work_flow_id']
+        , req.query['department_id']
+        , req.query['branch_id']
+        , req.query['division_id'] 
+    ).then(async (result, err) => {
         if (err) {
             console.log('error: ', err)
         }
-        else {
-            if ( (attach_file_primitive !== '') 
-            && (attach_file_primitive !== null) 
-            && (attach_file_primitive !== undefined) 
-            && (attach_file_primitive !== 'undefined')            
-            )
-            {   
-                // ใช้ fs.stat
-                fs.stat('./uploads/'+attach_file_primitive, (err, stats) => {
-                if (err) {
-                    console.log(`ไม่พบไฟล์: ${attach_file_primitive}`);
-                } else {
-                    fs.unlink('./uploads/'+attach_file_primitive, (err) => {
-                        if (err) throw err;
-                        console.log(attach_file_primitive+' ถูกลบแล้ว');
-                      });
-                }
-                });
+        else { 
+            if( (req.query['role_id'] !=='3') && (req.query['role_id'] !=='8') ) { 
+                let result_sendmail = await setSendMail_next_approver(req.query['Id'])
+                console.log('setSendMail_next_approver result_sendmail: ', result_sendmail)
             }
             res.json(result[0])
         }
     })
+})
+const setSendMail_next_approver = async (id) => {
+
+    try {
+        let result = await dboperations.get_mail_info_next_approve(id)
+        let output = result[0]
+        console.log(' output[0].email_next_approver: ', output[0].email_next_approver)
+        let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC`
+        let body = `วันที่: ${output[0].CreateDate}<br>
+        พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
+        ผู้ร้องขอ: ${output[0].requestor}<br>
+        ตำแหน่งผู้ร้องขอ: ${output[0].position}<br>
+        กดลิงค์ด้านล่างเพื่อ อนุมัติ หรือ ปฏิเสธ<br><br>
+        (<a href="http://localhost:443/approvevrflst">link</a>)`;
+        let transporter = nodemailer.createTransport({
+            host: process.env.smtp_server,
+            port: process.env.smtp_server_port,
+            secure: false,
+            auth: {
+                user: process.env.mail_user_sender,
+                pass: process.env.mail_pass_sender,
+            },
+            connectionTimeout: 3000000 // New timeout duration
+        });
+        let mailOptions
+        if (output[0].attach_file === '' || output[0].attach_file === null) {
+            mailOptions = {
+                from: `VRF <${process.env.mail_user_sender}>`,
+                to: output[0].email_next_approver,
+                subject,
+                html: body
+            };
+
+        }
+        else {
+            mailOptions = {
+                from: `VRF <${process.env.mail_user_sender}>`,
+                to: output[0].email_next_approver,
+                subject,
+                html: body, // use html instead of text
+                attachments: [
+                    {
+                        // Path is now relative to your current directory
+                        path: `./uploads/${output[0].attach_file}`
+                    }
+                ]
+            };
+        }
+        return new Promise((resolve, reject) => {
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    console.log(error);
+                    reject(error);
+                } else {
+                    console.log('Email sent: ' + info.response);
+                    resolve(true);
+                }
+            });
+        });
+        // transporter.sendMail(mailOptions, function (error, info) {
+        //     if (error) {
+        //         console.log(error);
+        //     } else {
+        //         console.log('Email sent: ' + info.response);
+        //         return true
+        //     }
+        // });
+
+        // res.send("Email sent");            
+        //console.log('set_sendmail output: ', output[0].reason)
+        // res.json(result)
+
+    }
+    catch (err) {
+        console.log('error: ', err);
+    }
+
+
+}
+app.get('/set_sp_update_vrf_checkinount', urlencodedParser, (req, res) => {
+
+    dboperations.set_sp_update_vrf_checkinount(req.query['Id']
+        , req.query['Type_']
+        , req.query['user_id']
+        , req.query['comment']
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+        }
+        else {
+
+            res.json(result[0])
+        }
+    })
+})
+app.get('/update_vrf_trans_status', urlencodedParser, (req, res) => {
+    let attach_file_primitive = req.query['attach_file_primitive']
+    dboperations.update_vrf_trans_status(req.query['Id']
+        , req.query['Type_']
+        , req.query['user_id']
+        , req.query['attach_file_primitive']).then((result, err) => {
+            if (err) {
+                console.log('error: ', err)
+            }
+            else {
+                if ((attach_file_primitive !== '')
+                    && (attach_file_primitive !== null)
+                    && (attach_file_primitive !== undefined)
+                    && (attach_file_primitive !== 'undefined')
+                ) {
+                    // ใช้ fs.stat
+                    fs.stat('./uploads/' + attach_file_primitive, (err, stats) => {
+                        if (err) {
+                            console.log(`ไม่พบไฟล์: ${attach_file_primitive}`);
+                        } else {
+                            fs.unlink('./uploads/' + attach_file_primitive, (err) => {
+                                if (err) throw err;
+                                console.log(attach_file_primitive + ' ถูกลบแล้ว');
+                            });
+                        }
+                    });
+                }
+                res.json(result[0])
+            }
+        })
 })
 app.get('/update_vrfstatus', urlencodedParser, (req, res) => {
     // console.log(req.query['Id'])
@@ -2697,4 +2170,3 @@ app.get('/delete_app_proc_det', urlencodedParser, (req, res) => {
     })
 })
 app.listen(process.env.PORT, () => console.log(`running on localhost:${process.env.PORT}`))
-

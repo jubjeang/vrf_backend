@@ -2,6 +2,35 @@ var config = require("../server/dbconfig");
 const sql = require("mssql");
 const moment = require('moment-timezone');
 
+async function set_reject_vrf(vrf_id_for_reject,reject_reason,RejectBy) {
+  try {
+    let pool = await sql.connect(config);
+    let spSet_reject_vrf = await pool
+      .request()
+      .input("vrf_id_for_reject", sql.Int, vrf_id_for_reject)
+      .input("reject_reason", sql.NVarChar, reject_reason)
+      .input("RejectBy", sql.NVarChar, RejectBy)
+      .execute("spSet_reject_vrf");
+    return spSet_reject_vrf.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_complete_word(search,type) {
+  try {
+    let pool = await sql.connect(config);
+    let spGet_complete_word = await pool
+      .request()
+      .input("search", sql.NVarChar, search)
+      .input("type", sql.NVarChar, type)
+      .execute("spGet_complete_word");
+    return spGet_complete_word.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_meeting_area(user_id) {
   try {
     let pool = await sql.connect(config);
@@ -23,6 +52,20 @@ async function get_navigator(user_id) {
       .input("user_id", sql.Int, user_id)
       .execute("spGetNavigator");
     return spGetNavigator.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_dept_by_branch(division_id, branch_id) {
+  try {
+    let pool = await sql.connect(config);
+    let spGetDept_By_Branch = await pool
+      .request()
+      .input("division_id", sql.Int, division_id)
+      .input("branch_id", sql.Int, branch_id)
+      .execute("spGetDept_By_Branch");
+    return spGetDept_By_Branch.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -56,8 +99,23 @@ async function get_position() {
     return [{ error: error }];
   }
 }
+async function get_user_by_branch(branch_id) {
+  try { 
+    console.log("get_user_by_branch branch_id",branch_id);
+    let pool = await sql.connect(config);
+    let spGetUser_by_branch = await pool
+      .request()
+      .input("branch_id", sql.Int, branch_id)
+      .execute("spGetUser_by_branch");
+    return spGetUser_by_branch.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_user(department_id) {
-  try {
+  try { 
+    
     let pool = await sql.connect(config);
     let spGetUser = await pool
       .request()
@@ -120,30 +178,7 @@ async function get_vehicle_brand() {
     return [{ error: error }];
   }
 }
-async function getOrder_status(
-  user_id,
-  customerID,
-  orderId,
-  activity_type,
-  service_type
-) {
-  //service_type:Deposit,Withdraw
-  try {
-    let pool = await sql.connect(config);
-    let spGetOrder_status = await pool
-      .request()
-      .input("user_id", sql.Int, user_id)
-      .input("customerID", sql.NVarChar, customerID)
-      .input("orderId", sql.Int, orderId)
-      .input("activity_type", sql.NVarChar, activity_type)
-      .input("service_type", sql.NVarChar, service_type)
-      .execute("spGetOrder_status");
-    return spGetOrder_status.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
+
 async function get_permission_access(user_id, user_role_id, user_role) {
   try {
     let pool = await sql.connect(config);
@@ -211,49 +246,6 @@ async function getuserEdit(userID, customerID) {
     return [{ error: error }];
   }
 }
-async function get_pbi_url(pagename, CustomerID, user_id) {
-  try {
-    let pool = await sql.connect(config);
-    let spGet_pbi_url = await pool
-      .request()
-      .input("CustomerID", sql.NVarChar, CustomerID)
-      .input("pagename", sql.NVarChar, pagename)
-      .input("user_id", sql.Int, user_id)
-      .execute("spGet_pbi_url");
-    // .query("SELECT top 1 pbi_url from T_Graph_Info where CustomerID = @CustomerID and pagename = @pagename and [Status]='1' ");
-    return spGet_pbi_url.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getBankTypeData(userID) {
-  try {
-    let pool = await sql.connect(config);
-    let spBankType = await pool
-      .request()
-      .input("userID", sql.Int, userID)
-      .execute("spBankType");
-    return spBankType.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getCCT_Data(CustomerID, user_id) {
-  try {
-    let pool = await sql.connect(config);
-    let spGetCCT_Data = await pool
-      .request()
-      .input("CustomerID", sql.NVarChar, CustomerID)
-      .input("user_id", sql.Int, user_id)
-      .execute("spGetCCT_Data");
-    return spGetCCT_Data.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
 async function getDownloadLink(userID) {
   try {
     let pool = await sql.connect(config);
@@ -267,51 +259,7 @@ async function getDownloadLink(userID) {
     return [{ error: error }];
   }
 }
-//------------branch data
-async function getBranchData(CustomerID, user_id) {
-  try {
-    let pool = await sql.connect(config);
-    let spBranchData = await pool
-      .request()
-      .input("CustomerID", sql.NVarChar, CustomerID)
-      .input("user_id", sql.Int, user_id)
-      .execute("spBranchData");
-    return spBranchData.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getCashCenterBOT(CustomerID, user_id) {
-  try {
-    let pool = await sql.connect(config);
-    let spCashCenterData = await pool
-      .request()
-      // let CustomerID_ = CustomerID
-      // CustomerID_ = '1493f524-c52e-4c06-aee8-8ef962929242'
-      .input("CustomerID", sql.NVarChar, CustomerID)
-      .input("user_id", sql.Int, user_id)
-      .execute("spCashCenterData");
-    return spCashCenterData.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getCashCenterData(CustomerID, user_id) {
-  try {
-    let pool = await sql.connect(config);
-    let spCashCenterData = await pool
-      .request()
-      .input("CustomerID", sql.NVarChar, CustomerID)
-      .input("user_id", sql.Int, user_id)
-      .execute("spCashCenterData");
-    return spCashCenterData.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
+
 async function getactivity_authen(approve_setting_id, approve_setting_version) {
   try {
     let output = null;
@@ -349,50 +297,6 @@ async function getActitySelectd(user_id, CustomerID) {
     //output = output[0]
     console.log("output: ", output);
     return output;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getBOT_Branch(user_id, CustomerID) {
-  try {
-    console.log("getBOT_Branch user_id :", user_id);
-    console.log("getBOT_Branch CustomerID :", CustomerID);
-    let pool = await sql.connect(config);
-    let spBOT_Branch = await pool
-      .request()
-      .input("CustomerID", sql.NVarChar, CustomerID)
-      .input("user_id", sql.Int, user_id)
-      .execute("spBOT_Branch");
-    return spBOT_Branch.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getBranchForCash(CustomerID, CCT, user_id) {
-  try {
-    let pool = await sql.connect(config);
-    let spBranchForCash = await pool
-      .request()
-      .input("CustomerID", sql.NVarChar, CustomerID)
-      .input("CCT", sql.NVarChar, CCT)
-      .input("user_id", sql.Int, user_id)
-      .execute("spBranchForCash");
-    return spBranchForCash.recordsets;
-    // let pool = await sql.connect(config);
-    // let sql_=""
-    // sql_="select * from [dbo].[T_Branch] where gfc_cct='"+CCT
-    // sql_ +="' and CustomerID='"+CustomerID+"' "
-    // sql_ +=" and branch_status=0"
-    // console.log('sql_: ',sql_)
-    // console.log('user_id: ',user_id)
-    // console.log('CustomerID: ',CustomerID)
-    // let T_Branch = await pool.request()
-    // .input('user_id', sql.NVarChar, user_id)
-    // .input('customerID', sql.NVarChar, CustomerID)
-    // .query( sql_ );
-    //return T_Branch.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -523,8 +427,7 @@ async function get_templete_vrf_list(
   branch_id
 ) 
 { 
-  console.log('/dboperations.get_templete_vrf_list department_id: ', department_id
-        , 'branch_id: ', branch_id )  
+
   try {
     let pool = await sql.connect(config);
     
@@ -540,13 +443,58 @@ async function get_templete_vrf_list(
     return [{ error: error }];
   }
 }
+async function get_vrf_lst_for_security(
+  department_id,
+  branch_id,
+  role_id,
+  division_id
+) 
+{ 
+  try {
+    let pool = await sql.connect(config);    
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let spGet_vrf_lst_for_security = await pool
+      .request()
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)  
+      .input("role_id", sql.Int, role_id)   
+      .input("division_id", sql.Int, division_id) 
+      .execute("spGet_vrf_lst_for_security");
+    return spGet_vrf_lst_for_security.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_vrf_approve_list(
+  department_id,
+  branch_id,
+  role_id,
+  division_id
+) 
+{ 
+  try {
+    let pool = await sql.connect(config);    
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let spGet_vrf_approve_list = await pool
+      .request()
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)  
+      .input("role_id", sql.Int, role_id)   
+      .input("division_id", sql.Int, division_id) 
+      .execute("spGet_vrf_approve_list");
+    return spGet_vrf_approve_list.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_vrf_list(
   department_id,
   branch_id
 ) 
 { 
-  console.log('/dboperations.get_templete_vrf_list department_id: ', department_id
-        , 'branch_id: ', branch_id )  
+  
   try {
     let pool = await sql.connect(config);    
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
@@ -556,184 +504,6 @@ async function get_vrf_list(
       .input("branch_id", sql.Int, branch_id)      
       .execute("spGet_vrf_list");
     return spGet_vrf_list.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getOrdersList(
-  RoleId,
-  CustomerID,
-  user_id,
-  approve_setting_id,
-  approve_setting_version
-) {
-  try {
-    let pool = await sql.connect(config);
-    console.log(
-      "getOrdersList RoleId: ",
-      RoleId,
-      "CustomerID: ",
-      CustomerID,
-      "user_id: ",
-      user_id,
-      "approve_setting_id: ",
-      approve_setting_id,
-      "approve_setting_version: ",
-      approve_setting_version
-    );
-    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
-    let spOrderlist = await pool
-      .request()
-      .input("customerID_", sql.NVarChar, CustomerID)
-      .input("RoleId_", sql.Int, RoleId)
-      .input("user_id", sql.Int, user_id)
-      .input("approve_setting_id", sql.Int, approve_setting_id)
-      .input("approve_setting_version", sql.Float, approve_setting_version)
-      .execute("spOrderlist");
-    return spOrderlist.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getApproveNList(
-  RoleId,
-  CustomerID,
-  user_id,
-  approve_setting_id,
-  approve_setting_version
-) {
-  console.log(
-    "getApproveList RoleId: ",
-    RoleId,
-    "CustomerID: ",
-    CustomerID,
-    "user_id: ",
-    user_id,
-    "approve_setting_id: ",
-    approve_setting_id,
-    "approve_setting_version: ",
-    approve_setting_version
-  );
-  try {
-    let pool = await sql.connect(config);
-    let spApproveNlist = await pool
-      .request()
-      .input("customerID_", sql.NVarChar, CustomerID)
-      .input("RoleId_", sql.Int, RoleId)
-      .input("user_id", sql.Int, user_id)
-      .input("approve_setting_id", sql.Int, approve_setting_id)
-      .input("approve_setting_version", sql.Float, approve_setting_version)
-      .execute("spApproveNlist");
-    return spApproveNlist.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getApproveList(
-  RoleId,
-  CustomerID,
-  user_id,
-  approve_setting_id,
-  approve_setting_version
-) {
-  console.log(
-    "getApproveList RoleId: ",
-    RoleId,
-    "CustomerID: ",
-    CustomerID,
-    "user_id: ",
-    user_id,
-    "approve_setting_id: ",
-    approve_setting_id,
-    "approve_setting_version: ",
-    approve_setting_version
-  );
-  try {
-    let pool = await sql.connect(config);
-    let spApprovelist = await pool
-      .request()
-      .input("customerID_", sql.NVarChar, CustomerID)
-      .input("RoleId_", sql.Int, RoleId)
-      .input("user_id", sql.Int, user_id)
-      .input("approve_setting_id", sql.Int, approve_setting_id)
-      .input("approve_setting_version", sql.Float, approve_setting_version)
-      .execute("spApprovelist");
-    return spApprovelist.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getApproveProcList(user_id) {
-  try {
-    let pool = await sql.connect(config);
-    let spApproveProclist = await pool
-      .request()
-      .input("user_id", sql.NVarChar, user_id)
-      .execute("spApproveProclist");
-    // .query("select * from vOrdersList where cashstatus=@cashstatus and customerID=@customerID  order by AutoID desc");
-    return spApproveProclist.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function get_approveProcData(Id) {
-  try {
-    let pool = await sql.connect(config);
-    let spApproveProcData = await pool
-      .request()
-      .input("Id", sql.NVarChar, Id)
-      .execute("spApproveProcData");
-    return spApproveProcData.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function set_cancel_approve_proc_data(Id) {
-  console.log("set_cancel_approve_proc_data Id: ", Id);
-  try {
-    let pool = await sql.connect(config);
-    let spUpdate_ApproveProcStatus = await pool
-      .request()
-      .input("Id_", sql.NVarChar, Id)
-      .execute("spUpdate_ApproveProcStatus");
-    return spUpdate_ApproveProcStatus.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function get_approveProcDataDet(Id, version) {
-  try {
-    let pool = await sql.connect(config);
-    let spApproveProcDataDet = await pool
-      .request()
-      .input("approve_setting_id", sql.NVarChar, Id)
-      .input("version", sql.Float, version)
-      .execute("spApproveProcDataDet");
-    console.log("Id: ", Id);
-    console.log("version: ", version);
-    return spApproveProcDataDet.recordsets;
-  } catch (error) {
-    console.log("error: ", error);
-    return [{ error: error }];
-  }
-}
-async function getOrder(orderId) {
-  try {
-    let pool = await sql.connect(config);
-    let product = await pool
-      .request()
-      .input("input_parameter", sql.Int, orderId)
-      .query(
-        "SELECT * from T_CCT_Monthly_Branch where AutoId = @input_parameter"
-      );
-    return product.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -773,6 +543,38 @@ async function get_vrf(Id) {
       .input("id", sql.Int, Id)      
       .execute("sp_Get_vrf_by_selected");
     return sp_Get_vrf_by_selected.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_mail_info_next_approve(Id) {
+  try {
+    let pool = await sql.connect(config);
+    let spGet_mail_info_next_approve = await pool
+      .request()
+      .input("id", sql.Int, Id)        
+      .execute("spGet_mail_info_next_approve");
+    return spGet_mail_info_next_approve.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_mail_vrf_info(Id
+  ,department_id
+  ,branch_id
+  ,division_id) {
+  try {
+    let pool = await sql.connect(config);
+    let spGet_mail_vrf_info = await pool
+      .request()
+      .input("id", sql.Int, Id)   
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)
+      .input("division_id", sql.Int, division_id)   
+      .execute("spGet_mail_vrf_info");
+    return spGet_mail_vrf_info.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -2758,7 +2560,11 @@ async function update_vrfstatus(Id, Type_, user_id) {
     console.log(err); 
   }
 }
-async function update_vrf_trans_status(Id, Type_, user_id) {
+async function update_vrf_trans_status(Id
+  , Type_
+  , user_id
+  , role_id
+  , work_flow_id) {
   try {
     let pool = await sql.connect(config);
     let update_vrf_trans_status = await pool
@@ -2766,8 +2572,56 @@ async function update_vrf_trans_status(Id, Type_, user_id) {
       .input("Id_", sql.Int, Id)
       .input("Type_", sql.NVarChar, Type_)
       .input("user_id", sql.NVarChar, user_id)
+      .input("role_id", sql.Int, role_id)
+      .input("work_flow_id", sql.Int, work_flow_id)
       .execute("spUpdate_vrf_trans_status");
     return update_vrf_trans_status.recordsets;
+  } catch (err) {
+    console.log(err); 
+  }
+}
+async function set_sp_update_vrf_checkinount(Id, Type_, user_id,comment) {
+  console.log('Id: ',Id,'Type: ', Type_,'user_id: ', user_id,'comment: '
+  ,comment)
+  try { 
+    let pool = await sql.connect(config);
+    let sp_update_vrf_checkinount = await pool
+      .request()
+      .input("Id_", sql.Int, Id)
+      .input("Type_", sql.NVarChar, Type_)
+      .input("user_id", sql.Int, user_id)
+      .input("comment", sql.NVarChar, comment)
+      .execute("sp_update_vrf_checkinount");
+    return sp_update_vrf_checkinount.recordsets;
+  } catch (err) {
+    console.log(err); 
+  }
+}
+
+async function update_vrf_trans_approve_status(Id, Type_
+  , user_id
+  ,role_id
+  ,work_flow_id
+  ,department_id
+  ,branch_id
+  ,division_id
+  ) {
+  console.log('update_vrf_trans_approve_status Id: ',Id,'Type: ', Type_,'user_id: ', user_id,'role_id: '
+  ,role_id,'work_flow_id',work_flow_id)
+  try { 
+    let pool = await sql.connect(config);
+    let sp_update_vrf_trans_approve_status = await pool
+      .request()
+      .input("Id_", sql.Int, Id)
+      .input("Type_", sql.NVarChar, Type_)
+      .input("user_id", sql.Int, user_id)
+      .input("role_id", sql.Int, role_id)
+      .input("work_flow_id", sql.Int, work_flow_id)
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)
+      .input("division_id", sql.Int, division_id)
+      .execute("sp_update_vrf_trans_approve_status");
+    return sp_update_vrf_trans_approve_status.recordsets;
   } catch (err) {
     console.log(err); 
   }
@@ -2785,6 +2639,16 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_mail_info_next_approve: get_mail_info_next_approve,
+  set_sp_update_vrf_checkinount: set_sp_update_vrf_checkinount,
+  get_vrf_lst_for_security: get_vrf_lst_for_security,
+  get_dept_by_branch: get_dept_by_branch,
+  get_user_by_branch: get_user_by_branch,
+  set_reject_vrf: set_reject_vrf,
+  get_mail_vrf_info:get_mail_vrf_info,
+  get_vrf_approve_list: get_vrf_approve_list,
+  update_vrf_trans_approve_status: update_vrf_trans_approve_status,
+  get_complete_word: get_complete_word,
   get_templete_det:get_templete_det,
   get_templete: get_templete,
   get_search_vrf_trans: get_search_vrf_trans,
@@ -2812,36 +2676,19 @@ module.exports = {
   get_user: get_user,
   get_vehicle_color: get_vehicle_color,
   get_vehicle_brand: get_vehicle_brand,
-  getOrder_status: getOrder_status,
   get_permission_access: get_permission_access,
-  set_cancel_approve_proc_data: set_cancel_approve_proc_data,
-  getApproveNList: getApproveNList,
   getactivity_authen: getactivity_authen,
   getActitySelectd: getActitySelectd,
-  getOrdersList: getOrdersList,
   getuserEdit: getuserEdit,
   delete_app_proc_det: delete_app_proc_det,
-  getOrder: getOrder,
-  getBranchData: getBranchData,
-  getCashCenterData: getCashCenterData,
   add_manual_order: add_manual_order,
   getuserinfo: getuserinfo,
   getCashOrder: getCashOrder,
   update_vrfstatus: update_vrfstatus,
   update_order: update_order,
-  get_pbi_url: get_pbi_url,
-  getApproveList: getApproveList,
-  getApproveProcList: getApproveProcList,
-  getBankTypeData: getBankTypeData,
   getDownloadLink: getDownloadLink,
-  getBOT_Branch: getBOT_Branch,
-  getBranchForCash: getBranchForCash,
-  getCashCenterBOT: getCashCenterBOT,
-  getCCT_Data: getCCT_Data,
   getRole: getRole,
   getUser: getUser,
   add_approveProc: add_approveProc,
-  get_approveProcData: get_approveProcData,
-  get_approveProcDataDet: get_approveProcDataDet,
   update_approveproc: update_approveproc,
 };
