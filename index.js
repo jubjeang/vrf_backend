@@ -1314,8 +1314,18 @@ app.get('/set_sendmail', urlencodedParser, (req, res) => {
                 //`<div style="text-align: right;">${value}</div>`
                 output = result[0]
                 console.log(' output[0].email: ', output[0].email)
+                let tbDateF_;
+                let formattedtbDateF;
+                let tbDateT_;
+                let formattedtbDateT;
+
+                tbDateF_ = moment.tz(output[0].datefrom, 'Asia/Bangkok');
+                formattedtbDateF = tbDateF_.format('DD-MM-YYYY');
+                tbDateT_ = moment.tz(output[0].dateto, 'Asia/Bangkok');
+                formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
+
                 let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC`
-                let body = `วันที่: ${output[0].CreateDate}<br>
+                let body = `วันที่: ${tbDateF_} - ${tbDateT_}<br>
             พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
             ผู้ร้องขอ: ${output[0].requestor}<br>
             ตำแหน่งผู้ร้องขอ: ${output[0].position}<br>
@@ -1507,7 +1517,15 @@ app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
         }
     })
 })
-app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
+app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => { 
+    console.log('/get_search_vrf_trans req.query[tbDateF]: ', req.query['tbDateF']
+    , 'req.query[tbDateT]: ', req.query['tbDateT']
+    , 'req.query[requestor_id]: ', req.query['requestor_id']
+    , 'req.query[area_id]: ', req.query['area_id']
+    , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']
+    , 'req.query[department_id]: ', req.query['department_id']
+    , 'req.query[branch_id]: ', req.query['branch_id']
+    )
 
     dboperations.get_search_vrf_trans(
         req.query['tbDateF']
@@ -1524,7 +1542,7 @@ app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
         }
         else {
             console.log('result: ', result)
-            res.json(result[0])
+            res.json(result)
         }
     })
 })
@@ -2020,8 +2038,19 @@ const setSendMail_next_approver = async (id) => {
         let result = await dboperations.get_mail_info_next_approve(id)
         let output = result[0]
         console.log(' output[0].email_next_approver: ', output[0].email_next_approver)
+
+        let tbDateF_;
+        let formattedtbDateF;
+        let tbDateT_;
+        let formattedtbDateT;
+
+        tbDateF_ = moment.tz(output[0].datefrom, 'Asia/Bangkok');
+        formattedtbDateF = tbDateF_.format('DD-MM-YYYY');
+        tbDateT_ = moment.tz(output[0].dateto, 'Asia/Bangkok');
+        formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
+
         let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC`
-        let body = `วันที่: ${output[0].CreateDate}<br>
+        let body = `วันที่: ${tbDateF_} - ${tbDateT_}<br>
         พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
         ผู้ร้องขอ: ${output[0].requestor}<br>
         ตำแหน่งผู้ร้องขอ: ${output[0].position}<br>
