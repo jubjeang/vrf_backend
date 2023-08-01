@@ -14,11 +14,20 @@ var config = require('./server/dbconfig');
 const sql = require('mssql');
 const cors = require('cors')
 const ActiveDirectory = require('activedirectory2');
-var bodyParser = require('body-parser');
+const { format } = require('date-fns')
+// var bodyParser = require('body-parser');
 const nodemailer = require("nodemailer");
+const ExcelJS = require('exceljs');
 require('dotenv').config()
-app.use(cors())
-// const ldap = require('ldapjs');
+app.use(cors({
+    origin: process.env.CLIENT_URL,//'http://localhost:84', // replace with your Vue app domain
+    credentials: true
+}));
+
+// app.use(cors())
+
+
+
 const setordernumber = (value) => {
     const now = new Date()
     const day = ('0' + now.getDate()).slice(-2)
@@ -846,6 +855,50 @@ app.get('/ordertrackinglist', (req, res) => {
 // create application/x-www-form-urlencoded parser
 var bodyParser = require('body-parser');
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
+app.post('/downloadExcel',bodyParser.json(), async (req, res) => {
+    try {
+    
+      const data = req.body; // ข้อมูลที่ส่งมาจาก frontend
+      console.log('req.body: ',req.body)
+  
+      let workbook = new ExcelJS.Workbook();
+      let worksheet = workbook.addWorksheet('Sheet 1');
+  
+      worksheet.columns = [
+        { header: 'No', key: 'no' },
+        { header: 'ชื่อผู้มาติดต่อ', key: 'contactor' },        
+        { header: 'วันที่เริ่มเข้า', key: 'date_from' },
+        { header: 'วันที่สุดท้ายที่เข้า', key: 'date_to' },
+        { header: 'พื้นที่ที่เข้าพบ', key: 'meeting_area' },
+        { header: 'เหตุผลที่เข้าพบ', key: 'reason' },
+        { header: 'ผู้นำพา', key: 'navigator' },
+        { header: 'สถานะการขอเข้าพื้นที่', key: 'approve_status' },
+        // ใส่คีย์อื่น ๆ ที่ตรงกับข้อมูลของคุณที่นี่...
+      ];
+  
+      data.forEach(item => {
+        item.date_from = format(new Date(item.date_from), 'dd-MM-yyyy')
+        item.date_to = format(new Date(item.date_to), 'dd-MM-yyyy')
+        worksheet.addRow(item);
+      });
+  
+      res.setHeader(
+        'Content-Type',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      );
+      res.setHeader(
+        'Content-Disposition',
+        'attachment; filename=' + 'report.xlsx',
+      );
+  
+      await workbook.xlsx.write(res);
+      res.end();
+    } catch (error) {
+        console.log('error: ',error);
+      res.status(500).send(error);
+    }
+});
+
 app.get('/get_complete_word', urlencodedParser, (req, res) => {
    
     dboperations.get_complete_word(req.query['search'], req.query['type']).then((result, err) => {
@@ -1446,6 +1499,22 @@ app.get('/getuserEdit', urlencodedParser, (req, res) => {
         }
     })
 })
+app.get('/get_user_list', urlencodedParser, (req, res) => {
+    // console.log('/get_vrf_list department_id: ', req.query['department_id']
+    //     , 'branch_id: ', req.query['branch_id'])
+    dboperations.get_user_list(
+        req.query['department_id']
+        , req.query['branch_id']
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
 app.get('/get_vrf_list', urlencodedParser, (req, res) => {
     // console.log('/get_vrf_list department_id: ', req.query['department_id']
     //     , 'branch_id: ', req.query['branch_id'])
@@ -1500,7 +1569,6 @@ app.get('/get_vrf_approve_list', urlencodedParser, (req, res) => {
         }
     })
 })
-app.ge
 app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
     console.log('/get_templete_vrf_list department_id: ', req.query['department_id']
         , 'branch_id: ', req.query['branch_id'])
@@ -1526,7 +1594,6 @@ app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
     , 'req.query[department_id]: ', req.query['department_id']
     , 'req.query[branch_id]: ', req.query['branch_id']
     )
-
     dboperations.get_search_vrf_trans(
         req.query['tbDateF']
         , req.query['tbDateT']
@@ -1535,6 +1602,7 @@ app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
         , req.query['requestor_dept_id']
         , req.query['department_id']
         , req.query['branch_id']
+        , req.query['checkin_status']
     ).then((result, err) => {
         if (err) {
             console.log('error: ', err)
@@ -1555,7 +1623,8 @@ app.get('/get_search_vrf', urlencodedParser, (req, res) => {
         , req.query['area_id']
         , req.query['requestor_dept_id']
         , req.query['department_id']
-        , req.query['branch_id']
+        , req.query['branch_id']        
+        , req.query['checkin_status']
     ).then((result, err) => {
         if (err) {
             console.log('error: ', err)
@@ -1563,11 +1632,10 @@ app.get('/get_search_vrf', urlencodedParser, (req, res) => {
         }
         else {
             console.log('result: ', result)
-            res.json(result[0])
+            res.json(result)
         }
     })
 })
-
 // app.get('/getcctbranch', urlencodedParser, (req, res) => {  
 //     dboperations.getCashCenterData( req.query['CustomerID']  ).then((result, err) => {
 //         if (err) {
@@ -1824,8 +1892,7 @@ app.post('/set_manual_update_vrf_det_trans', urlencodedParser, (req, res) => {
     }
     console.log('obj.length: ', obj.length)
     let obj_json = JSON.parse(obj)
-
-    dboperations.set_manual_update_vrf_det_trans(obj_json).then((result, err) => {
+    dboperations.set_manual_update_vrf_det_trans(obj_json).then((result, err) => {     
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })

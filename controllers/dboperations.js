@@ -308,57 +308,162 @@ async function get_search_vrf(
   area_id,
   requestor_dept_id,
   department_id,
-  branch_id
+  branch_id,
+  checkin_status
 ) {
-
   let tbDateF_;
   let formattedtbDateF;
   let tbDateT_;
   let formattedtbDateT;
-  if ((tbDateF !== null && tbDateT !== null) && (tbDateF !== undefined && tbDateT !== undefined) && (tbDateF !== '' && tbDateT !== '')) {
+  if (
+    (tbDateF !== undefined && tbDateF !== '' && tbDateF !== null) &&
+    (tbDateT !== undefined && tbDateT !== '' && tbDateT !== null)
+  ) {
     tbDateF_ = moment.tz(tbDateF, 'Asia/Bangkok');
     formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
     tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
     formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
-  }
-  else {
+  } else {
     tbDateF_ = '';
     formattedtbDateF = '';
     tbDateT_ = '';
     formattedtbDateT = '';
   }
-
-  let requestor_id_ = (requestor_id !== undefined && requestor_id !== '' && requestor_id !== null) ? parseInt(requestor_id) : null
-  let area_id_ = (area_id !== undefined && area_id !== '' && area_id !== null) ? parseInt(area_id) : null
-  let requestor_dept_id_ = (requestor_dept_id !== undefined && requestor_dept_id !== '' && requestor_dept_id !== null) ? parseInt(requestor_dept_id) : null
-
-  console.log('/get_search_vrf formattedtbDateF: ', formattedtbDateF
-    , 'formattedtbDateT: ', formattedtbDateT
-    , 'requestor_id_: ', requestor_id_
-    , 'area_id_: ', area_id_
-    , 'requestor_dept_id_: ', requestor_dept_id_
-    , 'department_id: ', department_id
-    , 'branch_id: ', branch_id)
+  let checkin_status_ =
+    checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
+      ? parseInt(checkin_status)
+      : null;
+  let requestor_id_ =
+    requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
+      ? parseInt(requestor_id)
+      : null;
+  let area_id_ =
+    area_id !== undefined && area_id !== '' && area_id !== null && !isNaN(area_id)
+      ? parseInt(area_id)
+      : null;
+  let requestor_dept_id_ =
+    requestor_dept_id !== undefined &&
+      requestor_dept_id !== '' &&
+      requestor_dept_id !== null &&
+      !isNaN(requestor_dept_id)
+      ? parseInt(requestor_dept_id)
+      : null;
   try {
     let pool = await sql.connect(config);
 
-    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
-    let spGet_search_vrf = await pool
-      .request()
-      .input("department_id", sql.Int, department_id)
-      .input("branch_id", sql.Int, branch_id)
-      .input("tbDateF", sql.VarChar, formattedtbDateF)
-      .input("tbDateT", sql.VarChar, formattedtbDateT)
-      .input("requestor_id", sql.Int, requestor_id_)
-      .input("area_id", sql.Int, area_id_)
-      .input("requestor_dept_id", sql.Int, requestor_dept_id_)
-      .execute("spGet_search_vrf");
-    return spGet_search_vrf.recordsets;
+    let queryString = `select ROW_NUMBER() OVER(ORDER BY vrpt.[id] DESC) AS [no],* from vVRF_Report_template vrpt WHERE vrpt.[Status] = '1' `;
+    let dateF = new Date(formattedtbDateF);
+    let dateT = new Date(formattedtbDateT);
+
+    let formattedDateF = `${dateF.getFullYear()}-${String(dateF.getMonth() + 1).padStart(2, '0')}-${String(dateF.getDate()).padStart(2, '0')}`;
+    let formattedDateT = `${dateT.getFullYear()}-${String(dateT.getMonth() + 1).padStart(2, '0')}-${String(dateT.getDate()).padStart(2, '0')}`;
+
+    requestor_id_
+      ? (queryString += `AND vrpt.requestor_dept = ${requestor_id_} AND vrpt.branch_id = ${branch_id} `)
+      : (queryString += `AND vrpt.branch_id = ${branch_id} `);
+    // formattedtbDateF || formattedtbDateT
+    //   ? (queryString += `AND vrpt.id IN (
+    //     SELECT DISTINCT id
+    //     FROM vVRF_trans_master_det
+    //     WHERE (
+    //       CAST(CreateDate AS DATE) BETWEEN
+    //         (CASE WHEN '${formattedtbDateF}' IS NULL THEN CAST(date_from AS DATE) ELSE CAST('${formattedtbDateF}' AS DATE) END)
+    //         AND (CASE WHEN '${formattedtbDateT}' IS NULL THEN CAST(date_to AS DATE) ELSE CAST('${formattedtbDateT}' AS DATE) END)
+    //     ) `)
+    //   : (queryString += '');
+    queryString += formattedtbDateF && formattedtbDateT
+    ? `AND vrpt.id IN (
+      SELECT DISTINCT vrf_id
+      FROM vVRF_Template_trans_master_det
+      WHERE (
+        CAST(date_from AS DATE) >= CAST('${formattedDateF}' AS DATE) AND CAST(date_to AS DATE) <= CAST('${formattedDateT}' AS DATE)
+      )`
+    : '';
+    requestor_id_
+      ? (queryString += `AND (${requestor_id_} IS NULL OR vrpt.requestor = ${requestor_id_}) `)
+      : (queryString += '');
+    area_id_
+      ? (queryString += `AND (${area_id_} IS NULL OR vrpt.area_id = ${area_id_}) `)
+      : (queryString += '');
+    requestor_dept_id_
+      ? (queryString += `AND (${requestor_dept_id_} IS NULL OR vrpt.requestor_dept = ${requestor_dept_id_}) `)
+      : (queryString += '');
+    if (checkin_status_) {
+      checkin_status_ === 1 ? (queryString += `AND ( vrpt.checkin_by is not null ) `) : null;
+      checkin_status_ === 2 ? (queryString += `AND ( vrpt.checkin_by is null ) `) : null;
+    }
+
+    formattedtbDateF && formattedtbDateT
+      ? (queryString += `)`)
+      : (queryString += '');
+    console.log('queryString: ', queryString);
+
+    let result = await pool.request().query(queryString);
+    return result.recordset;
   } catch (error) {
-    console.log("error: ", error);
+    console.log('error: ', error);
     return [{ error: error }];
   }
+
 }
+// async function get_search_vrf(
+//   tbDateF,
+//   tbDateT,
+//   requestor_id,
+//   area_id,
+//   requestor_dept_id,
+//   department_id,
+//   branch_id
+// ) {
+
+//   let tbDateF_;
+//   let formattedtbDateF;
+//   let tbDateT_;
+//   let formattedtbDateT;
+//   if ((tbDateF !== null && tbDateT !== null) && (tbDateF !== undefined && tbDateT !== undefined) && (tbDateF !== '' && tbDateT !== '')) {
+//     tbDateF_ = moment.tz(tbDateF, 'Asia/Bangkok');
+//     formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
+//     tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
+//     formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
+//   }
+//   else {
+//     tbDateF_ = '';
+//     formattedtbDateF = '';
+//     tbDateT_ = '';
+//     formattedtbDateT = '';
+//   }
+
+//   let requestor_id_ = (requestor_id !== undefined && requestor_id !== '' && requestor_id !== null) ? parseInt(requestor_id) : null
+//   let area_id_ = (area_id !== undefined && area_id !== '' && area_id !== null) ? parseInt(area_id) : null
+//   let requestor_dept_id_ = (requestor_dept_id !== undefined && requestor_dept_id !== '' && requestor_dept_id !== null) ? parseInt(requestor_dept_id) : null
+
+//   console.log('/get_search_vrf formattedtbDateF: ', formattedtbDateF
+//     , 'formattedtbDateT: ', formattedtbDateT
+//     , 'requestor_id_: ', requestor_id_
+//     , 'area_id_: ', area_id_
+//     , 'requestor_dept_id_: ', requestor_dept_id_
+//     , 'department_id: ', department_id
+//     , 'branch_id: ', branch_id)
+//   try {
+//     let pool = await sql.connect(config);
+
+    
+//     let spGet_search_vrf = await pool
+//       .request()
+//       .input("department_id", sql.Int, department_id)
+//       .input("branch_id", sql.Int, branch_id)
+//       .input("tbDateF", sql.VarChar, formattedtbDateF)
+//       .input("tbDateT", sql.VarChar, formattedtbDateT)
+//       .input("requestor_id", sql.Int, requestor_id_)
+//       .input("area_id", sql.Int, area_id_)
+//       .input("requestor_dept_id", sql.Int, requestor_dept_id_)
+//       .execute("spGet_search_vrf");
+//     return spGet_search_vrf.recordsets;
+//   } catch (error) {
+//     console.log("error: ", error);
+//     return [{ error: error }];
+//   }
+// }
 // async function get_search_vrf_trans(
 //   tbDateF,
 //   tbDateT,
@@ -431,7 +536,8 @@ async function get_search_vrf_trans(
   area_id,
   requestor_dept_id,
   department_id,
-  branch_id
+  branch_id,
+  checkin_status
 ) {
   let tbDateF_;
   let formattedtbDateF;
@@ -451,7 +557,10 @@ async function get_search_vrf_trans(
     tbDateT_ = '';
     formattedtbDateT = '';
   }
-
+  let checkin_status_ =
+    checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
+      ? parseInt(checkin_status)
+      : null;
   let requestor_id_ =
     requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
       ? parseInt(requestor_id)
@@ -470,32 +579,49 @@ async function get_search_vrf_trans(
   try {
     let pool = await sql.connect(config);
 
-    let queryString = `select * from vVRF_Report`;
+    let queryString = `select ROW_NUMBER() OVER(ORDER BY vrpt.[id] DESC) AS [no],* from vVRF_Report vrpt WHERE vrpt.[Status] = '1' `;
+    let dateF = new Date(formattedtbDateF);
+    let dateT = new Date(formattedtbDateT);
+
+    let formattedDateF = `${dateF.getFullYear()}-${String(dateF.getMonth() + 1).padStart(2, '0')}-${String(dateF.getDate()).padStart(2, '0')}`;
+    let formattedDateT = `${dateT.getFullYear()}-${String(dateT.getMonth() + 1).padStart(2, '0')}-${String(dateT.getDate()).padStart(2, '0')}`;
 
     requestor_id_
-      ? (queryString += `AND vf.requestor_dept = ${requestor_id_} AND us.branch_id = ${branch_id} `)
-      : (queryString += `AND us.branch_id = ${branch_id} `);
-    formattedtbDateF || formattedtbDateT
-      ? (queryString += `AND vf.id IN (
-        SELECT DISTINCT id
-        FROM vVRF_trans_master_det
-        WHERE (
-          CAST(CreateDate AS DATE) BETWEEN
-            (CASE WHEN '${formattedtbDateF}' IS NULL THEN CAST(CreateDate AS DATE) ELSE CAST('${formattedtbDateF}' AS DATE) END)
-            AND (CASE WHEN '${formattedtbDateT}' IS NULL THEN CAST(CreateDate AS DATE) ELSE CAST('${formattedtbDateT}' AS DATE) END)
-        ) `)
-      : (queryString += '');
+      ? (queryString += `AND vrpt.requestor_dept = ${requestor_id_} AND vrpt.branch_id = ${branch_id} `)
+      : (queryString += `AND vrpt.branch_id = ${branch_id} `);
+    // formattedtbDateF || formattedtbDateT
+    //   ? (queryString += `AND vrpt.id IN (
+    //     SELECT DISTINCT id
+    //     FROM vVRF_trans_master_det
+    //     WHERE (
+    //       CAST(CreateDate AS DATE) BETWEEN
+    //         (CASE WHEN '${formattedtbDateF}' IS NULL THEN CAST(date_from AS DATE) ELSE CAST('${formattedtbDateF}' AS DATE) END)
+    //         AND (CASE WHEN '${formattedtbDateT}' IS NULL THEN CAST(date_to AS DATE) ELSE CAST('${formattedtbDateT}' AS DATE) END)
+    //     ) `)
+    //   : (queryString += '');
+    queryString += formattedtbDateF && formattedtbDateT
+    ? `AND vrpt.id IN (
+      SELECT DISTINCT vrf_id
+      FROM vVRF_trans_master_det
+      WHERE (
+        CAST(date_from AS DATE) >= CAST('${formattedDateF}' AS DATE) AND CAST(date_to AS DATE) <= CAST('${formattedDateT}' AS DATE)
+      )`
+    : '';
     requestor_id_
-      ? (queryString += `AND (${requestor_id_} IS NULL OR requestor = ${requestor_id_}) `)
+      ? (queryString += `AND (${requestor_id_} IS NULL OR vrpt.requestor = ${requestor_id_}) `)
       : (queryString += '');
     area_id_
-      ? (queryString += `AND (${area_id_} IS NULL OR area = ${area_id_}) `)
+      ? (queryString += `AND (${area_id_} IS NULL OR vrpt.area_id = ${area_id_}) `)
       : (queryString += '');
     requestor_dept_id_
-      ? (queryString += `AND (${requestor_dept_id_} IS NULL OR requestor_dept = ${requestor_dept_id_}) `)
+      ? (queryString += `AND (${requestor_dept_id_} IS NULL OR vrpt.requestor_dept = ${requestor_dept_id_}) `)
       : (queryString += '');
+    if (checkin_status_) {
+      checkin_status_ === 1 ? (queryString += `AND ( vrpt.checkin_by is not null ) `) : null;
+      checkin_status_ === 2 ? (queryString += `AND ( vrpt.checkin_by is null ) `) : null;
+    }
 
-    formattedtbDateF || formattedtbDateT
+    formattedtbDateF && formattedtbDateT
       ? (queryString += `)`)
       : (queryString += '');
     console.log('queryString: ', queryString);
@@ -567,6 +693,25 @@ async function get_vrf_approve_list(
       .input("division_id", sql.Int, division_id)
       .execute("spGet_vrf_approve_list");
     return spGet_vrf_approve_list.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_user_list(
+  department_id,
+  branch_id
+) {
+
+  try {
+    let pool = await sql.connect(config);
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let spGet_vrf_list = await pool
+      .request()
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)
+      .execute("spGet_vrf_list");
+    return spGet_vrf_list.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -1618,23 +1763,31 @@ async function set_manual_update_vrf_det_trans(obj_json) {
   try {
     console.log('obj_json: ', obj_json)
     console.log('obj_json.length: ', Object.keys(obj_json).length)
-    for (let index in obj_json) {
-      let pool = await sql.connect(config);
-      let sp_set_manual_update_vrf_trans_det = await pool
+    let pool = await sql.connect(config);
+    let sp_set_deactive_vrf_trans_det = await pool
         .request()
-        .input("id", sql.Int, obj_json[index].id)
+        .input("vrf_id", sql.Int, obj_json[0].vrf_id)        
+        .input("ModifyBy", sql.Int, obj_json[0].user_id)
+        .execute("sp_set_deactive_vrf_trans_det");
+    let output_ = sp_set_deactive_vrf_trans_det.recordsets;
+
+    for (let index in obj_json) { 
+      console.log('set_manual_update_vrf_det_trans obj_json[index].vrf_id: ', obj_json[index].vrf_id)
+      let pool = await sql.connect(config);
+      let spAdd_vrf_det = await pool       
+        .request()
+        .input("vrf_id", sql.Int, obj_json[index].vrf_id)
         .input("date_from", sql.DateTime, obj_json[index].date_from)
         .input("date_to", sql.DateTime, obj_json[index].date_to)
-        .input("fullname", sql.NVarChar, obj_json[index].fullname)
+        .input("fullname", sql.NVarChar, obj_json[index].fullname)        
         .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
         .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
         .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
         .input("card_no", sql.NVarChar, obj_json[index].card_no)
-        .input("ModifyBy", sql.Int, obj_json[index].user_id)
-        .execute("sp_set_manual_update_vrf_trans_det");
-      let output_ = sp_set_manual_update_vrf_trans_det.recordsets;
+        .input("createby", sql.NVarChar, obj_json[index].user_id)
+        .execute("spAdd_vrf_det");
+      let output = spAdd_vrf_det.recordsets;
     }
-    //retu
     return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
   } catch (err) {
     console.log(err);
@@ -1701,21 +1854,44 @@ async function set_manual_update_vrf_det(obj_json) {
   try {
     console.log('obj_json: ', obj_json)
     console.log('obj_json.length: ', Object.keys(obj_json).length)
-    for (let index in obj_json) {
-      let pool = await sql.connect(config);
-      let sp_set_manual_update_vrf_det = await pool
+    let pool = await sql.connect(config);
+    let sp_set_deactive_vrf_det = await pool
         .request()
-        .input("id", sql.Int, obj_json[index].id)
-        .input("date_from", sql.DateTime, obj_json[index].date_from)
-        .input("date_to", sql.DateTime, obj_json[index].date_to)
-        .input("fullname", sql.NVarChar, obj_json[index].fullname)
-        .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
-        .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
-        .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
-        .input("card_no", sql.NVarChar, obj_json[index].card_no)
-        .input("ModifyBy", sql.Int, obj_json[index].user_id)
-        .execute("sp_set_manual_update_vrf_det");
-      let output_ = sp_set_manual_update_vrf_det.recordsets;
+        .input("vrf_id", sql.Int, obj_json[0].vrf_id)        
+        .input("ModifyBy", sql.Int, obj_json[0].user_id)
+        .execute("sp_set_deactive_vrf_det");
+    let output_ = sp_set_deactive_vrf_det.recordsets;
+
+    for (let index in obj_json) { 
+      console.log('set_manual_update_vrf_det obj_json[index].vrf_id: ', obj_json[index].vrf_id)
+      let pool = await sql.connect(config);
+      let spAdd_vrf_template_det = await pool
+          .request()
+          .input("vrf_id", sql.Int, obj_json[index].vrf_id)
+          .input("date_from", sql.DateTime, obj_json[index].date_from)
+          .input("date_to", sql.DateTime, obj_json[index].date_to)
+          .input("fullname", sql.NVarChar, obj_json[index].fullname)
+          .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
+          .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
+          .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
+          .input("card_no", sql.NVarChar, obj_json[index].card_no)
+          .input("createby", sql.NVarChar, obj_json[index].user_id)
+          .execute("spAdd_vrf_template_det");
+      let output = spAdd_vrf_template_det.recordsets;
+      // let pool = await sql.connect(config);
+      // let sp_set_manual_update_vrf_det = await pool
+      //   .request()
+      //   .input("id", sql.Int, obj_json[index].id)
+      //   .input("date_from", sql.DateTime, obj_json[index].date_from)
+      //   .input("date_to", sql.DateTime, obj_json[index].date_to)
+      //   .input("fullname", sql.NVarChar, obj_json[index].fullname)
+      //   .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
+      //   .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
+      //   .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
+      //   .input("card_no", sql.NVarChar, obj_json[index].card_no)
+      //   .input("ModifyBy", sql.Int, obj_json[index].user_id)
+      //   .execute("sp_set_manual_update_vrf_det");
+      // let output_ = sp_set_manual_update_vrf_det.recordsets;
     }
     //retu
     return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
@@ -2720,7 +2896,8 @@ async function get_upload_filename(Id, Type_, user_id) {
     console.log(err);
   }
 }
-module.exports = {
+module.exports = { 
+  get_user_list: get_user_list,
   get_mail_info_next_approve: get_mail_info_next_approve,
   set_sp_update_vrf_checkinount: set_sp_update_vrf_checkinount,
   get_vrf_lst_for_security: get_vrf_lst_for_security,
