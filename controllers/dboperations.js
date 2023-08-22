@@ -71,6 +71,62 @@ async function get_dept_by_branch(division_id, branch_id) {
     return [{ error: error }];
   }
 }
+async function get_dept_all() {
+  try {
+    let pool = await sql.connect(config);
+    let spGetDept_all = await pool
+      .request()
+      // .input("division_id", sql.Int, division_id)
+      // .input("branch_id", sql.Int, branch_id)
+      .execute("spGetDept_all");
+    return spGetDept_all.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_division_all() {
+  try {
+    let pool = await sql.connect(config);
+    let spGetDivision_all = await pool
+      .request()
+      // .input("division_id", sql.Int, division_id)
+      // .input("branch_id", sql.Int, branch_id)
+      .execute("spGetDivision_all");
+    return spGetDivision_all.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_branch_all() {
+  try {
+    let pool = await sql.connect(config);
+    let spGetBranch_all = await pool
+      .request()
+      // .input("division_id", sql.Int, division_id)
+      // .input("branch_id", sql.Int, branch_id)
+      .execute("spGetBranch_all");
+    return spGetBranch_all.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_role_all() {
+  try {
+    let pool = await sql.connect(config);
+    let spGetRole_all = await pool
+      .request()
+      // .input("division_id", sql.Int, division_id)
+      // .input("branch_id", sql.Int, branch_id)
+      .execute("spGetRole_all");
+    return spGetRole_all.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_dept(division_id, branch_id) {
   try {
     let pool = await sql.connect(config);
@@ -633,6 +689,42 @@ async function get_search_vrf_trans(
     return [{ error: error }];
   }
 }
+async function get_search_user_vrf(
+  user_id,
+  first_name,
+  last_name,
+  username,
+  employee_id,
+  email,
+  position_id,
+  department_id,
+  branch_id,
+  role_id,
+  division_id
+) {
+  try {
+    let pool = await sql.connect(config);
+
+    let queryString = `select ROW_NUMBER() OVER(ORDER BY uvf.[user_id] desc) AS [no], * from vUserVRF uvf WHERE uvf.[Status] = '1' `;
+    first_name ? (queryString += ` AND uvf.first_name like '%${first_name.trim()}%' `) : (queryString += ``);
+    last_name ? (queryString += ` and uvf.last_name like '%${last_name.trim()}%' `) : (queryString += ``);
+    username ? (queryString += ` and uvf.username like '%${username.trim()}%' `) : (queryString += ``);
+    employee_id ? (queryString += ` and uvf.employee_id = ${employee_id} `) : (queryString += ``);
+    email ? (queryString += ` and uvf.email like '%${email.trim()}%' `) : (queryString += ``);
+    position_id ? (queryString += ` and uvf.position_id = ${position_id} `) : (queryString += ``);
+    department_id ? (queryString += ` and uvf.department_id = ${department_id} `) : (queryString += ``);
+    branch_id ? (queryString += ` and uvf.branch_id = ${branch_id} `) : (queryString += ``);
+    role_id ? (queryString += ` and uvf.role_id = ${role_id} `) : (queryString += ``);
+    division_id ? (queryString += ` and uvf.division_id = ${division_id}  `) : (queryString += ``);    
+    queryString += ` order by uvf.[USER_ID] desc `;    
+    console.log('queryString: ', queryString);
+    let result = await pool.request().query(queryString);
+    return result.recordset;
+  } catch (error) {
+    console.log('error: ', error);
+    return [{ error: error }];
+  }
+}
 
 async function get_templete_vrf_list(
   department_id,
@@ -699,19 +791,18 @@ async function get_vrf_approve_list(
   }
 }
 async function get_user_list(
-  department_id,
-  branch_id
+  // department_id,
+  // branch_id
 ) {
 
   try {
     let pool = await sql.connect(config);
-    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
-    let spGet_vrf_list = await pool
+    let sp_UserLst = await pool 
       .request()
-      .input("department_id", sql.Int, department_id)
-      .input("branch_id", sql.Int, branch_id)
-      .execute("spGet_vrf_list");
-    return spGet_vrf_list.recordsets;
+      // .input("department_id", sql.Int, department_id)
+      // .input("branch_id", sql.Int, branch_id)
+      .execute("sp_UserLst");
+    return sp_UserLst.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -770,6 +861,19 @@ async function get_vrf(Id) {
       .input("id", sql.Int, Id)
       .execute("sp_Get_vrf_by_selected");
     return sp_Get_vrf_by_selected.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_uservrf_info(user_id) {
+  try {
+    let pool = await sql.connect(config);
+    let sp_Get_Uservrf_selected = await pool
+      .request()
+      .input("user_id", sql.Int, user_id)
+      .execute("sp_Get_Uservrf_selected");
+    return sp_Get_Uservrf_selected.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -849,6 +953,35 @@ async function getuserinfo(data_all) {
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
+  }
+}
+async function set_add_user_vrf(obj_json) {
+  let output_ = null;
+  let output = null;
+  console.log("set_manual_add_vrf_trans obj_json: ", obj_json);
+  console.log("set_manual_add_vrf_trans obj_json.reason: ", obj_json.reason);
+  try {
+    let pool = await sql.connect(config);
+    let spAdd_user_vrf = await pool
+      .request()
+      .input("CreateBy", sql.NVarChar, obj_json.user_id)
+      .input("employee_id", sql.NVarChar, obj_json.employee_id)
+      .input("email", sql.NVarChar, obj_json.email)
+      .input("username", sql.NVarChar, obj_json.username)
+      .input("first_name", sql.NVarChar, obj_json.first_name)
+      .input("last_name", sql.NVarChar, obj_json.last_name)
+      .input("division_id", sql.Int, obj_json.division_id)
+      .input("department_id", sql.Int, obj_json.department_id)
+      .input("position_id", sql.Int, obj_json.position_id)
+      .input("role_id", sql.Int, obj_json.role_id)
+      .input("branch_id", sql.Int, obj_json.branch_id)      
+      .execute("spAdd_user_vrf");
+    output_ = spAdd_user_vrf.recordsets;
+    output_ = output_[0];
+    output = output_[0];
+    return output[''];
+  } catch (err) {
+    console.log(err);
   }
 }
 async function set_manual_add_vrf_trans(obj_json) {
@@ -1899,6 +2032,30 @@ async function set_manual_update_vrf_det(obj_json) {
     console.log(err);
   }
 }
+async function set_update_userinfo_vrf(obj_json) {  
+  try {
+    let pool = await sql.connect(config);
+    let sp_set_update_userinfo_vrf = await pool
+      .request()
+      .input("employee_id", sql.NVarChar, obj_json.employee_id)
+      .input("email", sql.NVarChar, obj_json.email)
+      .input("username", sql.NVarChar, obj_json.username)
+      .input("first_name", sql.NVarChar, obj_json.first_name)
+      .input("last_name", sql.NVarChar, obj_json.last_name)
+      .input("division_id", sql.Int, obj_json.division_id)
+      .input("department_id", sql.Int, obj_json.department_id)
+      .input("position_id", sql.Int, obj_json.position_id)
+      .input("role_id", sql.Int, obj_json.role_id)      
+      .input("branch_id", sql.Int, obj_json.branch_id)
+      .input("ModifyBy", sql.NVarChar, obj_json.modify_by)
+      .input("user_id", sql.Int, obj_json.user_id)
+      .execute("sp_set_update_userinfo_vrf");
+    return sp_set_update_userinfo_vrf.recordsets;
+  } catch (err) {
+    console.log(err);
+  }
+
+}
 async function set_manual_update_vrf_trans(obj_json) {
   console.log('set_manual_update_vrf_trans obj_json.attach_file: ', obj_json.attach_file)
   try {
@@ -2818,6 +2975,43 @@ async function update_vrfstatus(Id, Type_, user_id) {
     console.log(err);
   }
 }
+async function update_user_vrf_status(Id
+  , Type_
+  , user_id
+  ) {
+  try {
+    let pool = await sql.connect(config);
+    let spUpdate_user_vrf_status = await pool
+      .request()
+      .input("Id_", sql.Int, Id)
+      .input("Type_", sql.NVarChar, Type_)
+      .input("user_id", sql.NVarChar, user_id)      
+      .execute("spUpdate_user_vrf_status");
+    return spUpdate_user_vrf_status.recordsets;
+  } catch (err) {
+    console.log(err);
+  }
+}
+async function update_vrf_trans_status(Id
+  , Type_
+  , user_id
+  , role_id
+  , work_flow_id) {
+  try {
+    let pool = await sql.connect(config);
+    let update_vrf_trans_status = await pool
+      .request()
+      .input("Id_", sql.Int, Id)
+      .input("Type_", sql.NVarChar, Type_)
+      .input("user_id", sql.NVarChar, user_id)
+      .input("role_id", sql.Int, role_id)
+      .input("work_flow_id", sql.Int, work_flow_id)
+      .execute("spUpdate_vrf_trans_status");
+    return update_vrf_trans_status.recordsets;
+  } catch (err) {
+    console.log(err);
+  }
+}
 async function update_vrf_trans_status(Id
   , Type_
   , user_id
@@ -2897,6 +3091,15 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_search_user_vrf: get_search_user_vrf,
+  set_update_userinfo_vrf: set_update_userinfo_vrf,
+  get_uservrf_info: get_uservrf_info,
+  update_user_vrf_status: update_user_vrf_status,
+  set_add_user_vrf: set_add_user_vrf,
+  get_role_all: get_role_all,
+  get_branch_all: get_branch_all,
+  get_division_all: get_division_all,
+  get_dept_all: get_dept_all,
   get_user_list: get_user_list,
   get_mail_info_next_approve: get_mail_info_next_approve,
   set_sp_update_vrf_checkinount: set_sp_update_vrf_checkinount,

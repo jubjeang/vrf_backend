@@ -23,11 +23,7 @@ app.use(cors({
     origin: process.env.CLIENT_URL,//'http://localhost:84', // replace with your Vue app domain
     credentials: true
 }));
-
 // app.use(cors())
-
-
-
 const setordernumber = (value) => {
     const now = new Date()
     const day = ('0' + now.getDate()).slice(-2)
@@ -328,6 +324,32 @@ const check_pcs = (value_, type_) => {
     }
     return returnValue
 }
+app.post('/set_add_user_vrf', upload.single('file'), (req, res) => {
+    console.log('set_manual_add_vrf_trans req.body: ', req.body)
+    console.log('req.body.first_name: ', req.body.first_name)   
+    let data = {
+        user_id: req.body.user_id,
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        username: req.body.username,
+        position_id: req.body.position_id,
+        department_id: req.body.department_id,
+        division_id: req.body.division_id,
+        branch_id: req.body.branch_id,
+        role_id: req.body.role_id,
+        email: req.body.email,
+        employee_id: req.body.employee_id
+    }
+    dboperations.set_add_user_vrf(data).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result)
+        }
+    })
+})
 app.post('/set_manual_add_vrf_trans', upload.single('file'), (req, res) => {
     console.log('set_manual_add_vrf_trans req.body: ', req.body)
     console.log('req.file : ', req.file)
@@ -366,8 +388,61 @@ app.post('/set_manual_add_vrf_trans', upload.single('file'), (req, res) => {
         }
     })
 })
-//i want to check filename compare req.body.attach_file_primitive before upload
+app.post('/set_update_userinfo_vrf',upload.single('file'), (req, res) => { 
+    
+    let data = {
+        user_id: req.body.user_id,
+        modify_by: req.body.modify_by,
+        username: req.body.username,
+        first_name: req.body.first_name,
+        last_name: req.body.last_name,
+        position_id: req.body.position_id,
+        department_id: req.body.department_id,
+        division_id: req.body.division_id,
+        branch_id: req.body.branch_id,
+        role_id: req.body.role_id,
+        email: req.body.email,
+        employee_id: req.body.employee_id
+    }
+    //console.log('/set_update_userinfo_vrf data: ', data)
+    dboperations.set_update_userinfo_vrf(data)
+    .then((result) => {
+        res.json(result[0]);
+    })
+    .catch((err) => {
+        console.error('Database operation error: ', err);
+        res.status(500).json({ error: 'Database operation error' });
+    });
+});
 
+// app.post('/set_update_userinfo_vrf', (req, res) => { 
+   
+//     let data = {
+//         user_id: req.body.user_id,
+//         modify_by: req.body.modify_by,
+//         username: req.body.username,
+//         first_name: req.body.first_name,
+//         last_name: req.body.last_name,
+//         position_id: req.body.position_id,
+//         department_id: req.body.department_id,
+//         division_id: req.body.division_id,
+//         branch_id: req.body.branch_id,
+//         role_id: req.body.role_id,
+//         email: req.body.email,
+//         employee_id: req.body.employee_id
+//     }
+//     //console.log('data: ', data)
+//     dboperations.set_update_userinfo_vrf(data).then((result, err) => {
+//         if (err) {
+//             console.log('error: ', err)
+//             res.json({ error: err })
+//         }
+//         else {
+
+//             res.json(result[0])
+//         }
+//     })
+// })
 app.post('/set_manual_update_vrf_trans', upload.single('file'), (req, res) => {
     // console.log(req.file)    
     let originalname = req.file !== undefined ? req.file.originalname : ''
@@ -898,7 +973,6 @@ app.post('/downloadExcel',bodyParser.json(), async (req, res) => {
       res.status(500).send(error);
     }
 });
-
 app.get('/get_complete_word', urlencodedParser, (req, res) => {
    
     dboperations.get_complete_word(req.query['search'], req.query['type']).then((result, err) => {
@@ -926,6 +1000,52 @@ app.get('/get_meeting_area', urlencodedParser, (req, res) => {
 app.get('/get_navigator', urlencodedParser, (req, res) => {
     
     dboperations.get_navigator(req.query['user_id']).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.get('/get_dept_all', urlencodedParser, (req, res) => {
+    
+    dboperations.get_dept_all().then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.get('/get_division_all', urlencodedParser, (req, res) => {
+    
+    dboperations.get_division_all().then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.get('/get_role_all', urlencodedParser, (req, res) => {     
+    dboperations.get_role_all().then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.get('/get_branch_all', urlencodedParser, (req, res) => {     
+    dboperations.get_branch_all().then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
@@ -1085,7 +1205,6 @@ app.post('/authenticate', urlencodedParser, (req, res) => {
         }
     });
 });
-
 app.get('/get_permission_access', urlencodedParser, (req, res) => {
 
     dboperations.get_permission_access(req.query['user_id']
@@ -1230,7 +1349,6 @@ app.post("/generateXLS", urlencodedParser, async (req, res) => {
         destroy(filestream)
     })
 })
-
 app.get('/getActitySelectd', urlencodedParser, async (req, res) => {
     dboperations.getActitySelectd(req.query['user_id'], req.query['customerID']).then((result, err) => {
         if (err) {
@@ -1503,8 +1621,8 @@ app.get('/get_user_list', urlencodedParser, (req, res) => {
     // console.log('/get_vrf_list department_id: ', req.query['department_id']
     //     , 'branch_id: ', req.query['branch_id'])
     dboperations.get_user_list(
-        req.query['department_id']
-        , req.query['branch_id']
+    //     req.query['department_id']
+    //     , req.query['branch_id']
     ).then((result, err) => {
         if (err) {
             console.log('error: ', err)
@@ -1603,6 +1721,30 @@ app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
         , req.query['department_id']
         , req.query['branch_id']
         , req.query['checkin_status']
+    ).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            console.log('result: ', result)
+            res.json(result)
+        }
+    })
+})
+app.get('/get_search_user_vrf', urlencodedParser, (req, res) => { 
+    dboperations.get_search_user_vrf(
+        req.query['user_id']
+        , req.query['first_name']
+        , req.query['last_name']
+        , req.query['username']
+        , req.query['employee_id']
+        , req.query['email']
+        , req.query['position_id']
+        , req.query['department_id']
+        , req.query['branch_id']
+        , req.query['role_id']
+        , req.query['division_id']
     ).then((result, err) => {
         if (err) {
             console.log('error: ', err)
@@ -1941,7 +2083,6 @@ app.post('/set_manual_update_vrf', urlencodedParser, (req, res) => {
     })
 
 })
-
 app.get('/get_templete_vrf', urlencodedParser, (req, res) => {
     //console.log('/getcashorder req.query[Id] :', req.query['Id'])
     dboperations.get_templete_vrf(req.query['Id']).then((result, err) => {
@@ -1957,6 +2098,18 @@ app.get('/get_templete_vrf', urlencodedParser, (req, res) => {
 app.get('/get_vrf', urlencodedParser, (req, res) => {
     //console.log('/getcashorder req.query[Id] :', req.query['Id'])
     dboperations.get_vrf(req.query['Id']).then((result, err) => {
+        if (err) {
+            console.log('error: ', err)
+            res.json({ error: err })
+        }
+        else {
+            res.json(result[0])
+        }
+    })
+})
+app.get('/get_uservrf_info', urlencodedParser, (req, res) => {
+    //console.log('/getcashorder req.query[Id] :', req.query['Id'])
+    dboperations.get_uservrf_info(req.query['user_id']).then((result, err) => {
         if (err) {
             console.log('error: ', err)
             res.json({ error: err })
@@ -1993,6 +2146,23 @@ app.get('/get_templete_vrf_det', urlencodedParser, (req, res) => {
             res.json(result[0])
         }
     })
+})
+app.get('/update_user_vrf_status_all', urlencodedParser, (req, res) => {
+    let output = null    
+    req.query['Id'].forEach((item) => {
+        dboperations.update_user_vrf_status(parseInt(item)
+            , req.query['Type_']
+            , req.query['user_id']            
+        ).then((result, err) => {
+            if (err) {
+                console.log('error: ', err)
+            }
+            else {               
+                output = result[0]
+            }
+        })
+    })
+    res.json(output)
 })
 app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
     let output = null
@@ -2204,37 +2374,56 @@ app.get('/set_sp_update_vrf_checkinount', urlencodedParser, (req, res) => {
         }
     })
 })
+app.get('/update_user_vrf_status', urlencodedParser, (req, res) => {     
+
+    dboperations.update_user_vrf_status(req.query['Id'], req.query['Type_'], req.query['user_id'])
+    .then((result) => {
+        try {
+            res.json(result[0])
+        } catch (error) {
+            console.error("Error:", error);
+            res.status(500).send("Internal Server Error");
+        }
+    })
+    .catch((err) => {
+        console.error('Database operation error: ', err);
+        res.status(500).send("Database operation error");
+    });
+});
 app.get('/update_vrf_trans_status', urlencodedParser, (req, res) => {
     let attach_file_primitive = req.query['attach_file_primitive']
-    dboperations.update_vrf_trans_status(req.query['Id']
-        , req.query['Type_']
-        , req.query['user_id']
-        , req.query['attach_file_primitive']).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
+
+    dboperations.update_vrf_trans_status(req.query['Id'], req.query['Type_'], req.query['user_id'], req.query['attach_file_primitive'])
+    .then((result) => {
+        try {
+            if (attach_file_primitive && attach_file_primitive !== 'undefined') {
+                // ใช้ fs.stat
+                fs.stat('./uploads/' + attach_file_primitive, (err, stats) => {
+                    if (err) {
+                        console.log(`ไม่พบไฟล์: ${attach_file_primitive}`);
+                    } else {
+                        fs.unlink('./uploads/' + attach_file_primitive, (err) => {
+                            if (err) {
+                                console.error("Error while deleting the file:", err);
+                                res.status(500).send("Error while deleting the file");
+                                return;
+                            }
+                            console.log(attach_file_primitive + ' ถูกลบแล้ว');
+                        });
+                    }
+                });
             }
-            else {
-                if ((attach_file_primitive !== '')
-                    && (attach_file_primitive !== null)
-                    && (attach_file_primitive !== undefined)
-                    && (attach_file_primitive !== 'undefined')
-                ) {
-                    // ใช้ fs.stat
-                    fs.stat('./uploads/' + attach_file_primitive, (err, stats) => {
-                        if (err) {
-                            console.log(`ไม่พบไฟล์: ${attach_file_primitive}`);
-                        } else {
-                            fs.unlink('./uploads/' + attach_file_primitive, (err) => {
-                                if (err) throw err;
-                                console.log(attach_file_primitive + ' ถูกลบแล้ว');
-                            });
-                        }
-                    });
-                }
-                res.json(result[0])
-            }
-        })
-})
+            res.json(result[0])
+        } catch (error) {
+            console.error("Error:", error);
+            res.status(500).send("Internal Server Error");
+        }
+    })
+    .catch((err) => {
+        console.error('Database operation error: ', err);
+        res.status(500).send("Database operation error");
+    });
+});
 app.get('/update_vrfstatus', urlencodedParser, (req, res) => {
     // console.log(req.query['Id'])
     // console.log(req.query['Type_'])
@@ -2265,4 +2454,35 @@ app.get('/delete_app_proc_det', urlencodedParser, (req, res) => {
         }
     })
 })
+// app.get('/update_vrf_trans_status', urlencodedParser, (req, res) => {
+//     let attach_file_primitive = req.query['attach_file_primitive']
+//     dboperations.update_vrf_trans_status(req.query['Id']
+//         , req.query['Type_']
+//         , req.query['user_id']
+//         , req.query['attach_file_primitive']).then((result, err) => {
+//             if (err) {
+//                 console.log('error: ', err)
+//             }
+//             else {
+//                 if ((attach_file_primitive !== '')
+//                     && (attach_file_primitive !== null)
+//                     && (attach_file_primitive !== undefined)
+//                     && (attach_file_primitive !== 'undefined')
+//                 ) {
+//                     // ใช้ fs.stat
+//                     fs.stat('./uploads/' + attach_file_primitive, (err, stats) => {
+//                         if (err) {
+//                             console.log(`ไม่พบไฟล์: ${attach_file_primitive}`);
+//                         } else {
+//                             fs.unlink('./uploads/' + attach_file_primitive, (err) => {
+//                                 if (err) throw err;
+//                                 console.log(attach_file_primitive + ' ถูกลบแล้ว');
+//                             });
+//                         }
+//                     });
+//                 }
+//                 res.json(result[0])
+//             }
+//         })
+// })
 app.listen(process.env.PORT, () => console.log(`running on localhost:${process.env.PORT}`))
