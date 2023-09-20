@@ -113,6 +113,20 @@ async function get_branch_all() {
     return [{ error: error }];
   }
 }
+async function get_role_by_dept() {
+  try {
+    let pool = await sql.connect(config);
+    let spGetRole_by_dept = await pool
+      .request()
+      // .input("division_id", sql.Int, division_id)
+      // .input("branch_id", sql.Int, branch_id)
+      .execute("spGetRole_by_dept");
+    return spGetRole_by_dept.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_role_all() {
   try {
     let pool = await sql.connect(config);
@@ -417,23 +431,15 @@ async function get_search_vrf(
     requestor_id_
       ? (queryString += `AND vrpt.requestor_dept = ${requestor_id_} AND vrpt.branch_id = ${branch_id} `)
       : (queryString += `AND vrpt.branch_id = ${branch_id} `);
-    // formattedtbDateF || formattedtbDateT
-    //   ? (queryString += `AND vrpt.id IN (
-    //     SELECT DISTINCT id
-    //     FROM vVRF_trans_master_det
-    //     WHERE (
-    //       CAST(CreateDate AS DATE) BETWEEN
-    //         (CASE WHEN '${formattedtbDateF}' IS NULL THEN CAST(date_from AS DATE) ELSE CAST('${formattedtbDateF}' AS DATE) END)
-    //         AND (CASE WHEN '${formattedtbDateT}' IS NULL THEN CAST(date_to AS DATE) ELSE CAST('${formattedtbDateT}' AS DATE) END)
-    //     ) `)
-    //   : (queryString += '');
     queryString += formattedtbDateF && formattedtbDateT
-    ? `AND vrpt.id IN (
-      SELECT DISTINCT vrf_id
-      FROM vVRF_Template_trans_master_det
-      WHERE (
-        CAST(date_from AS DATE) >= CAST('${formattedDateF}' AS DATE) AND CAST(date_to AS DATE) <= CAST('${formattedDateT}' AS DATE)
-      )`
+     ? 
+     //`AND vrpt.id IN (
+    //   SELECT DISTINCT vrf_id
+    //   FROM vVRF_Template_trans_master_det
+    //   WHERE (
+    //     CAST(date_from AS DATE) >= CAST('${formattedDateF}' AS DATE) AND CAST(date_to AS DATE) <= CAST('${formattedDateT}' AS DATE)
+    //   )`
+      ` AND CAST(vrpt.date_from AS DATE) <= CAST('${formattedDateF}' AS DATE) AND CAST(vrpt.date_to AS DATE) >= CAST('${formattedDateT}' AS DATE) `      
     : '';
     requestor_id_
       ? (queryString += `AND (${requestor_id_} IS NULL OR vrpt.requestor = ${requestor_id_}) `)
@@ -449,9 +455,9 @@ async function get_search_vrf(
       checkin_status_ === 2 ? (queryString += `AND ( vrpt.checkin_by is null ) `) : null;
     }
 
-    formattedtbDateF && formattedtbDateT
-      ? (queryString += `)`)
-      : (queryString += '');
+    // formattedtbDateF && formattedtbDateT
+    //   ? (queryString += `)`)
+    //   : (queryString += '');
     console.log('queryString: ', queryString);
 
     let result = await pool.request().query(queryString);
@@ -462,129 +468,6 @@ async function get_search_vrf(
   }
 
 }
-// async function get_search_vrf(
-//   tbDateF,
-//   tbDateT,
-//   requestor_id,
-//   area_id,
-//   requestor_dept_id,
-//   department_id,
-//   branch_id
-// ) {
-
-//   let tbDateF_;
-//   let formattedtbDateF;
-//   let tbDateT_;
-//   let formattedtbDateT;
-//   if ((tbDateF !== null && tbDateT !== null) && (tbDateF !== undefined && tbDateT !== undefined) && (tbDateF !== '' && tbDateT !== '')) {
-//     tbDateF_ = moment.tz(tbDateF, 'Asia/Bangkok');
-//     formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
-//     tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
-//     formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
-//   }
-//   else {
-//     tbDateF_ = '';
-//     formattedtbDateF = '';
-//     tbDateT_ = '';
-//     formattedtbDateT = '';
-//   }
-
-//   let requestor_id_ = (requestor_id !== undefined && requestor_id !== '' && requestor_id !== null) ? parseInt(requestor_id) : null
-//   let area_id_ = (area_id !== undefined && area_id !== '' && area_id !== null) ? parseInt(area_id) : null
-//   let requestor_dept_id_ = (requestor_dept_id !== undefined && requestor_dept_id !== '' && requestor_dept_id !== null) ? parseInt(requestor_dept_id) : null
-
-//   console.log('/get_search_vrf formattedtbDateF: ', formattedtbDateF
-//     , 'formattedtbDateT: ', formattedtbDateT
-//     , 'requestor_id_: ', requestor_id_
-//     , 'area_id_: ', area_id_
-//     , 'requestor_dept_id_: ', requestor_dept_id_
-//     , 'department_id: ', department_id
-//     , 'branch_id: ', branch_id)
-//   try {
-//     let pool = await sql.connect(config);
-
-    
-//     let spGet_search_vrf = await pool
-//       .request()
-//       .input("department_id", sql.Int, department_id)
-//       .input("branch_id", sql.Int, branch_id)
-//       .input("tbDateF", sql.VarChar, formattedtbDateF)
-//       .input("tbDateT", sql.VarChar, formattedtbDateT)
-//       .input("requestor_id", sql.Int, requestor_id_)
-//       .input("area_id", sql.Int, area_id_)
-//       .input("requestor_dept_id", sql.Int, requestor_dept_id_)
-//       .execute("spGet_search_vrf");
-//     return spGet_search_vrf.recordsets;
-//   } catch (error) {
-//     console.log("error: ", error);
-//     return [{ error: error }];
-//   }
-// }
-// async function get_search_vrf_trans(
-//   tbDateF,
-//   tbDateT,
-//   requestor_id,
-//   area_id,
-//   requestor_dept_id,
-//   department_id,
-//   branch_id
-// ) 
-// {  
-//   let tbDateF_;
-//   let formattedtbDateF;
-//   let tbDateT_;
-//   let formattedtbDateT;
-//   if( 
-//     (tbDateF !== undefined && tbDateF !== '' && tbDateF !== null  )  
-//   && (tbDateT !== undefined && tbDateT !== '' && tbDateT !== null  ) 
-//   )
-//   {
-//     tbDateF_ = moment.tz(tbDateF, 'Asia/Bangkok');
-//      formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
-//      tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
-//      formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
-//      console.log('aaa')
-//   }
-//   else
-//   {
-//     tbDateF_ = '';
-//     formattedtbDateF = '';
-//     tbDateT_ = '';
-//     formattedtbDateT = '';
-//     console.log('bbbb')
-//   }
-
-//   let requestor_id_ = (requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)) ? parseInt(requestor_id) : null;
-//   let area_id_ = (area_id !== undefined && area_id !== '' && area_id !== null && !isNaN(area_id)) ? parseInt(area_id) : null;  
-//   let requestor_dept_id_ = (requestor_dept_id !== undefined && requestor_dept_id !== '' && requestor_dept_id !== null && !isNaN(requestor_dept_id)) ? parseInt(requestor_dept_id) : null;
-
-
-//   console.log('/get_search_vrf_trans formattedtbDateF: ', formattedtbDateF
-//   , 'formattedtbDateT: ', formattedtbDateT
-//   , 'requestor_id_: ', requestor_id_ 
-//   , 'area_id_: ', area_id_
-//   , 'requestor_dept_id_: ', requestor_dept_id_
-//   , 'department_id: ', department_id
-//   , 'branch_id: ', branch_id   ) 
-//   try {
-//     let pool = await sql.connect(config); 
-
-//     let spGet_search_vrf_trans = await pool
-//       .request()
-//       .input("department_id", sql.Int, department_id)
-//       .input("branch_id", sql.Int, branch_id)
-//       .input("tbDateF", sql.VarChar, formattedtbDateF )
-//       .input("tbDateT", sql.VarChar, formattedtbDateT )    
-//       .input("requestor_id", sql.Int, requestor_id_)
-//       .input("area_id", sql.Int, area_id_)
-//       .input("requestor_dept_id", sql.Int, requestor_dept_id_)      
-//       .execute("spGet_search_vrf_trans");
-//     return spGet_search_vrf_trans.recordsets;
-//   } catch (error) {
-//     console.log("error: ", error);
-//     return [{ error: error }];
-//   }
-// }
 async function get_search_vrf_trans(
   tbDateF,
   tbDateT,
@@ -593,12 +476,19 @@ async function get_search_vrf_trans(
   requestor_dept_id,
   department_id,
   branch_id,
-  checkin_status
+  checkin_status,
+  role_id
 ) {
   let tbDateF_;
   let formattedtbDateF;
   let tbDateT_;
   let formattedtbDateT;
+
+  let dateF
+  let dateT
+  let formattedDateF
+  let formattedDateT
+
   if (
     (tbDateF !== undefined && tbDateF !== '' && tbDateF !== null) &&
     (tbDateT !== undefined && tbDateT !== '' && tbDateT !== null)
@@ -607,11 +497,19 @@ async function get_search_vrf_trans(
     formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
     tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
     formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
+    dateF = new Date(formattedtbDateF);
+    dateT = new Date(formattedtbDateT);
+    formattedDateF = `${dateF.getUTCFullYear()}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${String(dateF.getUTCDate()).padStart(2, '0')}`;
+    formattedDateT = `${dateT.getUTCFullYear()}-${String(dateT.getUTCMonth() + 1).padStart(2, '0')}-${String(dateT.getUTCDate()).padStart(2, '0')}`;
   } else {
     tbDateF_ = '';
     formattedtbDateF = '';
     tbDateT_ = '';
     formattedtbDateT = '';
+    dateF = '';
+    dateT = '';
+    formattedDateF = null;
+    formattedDateT = null;
   }
   let checkin_status_ =
     checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
@@ -632,56 +530,98 @@ async function get_search_vrf_trans(
       !isNaN(requestor_dept_id)
       ? parseInt(requestor_dept_id)
       : null;
+   
+    try {
+      let pool = await sql.connect(config);
+
+      console.log('get_search_vrf_trans checkin_status_: ', checkin_status_,'requestor_id_: ', requestor_id_,'area_id_: ', area_id_
+      ,'requestor_dept_id_: ', requestor_dept_id_
+      ,'formattedDateF: ', formattedDateF
+      ,'formattedDateT: ', formattedDateT
+      ,'role_id: ', role_id);
+      // สร้าง request และเพิ่ม input parameters
+      let request = pool.request();
+      request.input('formattedDateF', sql.Date, formattedDateF);
+      request.input('formattedDateT', sql.Date, formattedDateT);
+      request.input('requestor_dept_id', sql.Int, requestor_dept_id_);
+      request.input('branch_id', sql.Int, branch_id);
+      request.input('requestor_id', sql.Int, requestor_id_);
+      request.input('area_id', sql.Int, area_id_);
+      request.input('checkin_status', sql.Int, checkin_status_);
+      request.input('role_id', sql.Int, role_id);
+  
+      // เรียกใช้ stored procedure
+      let result = await request.execute('spGet_search_approve_vrf');
+      
+      return result.recordset;
+  } catch (error) {
+      console.log('error: ', error);
+      return [{ error: error }];
+  }  
+  // try {
+  //   let pool = await sql.connect(config);
+
+  //   let queryString = `select ROW_NUMBER() OVER(ORDER BY vrpt.[id] DESC) AS [no],* from vVRF_Report vrpt WHERE vrpt.[Status] = '1' `;
+  //   let dateF = new Date(formattedtbDateF);
+  //   let dateT = new Date(formattedtbDateT);
+
+  //   let formattedDateF = `${dateF.getFullYear()}-${String(dateF.getMonth() + 1).padStart(2, '0')}-${String(dateF.getDate()).padStart(2, '0')}`;
+  //   let formattedDateT = `${dateT.getFullYear()}-${String(dateT.getMonth() + 1).padStart(2, '0')}-${String(dateT.getDate()).padStart(2, '0')}`;
+
+  //   requestor_dept_id_
+  //     ? (queryString += `AND vrpt.requestor_dept_id = ${requestor_dept_id_} AND vrpt.branch_id = ${branch_id} `)
+  //     : (queryString += `AND vrpt.branch_id = ${branch_id} `);
+  //   queryString += formattedtbDateF && formattedtbDateT
+  //   ? 
+  //    ` AND CAST(vrpt.date_from AS DATE) >= CAST('${formattedDateF}' AS DATE) AND CAST(vrpt.date_to AS DATE) <= CAST('${formattedDateT}' AS DATE) `      
+  //  : '';
+  //   requestor_id_
+  //     ? (queryString += `AND (${requestor_id_} IS NULL OR vrpt.requestor_id = ${requestor_id_}) `)
+  //     : (queryString += '');
+  //   area_id_
+  //     ? (queryString += `AND (${area_id_} IS NULL OR vrpt.area_id = ${area_id_}) `)
+  //     : (queryString += '');
+  //   if (checkin_status_) {
+  //     checkin_status_ === 1 ? (queryString += `AND ( vrpt.checkin_by is not null ) `) : null;
+  //     checkin_status_ === 2 ? (queryString += `AND ( vrpt.checkin_by is null ) `) : null;
+  //   }
+  //   console.log('queryString: ', queryString);
+  //   let result = await pool.request().query(queryString);
+  //   return result.recordset;
+  // } catch (error) {
+  //   console.log('error: ', error);
+  //   return [{ error: error }];
+  // }
+}
+async function get_search_user_vrf_by_dept(
+  user_id,
+  first_name,
+  last_name,
+  username,
+  employee_id,
+  email,
+  position_id,
+  department_id,
+  branch_id,
+  role_id,
+  division_id
+) {
   try {
     let pool = await sql.connect(config);
 
-    let queryString = `select ROW_NUMBER() OVER(ORDER BY vrpt.[id] DESC) AS [no],* from vVRF_Report vrpt WHERE vrpt.[Status] = '1' `;
-    let dateF = new Date(formattedtbDateF);
-    let dateT = new Date(formattedtbDateT);
-
-    let formattedDateF = `${dateF.getFullYear()}-${String(dateF.getMonth() + 1).padStart(2, '0')}-${String(dateF.getDate()).padStart(2, '0')}`;
-    let formattedDateT = `${dateT.getFullYear()}-${String(dateT.getMonth() + 1).padStart(2, '0')}-${String(dateT.getDate()).padStart(2, '0')}`;
-
-    requestor_id_
-      ? (queryString += `AND vrpt.requestor_dept = ${requestor_id_} AND vrpt.branch_id = ${branch_id} `)
-      : (queryString += `AND vrpt.branch_id = ${branch_id} `);
-    // formattedtbDateF || formattedtbDateT
-    //   ? (queryString += `AND vrpt.id IN (
-    //     SELECT DISTINCT id
-    //     FROM vVRF_trans_master_det
-    //     WHERE (
-    //       CAST(CreateDate AS DATE) BETWEEN
-    //         (CASE WHEN '${formattedtbDateF}' IS NULL THEN CAST(date_from AS DATE) ELSE CAST('${formattedtbDateF}' AS DATE) END)
-    //         AND (CASE WHEN '${formattedtbDateT}' IS NULL THEN CAST(date_to AS DATE) ELSE CAST('${formattedtbDateT}' AS DATE) END)
-    //     ) `)
-    //   : (queryString += '');
-    queryString += formattedtbDateF && formattedtbDateT
-    ? `AND vrpt.id IN (
-      SELECT DISTINCT vrf_id
-      FROM vVRF_trans_master_det
-      WHERE (
-        CAST(date_from AS DATE) >= CAST('${formattedDateF}' AS DATE) AND CAST(date_to AS DATE) <= CAST('${formattedDateT}' AS DATE)
-      )`
-    : '';
-    requestor_id_
-      ? (queryString += `AND (${requestor_id_} IS NULL OR vrpt.requestor = ${requestor_id_}) `)
-      : (queryString += '');
-    area_id_
-      ? (queryString += `AND (${area_id_} IS NULL OR vrpt.area_id = ${area_id_}) `)
-      : (queryString += '');
-    requestor_dept_id_
-      ? (queryString += `AND (${requestor_dept_id_} IS NULL OR vrpt.requestor_dept = ${requestor_dept_id_}) `)
-      : (queryString += '');
-    if (checkin_status_) {
-      checkin_status_ === 1 ? (queryString += `AND ( vrpt.checkin_by is not null ) `) : null;
-      checkin_status_ === 2 ? (queryString += `AND ( vrpt.checkin_by is null ) `) : null;
-    }
-
-    formattedtbDateF && formattedtbDateT
-      ? (queryString += `)`)
-      : (queryString += '');
+    let queryString = `select ROW_NUMBER() OVER(ORDER BY uvf.[user_id] desc) AS [no], * from vUserVRF uvf WHERE uvf.[Status] = '1' `;
+    first_name ? (queryString += ` AND uvf.first_name like '%${first_name.trim()}%' `) : (queryString += ``);
+    last_name ? (queryString += ` and uvf.last_name like '%${last_name.trim()}%' `) : (queryString += ``);
+    username ? (queryString += ` and uvf.username like '%${username.trim()}%' `) : (queryString += ``);
+    employee_id ? (queryString += ` and uvf.employee_id = ${employee_id} `) : (queryString += ``);
+    email ? (queryString += ` and uvf.email like '%${email.trim()}%' `) : (queryString += ``);
+    position_id ? (queryString += ` and uvf.position_id = ${position_id} `) : (queryString += ``);    
+    queryString += ` and uvf.department_id = ${department_id} `;
+    queryString += ` and uvf.branch_id = ${branch_id} `;    
+    role_id ? (queryString += ` and uvf.role_id = ${role_id} `) : (queryString += ``);
+    queryString += ` and uvf.division_id = ${division_id}  `;
+    queryString += ` order by uvf.[USER_ID] desc `;    
     console.log('queryString: ', queryString);
-
     let result = await pool.request().query(queryString);
     return result.recordset;
   } catch (error) {
@@ -733,7 +673,6 @@ async function get_templete_vrf_list(
 
   try {
     let pool = await sql.connect(config);
-
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
     let spTemplete_vrf_list = await pool
       .request()
@@ -785,6 +724,26 @@ async function get_vrf_approve_list(
       .input("division_id", sql.Int, division_id)
       .execute("spGet_vrf_approve_list");
     return spGet_vrf_approve_list.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_user_list_by_dept(
+  division_id, 
+  department_id,
+   branch_id
+) {
+
+  try {
+    let pool = await sql.connect(config);
+    let sp_UserLst_by_dept = await pool 
+      .request()
+       .input("department_id", sql.Int, department_id)
+       .input("branch_id", sql.Int, branch_id)
+       .input("division_id", sql.Int, division_id)
+      .execute("sp_UserLst_by_dept");
+    return sp_UserLst_by_dept.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -892,6 +851,19 @@ async function get_mail_info_next_approve(Id) {
     return [{ error: error }];
   }
 }
+async function get_mail_info_final_approve(Id) {
+  try {
+    let pool = await sql.connect(config);
+    let spGet_mail_info_final_approve = await pool
+      .request()
+      .input("id", sql.Int, Id)
+      .execute("spGet_mail_info_final_approve");
+    return spGet_mail_info_final_approve.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_mail_vrf_info(Id
   , department_id
   , branch_id
@@ -958,8 +930,8 @@ async function getuserinfo(data_all) {
 async function set_add_user_vrf(obj_json) {
   let output_ = null;
   let output = null;
-  console.log("set_manual_add_vrf_trans obj_json: ", obj_json);
-  console.log("set_manual_add_vrf_trans obj_json.reason: ", obj_json.reason);
+  console.log("set_add_user_vrf obj_json: ", obj_json);
+  console.log("set_add_user_vrf obj_json.reason: ", obj_json.reason);
   try {
     let pool = await sql.connect(config);
     let spAdd_user_vrf = await pool
@@ -1005,6 +977,8 @@ async function set_manual_add_vrf_trans(obj_json) {
       .input("attach_file_origin", sql.NVarChar, obj_json.file_originalname)
       .input("templete_id", sql.NVarChar, obj_json.templete_id)
       .input("createby", sql.NVarChar, obj_json.createby)
+      .input("date_from", sql.DateTime, obj_json.date_from)
+      .input("date_to", sql.DateTime, obj_json.date_to)
       .execute("spAdd_vrf");
     output_ = spAdd_vrf.recordsets;
     output_ = output_[0];
@@ -1030,10 +1004,11 @@ async function set_manual_add_vrf(obj_json) {
       .input("requestor_phone", sql.NVarChar, obj_json.requestor_phone)
       .input("navigator", sql.Int, obj_json.navigator)
       .input("area", sql.Int, obj_json.area)
+      .input("date_from", sql.DateTime, obj_json.date_from)
+      .input("date_to", sql.DateTime, obj_json.date_to)
       .input("createby", sql.NVarChar, obj_json.user_id)
       .execute("spAdd_vrf_template");
     output_ = spAdd_vrf_template.recordsets;
-
     output_ = output_[0];
     output = output_[0];
     return output[''];
@@ -1041,10 +1016,8 @@ async function set_manual_add_vrf(obj_json) {
     console.log(err);
   }
 }
-async function set_manual_add_vrf_trans_det(obj_json) {
-  // let obj_json = JSON.parse(obj);
+async function set_manual_add_vrf_trans_det(obj_json) { 
   console.log("set_manual_add_vrf_trans_det: obj_json", obj_json);
-  // let length = Object.keys(obj_json).length;
   let output
   let newid = obj_json.newid;
   try {
@@ -1055,9 +1028,7 @@ async function set_manual_add_vrf_trans_det(obj_json) {
         let pool = await sql.connect(config);
         let spAdd_vrf_det = await pool
           .request()
-          .input("vrf_id", sql.Int, newid)
-          .input("date_from", sql.DateTime, obj_json[key].tbDateF)
-          .input("date_to", sql.DateTime, obj_json[key].tbDateT)
+          .input("vrf_id", sql.Int, newid)          
           .input("fullname", sql.NVarChar, obj_json[key].tbFullName)
           .input("vehicle_registration", sql.NVarChar, obj_json[key].tbVehicle_Registration)
           .input("vehicle_brand", sql.Int, obj_json[key].ddlvehicle_brand)
@@ -1089,9 +1060,7 @@ async function set_manual_add_vrf_det(obj_json) {
         let pool = await sql.connect(config);
         let spAdd_vrf_template_det = await pool
           .request()
-          .input("vrf_id", sql.Int, newid)
-          .input("date_from", sql.DateTime, obj_json[key].tbDateF)
-          .input("date_to", sql.DateTime, obj_json[key].tbDateT)
+          .input("vrf_id", sql.Int, newid)          
           .input("fullname", sql.NVarChar, obj_json[key].tbFullName)
           .input("vehicle_registration", sql.NVarChar, obj_json[key].tbVehicle_Registration)
           .input("vehicle_brand", sql.Int, obj_json[key].ddlvehicle_brand)
@@ -1909,9 +1878,7 @@ async function set_manual_update_vrf_det_trans(obj_json) {
       let pool = await sql.connect(config);
       let spAdd_vrf_det = await pool       
         .request()
-        .input("vrf_id", sql.Int, obj_json[index].vrf_id)
-        .input("date_from", sql.DateTime, obj_json[index].date_from)
-        .input("date_to", sql.DateTime, obj_json[index].date_to)
+        .input("vrf_id", sql.Int, obj_json[index].vrf_id)        
         .input("fullname", sql.NVarChar, obj_json[index].fullname)        
         .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
         .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
@@ -2001,8 +1968,8 @@ async function set_manual_update_vrf_det(obj_json) {
       let spAdd_vrf_template_det = await pool
           .request()
           .input("vrf_id", sql.Int, obj_json[index].vrf_id)
-          .input("date_from", sql.DateTime, obj_json[index].date_from)
-          .input("date_to", sql.DateTime, obj_json[index].date_to)
+          // .input("date_from", sql.DateTime, obj_json[index].date_from)
+          // .input("date_to", sql.DateTime, obj_json[index].date_to)
           .input("fullname", sql.NVarChar, obj_json[index].fullname)
           .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
           .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
@@ -2071,6 +2038,8 @@ async function set_manual_update_vrf_trans(obj_json) {
       .input("requestor_phone", sql.NVarChar, obj_json.requestor_phone)
       .input("navigator", sql.Int, obj_json.navigator)
       .input("area", sql.Int, obj_json.area)
+      .input("date_from", sql.DateTime, obj_json.date_from)
+      .input("date_to", sql.DateTime, obj_json.date_to)
       .input("attach_file", sql.NVarChar, obj_json.attach_file)
       .input("attach_file_origin", sql.NVarChar, obj_json.attach_file_origin)
       .input("ModifyBy", sql.Int, obj_json.createby)
@@ -2096,13 +2065,14 @@ async function set_manual_update_vrf(obj_json) {
       .input("requestor_phone", sql.NVarChar, obj_json["requestor_phone"])
       .input("navigator", sql.Int, obj_json["navigator"])
       .input("area", sql.Int, obj_json["area"])
+      .input("date_from", sql.DateTime, obj_json["date_from"])
+      .input("date_to", sql.DateTime, obj_json["date_to"])
       .input("ModifyBy", sql.Int, obj_json["user_id"])
       .execute("sp_set_manual_update_vrf");
     return sp_set_manual_update_vrf.recordsets;
   } catch (err) {
     console.log(err);
   }
-
 }
 async function update_order(gfccp_order) {
   let NULL_ = null;
@@ -3049,7 +3019,6 @@ async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
     console.log(err);
   }
 }
-
 async function update_vrf_trans_approve_status(Id, Type_
   , user_id
   , role_id
@@ -3091,6 +3060,10 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_search_user_vrf_by_dept: get_search_user_vrf_by_dept,
+  get_role_by_dept: get_role_by_dept,
+  get_user_list_by_dept: get_user_list_by_dept,
+  get_mail_info_final_approve: get_mail_info_final_approve,
   get_search_user_vrf: get_search_user_vrf,
   set_update_userinfo_vrf: set_update_userinfo_vrf,
   get_uservrf_info: get_uservrf_info,
