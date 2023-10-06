@@ -477,7 +477,8 @@ async function get_search_vrf_trans(
   department_id,
   branch_id,
   checkin_status,
-  role_id
+  role_id,
+  approve_status
 ) {
   let tbDateF_;
   let formattedtbDateF;
@@ -515,6 +516,10 @@ async function get_search_vrf_trans(
     checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
       ? parseInt(checkin_status)
       : null;
+  let approve_status_ =
+  approve_status !== undefined && approve_status !== '' && approve_status !== null && !isNaN(approve_status)
+        ? approve_status
+        : null;
   let requestor_id_ =
     requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
       ? parseInt(requestor_id)
@@ -538,6 +543,7 @@ async function get_search_vrf_trans(
       ,'requestor_dept_id_: ', requestor_dept_id_
       ,'formattedDateF: ', formattedDateF
       ,'formattedDateT: ', formattedDateT
+      ,'approve_status: ', approve_status
       ,'role_id: ', role_id);
       // สร้าง request และเพิ่ม input parameters
       let request = pool.request();
@@ -548,6 +554,7 @@ async function get_search_vrf_trans(
       request.input('requestor_id', sql.Int, requestor_id_);
       request.input('area_id', sql.Int, area_id_);
       request.input('checkin_status', sql.Int, checkin_status_);
+      request.input('approve_status', sql.NVarChar, approve_status_);
       request.input('role_id', sql.Int, role_id);
   
       // เรียกใช้ stored procedure
@@ -558,40 +565,102 @@ async function get_search_vrf_trans(
       console.log('error: ', error);
       return [{ error: error }];
   }  
-  // try {
-  //   let pool = await sql.connect(config);
 
-  //   let queryString = `select ROW_NUMBER() OVER(ORDER BY vrpt.[id] DESC) AS [no],* from vVRF_Report vrpt WHERE vrpt.[Status] = '1' `;
-  //   let dateF = new Date(formattedtbDateF);
-  //   let dateT = new Date(formattedtbDateT);
+}
+async function get_search_vrf_list(
+  tbDateF,
+  tbDateT,
+  requestor_id,
+  area_id,
+  requestor_dept_id,
+  branch_id,
+  approve_status
+) {
+  let tbDateF_;
+  let formattedtbDateF;
+  let tbDateT_;
+  let formattedtbDateT;
 
-  //   let formattedDateF = `${dateF.getFullYear()}-${String(dateF.getMonth() + 1).padStart(2, '0')}-${String(dateF.getDate()).padStart(2, '0')}`;
-  //   let formattedDateT = `${dateT.getFullYear()}-${String(dateT.getMonth() + 1).padStart(2, '0')}-${String(dateT.getDate()).padStart(2, '0')}`;
+  let dateF
+  let dateT
+  let formattedDateF
+  let formattedDateT
 
-  //   requestor_dept_id_
-  //     ? (queryString += `AND vrpt.requestor_dept_id = ${requestor_dept_id_} AND vrpt.branch_id = ${branch_id} `)
-  //     : (queryString += `AND vrpt.branch_id = ${branch_id} `);
-  //   queryString += formattedtbDateF && formattedtbDateT
-  //   ? 
-  //    ` AND CAST(vrpt.date_from AS DATE) >= CAST('${formattedDateF}' AS DATE) AND CAST(vrpt.date_to AS DATE) <= CAST('${formattedDateT}' AS DATE) `      
-  //  : '';
-  //   requestor_id_
-  //     ? (queryString += `AND (${requestor_id_} IS NULL OR vrpt.requestor_id = ${requestor_id_}) `)
-  //     : (queryString += '');
-  //   area_id_
-  //     ? (queryString += `AND (${area_id_} IS NULL OR vrpt.area_id = ${area_id_}) `)
-  //     : (queryString += '');
-  //   if (checkin_status_) {
-  //     checkin_status_ === 1 ? (queryString += `AND ( vrpt.checkin_by is not null ) `) : null;
-  //     checkin_status_ === 2 ? (queryString += `AND ( vrpt.checkin_by is null ) `) : null;
-  //   }
-  //   console.log('queryString: ', queryString);
-  //   let result = await pool.request().query(queryString);
-  //   return result.recordset;
-  // } catch (error) {
-  //   console.log('error: ', error);
-  //   return [{ error: error }];
-  // }
+  if (
+    (tbDateF !== undefined && tbDateF !== '' && tbDateF !== null) &&
+    (tbDateT !== undefined && tbDateT !== '' && tbDateT !== null)
+  ) {
+    tbDateF_ = moment.tz(tbDateF, 'Asia/Bangkok');
+    formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
+    tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
+    formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
+    dateF = new Date(formattedtbDateF);
+    dateT = new Date(formattedtbDateT);
+    formattedDateF = `${dateF.getUTCFullYear()}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${String(dateF.getUTCDate()).padStart(2, '0')}`;
+    formattedDateT = `${dateT.getUTCFullYear()}-${String(dateT.getUTCMonth() + 1).padStart(2, '0')}-${String(dateT.getUTCDate()).padStart(2, '0')}`;
+  } else {
+    tbDateF_ = '';
+    formattedtbDateF = '';
+    tbDateT_ = '';
+    formattedtbDateT = '';
+    dateF = '';
+    dateT = '';
+    formattedDateF = null;
+    formattedDateT = null;
+  }  
+//--------------------------------------
+
+//--------------------------------------  
+  approve_status
+  console.log('approve_status: ', approve_status );
+  let approve_status_ =
+  approve_status !== undefined && approve_status !== '' && approve_status !== null  ? approve_status : null;
+  let requestor_id_ =
+    requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
+      ? parseInt(requestor_id)
+      : null;
+  let area_id_ =
+    area_id !== undefined && area_id !== '' && area_id !== null && !isNaN(area_id)
+      ? parseInt(area_id)
+      : null;
+  let requestor_dept_id_ =
+    requestor_dept_id !== undefined &&
+      requestor_dept_id !== '' &&
+      requestor_dept_id !== null &&
+      !isNaN(requestor_dept_id)
+      ? parseInt(requestor_dept_id)
+      : null;
+   
+    try {
+      let pool = await sql.connect(config);
+
+      console.log('get_search_vrf_list requestor_id_: ', requestor_id_,'area_id_: ', area_id_
+      ,'requestor_dept_id_: ', requestor_dept_id_
+      ,'formattedDateF: ', formattedDateF
+      ,'formattedDateT: ', formattedDateT
+      ,'approve_status: ', approve_status_
+      ,'branch_id: ', branch_id
+      );
+      // สร้าง request และเพิ่ม input parameters
+      let request = pool.request();
+      request.input('formattedDateF', sql.Date, formattedDateF);
+      request.input('formattedDateT', sql.Date, formattedDateT);
+      request.input('requestor_dept_id', sql.Int, requestor_dept_id_);
+      request.input('branch_id', sql.Int, branch_id);
+      request.input('requestor_id', sql.Int, requestor_id_);
+      request.input('area_id', sql.Int, area_id_);     
+      request.input('approve_status', sql.NVarChar, approve_status_);      
+  
+      // เรียกใช้ stored procedure
+      let result = await request.execute('spGet_search_vrf_list');
+      console.log('result.recordset: ',result.recordset); // Output the result
+      
+      return result.recordset;
+  } catch (error) {
+      console.log('error: ', error);
+      return [{ error: error }];
+  }  
+
 }
 async function get_search_user_vrf_by_dept(
   user_id,
@@ -3060,6 +3129,7 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_search_vrf_list: get_search_vrf_list,
   get_search_user_vrf_by_dept: get_search_user_vrf_by_dept,
   get_role_by_dept: get_role_by_dept,
   get_user_list_by_dept: get_user_list_by_dept,

@@ -20,6 +20,7 @@ const nodemailer = require("nodemailer");
 const ExcelJS = require('exceljs');
 require('dotenv').config()
 const moment = require('moment-timezone');
+
 app.use(cors({
     origin: process.env.CLIENT_URL,//'http://localhost:84', // replace with your Vue app domain
     credentials: true
@@ -271,11 +272,15 @@ app.post('/downloadExcel', bodyParser.json(), async (req, res) => {
                 right: { style: 'thin' },
             };
         });
+        let dateF;        
+        let dateT;
 
         // สร้าง row จากข้อมูลและกำหนด style
-        data.forEach(item => {
-            item.date_from = format(new Date(item.date_from), 'dd-MM-yyyy');
-            item.date_to = format(new Date(item.date_to), 'dd-MM-yyyy');
+        data.forEach(item => { 
+            dateF = new Date(item.date_from)
+            dateT = new Date(item.date_to)
+            item.date_from =  `${String(dateF.getUTCDate()).padStart(2, '0')}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${dateF.getUTCFullYear()}`;//format(new Date(item.date_from), 'dd-MM-yyyy');
+            item.date_to = `${String(dateT.getUTCDate()).padStart(2, '0')}-${String(dateT.getUTCMonth() + 1).padStart(2, '0')}-${dateT.getUTCFullYear()}`;//format(new Date(item.date_to), 'dd-MM-yyyy');
             const newRow = worksheet.addRow(item);
 
             newRow.eachCell((cell) => {
@@ -331,23 +336,19 @@ app.get('/get_complete_word', urlencodedParser, async (req, res) => {
 });
 app.get('/get_meeting_area', urlencodedParser, async (req, res) => {
     try {
-        const userId = req.query['user_id'];
+            const userId = req.query['user_id'];
+            // Optionally, validate 'userId' here.
+            // For example, ensure that it's a non-empty string or a number.
+            if (!userId) {
+                return res.status(400).json({ error: "The 'user_id' parameter is required." });
+            }
+            const result = await dboperations.get_meeting_area(userId);
+            if (!result || !result.length) {
+                return res.status(404).json({ error: "get_meeting_area error" });
+            }
+            return res.json(result[0]);
 
-        // Optionally, validate 'userId' here.
-        // For example, ensure that it's a non-empty string or a number.
-        if (!userId) {
-            return res.status(400).json({ error: "The 'user_id' parameter is required." });
-        }
-
-        const result = await dboperations.get_meeting_area(userId);
-
-        if (!result || !result.length) {
-            return res.status(404).json({ error: "get_meeting_area error" });
-        }
-
-        return res.json(result[0]);
-
-    } catch (err) {
+        } catch (err) {
         console.error('get_meeting_area error:', err);
         return res.status(500).json({ error: 'get_meeting_area error' });
     }
@@ -961,7 +962,8 @@ app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
         , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']
         , 'req.query[department_id]: ', req.query['department_id']
         , 'req.query[branch_id]: ', req.query['branch_id']
-        , 'req.query[role_id]: ', req.query['role_id']
+        , 'req.query[checkin_status]: ', req.query['checkin_status']
+        , 'req.query[approve_status]: ', req.query['approve_status']
     )
     try {
         dboperations.get_search_vrf_trans(
@@ -974,7 +976,39 @@ app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
             , req.query['branch_id']
             , req.query['checkin_status']
             , req.query['role_id']
+            , req.query['approve_status']
         ).then((result) => {
+            res.json(result)
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
+app.get('/get_search_vrf_list', urlencodedParser, (req, res) => { 
+    console.log('/get_search_vrf_list req.query[tbDateF]: ', req.query['tbDateF']
+        , 'req.query[tbDateT]: ', req.query['tbDateT']
+        , 'req.query[requestor_id]: ', req.query['requestor_id']
+        , 'req.query[area_id]: ', req.query['area_id']
+        , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']        
+        , 'req.query[branch_id]: ', req.query['branch_id']        
+        , 'req.query[approve_status]: ', req.query['approve_status']
+    )
+    try {
+        dboperations.get_search_vrf_list(
+            req.query['tbDateF']
+            , req.query['tbDateT']
+            , req.query['requestor_id']
+            , req.query['area_id']
+            , req.query['requestor_dept_id']
+            , req.query['branch_id']
+            , req.query['approve_status']
+        ).then((result) => { 
+            //console.log('result: ', result)
             res.json(result)
         }).catch((err) => {
             console.log('error: ', err)
@@ -1593,16 +1627,23 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, (req, res) => {
             }
             else {
                 if ((req.query['role_id'] !== '3') && (req.query['role_id'] !== '8')) {
-                    let result_sendmail = await setSendMail_next_approver(req.query['Id'])
+                    let result_sendmail = await setSendMail_next_approver(req.query['Id']).catch(err => {
+                        console.error('Error sending email:', err);
+                    });
                     console.log('setSendMail_next_approver result_sendmail: ', result_sendmail)
                 }
                 if (req.query['role_id'] === '8') {
-                    let result_sendmail = await setSendMail_final_approve(req.query['Id'])
+                    let result_sendmail = await setSendMail_final_approve(req.query['Id']).catch(err => {
+                        console.error('Error sending email:', err);
+                    });
                     console.log('setSendMail_final_approve result_sendmail: ', result_sendmail)
                 }
                 //role_id=8 is ncc_manager
                 res.json(result[0])
             }
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
         })
     } catch (error) {
         console.error('error: ', error);
