@@ -12,6 +12,8 @@ var onFinished = require('on-finished')
 var fileName
 var config = require('./server/dbconfig');
 const sql = require('mssql');
+const http = require('http');
+const { Server } = require("socket.io");
 const cors = require('cors')
 const ActiveDirectory = require('activedirectory2');
 const { format } = require('date-fns')
@@ -22,10 +24,31 @@ require('dotenv').config()
 const moment = require('moment-timezone');
 
 app.use(cors({
-    origin: process.env.CLIENT_URL,//'http://localhost:84', // replace with your Vue app domain
+    origin: process.env.CLIENT_URL,//'https://localhost:84', // replace with your Vue app domain
     credentials: true
 }));
 // app.use(cors())
+const server = http.createServer(app);
+
+// ตั้งค่า Socket.IO กับ HTTP server และกำหนด CORS option
+const io = new Server(server, {
+    cors: {
+        origin: process.env.CLIENT_URL,
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+
+io.on('connection', (socket) => {
+    //   console.log('New client connected');
+
+    socket.on('disconnect', () => {
+        //console.log('Client disconnected');
+    });
+
+    // สามารถเพิ่ม handlers อื่นๆ ที่นี่
+});
+
 const setordernumber = (value) => {
     try {
         const now = new Date()
@@ -97,7 +120,7 @@ const adjustDate = (inputDate) => {
     const date = new Date(inputDate);
     date.setDate(date.getDate() + 1);
     return date;
-  };
+};
 app.post('/set_add_user_vrf', upload.single('file'), async (req, res) => {
     try {
         console.log('set_manual_add_vrf_trans req.body: ', req.body);
@@ -134,7 +157,7 @@ app.post('/set_add_user_vrf', upload.single('file'), async (req, res) => {
 });
 app.post('/set_manual_add_vrf_trans', upload.single('file'), async (req, res) => {
     try {
-        
+
         let file_originalname_ = req.file === undefined ? '' : req.file.originalname;
         let filename_ = req.file === undefined ? '' : req.file.filename;
         let data = {
@@ -199,7 +222,7 @@ app.post('/set_manual_update_vrf_trans', upload.single('file'), async (req, res)
         let originalname = req.file !== undefined ? req.file.originalname : '';
         let filename_ = req.file !== undefined ? req.file.filename : '';
         let old_file = (req.body.attach_file_primitive !== undefined) && (req.body.attach_file_primitive !== '') ? req.body.attach_file_primitive : '';
-       
+
         let data = {
             vrf_id: req.body.id,
             attach_file_origin: originalname,
@@ -272,14 +295,14 @@ app.post('/downloadExcel', bodyParser.json(), async (req, res) => {
                 right: { style: 'thin' },
             };
         });
-        let dateF;        
+        let dateF;
         let dateT;
 
         // สร้าง row จากข้อมูลและกำหนด style
-        data.forEach(item => { 
+        data.forEach(item => {
             dateF = new Date(item.date_from)
             dateT = new Date(item.date_to)
-            item.date_from =  `${String(dateF.getUTCDate()).padStart(2, '0')}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${dateF.getUTCFullYear()}`;//format(new Date(item.date_from), 'dd-MM-yyyy');
+            item.date_from = `${String(dateF.getUTCDate()).padStart(2, '0')}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${dateF.getUTCFullYear()}`;//format(new Date(item.date_from), 'dd-MM-yyyy');
             item.date_to = `${String(dateT.getUTCDate()).padStart(2, '0')}-${String(dateT.getUTCMonth() + 1).padStart(2, '0')}-${dateT.getUTCFullYear()}`;//format(new Date(item.date_to), 'dd-MM-yyyy');
             const newRow = worksheet.addRow(item);
 
@@ -336,19 +359,19 @@ app.get('/get_complete_word', urlencodedParser, async (req, res) => {
 });
 app.get('/get_meeting_area', urlencodedParser, async (req, res) => {
     try {
-            const userId = req.query['user_id'];
-            // Optionally, validate 'userId' here.
-            // For example, ensure that it's a non-empty string or a number.
-            if (!userId) {
-                return res.status(400).json({ error: "The 'user_id' parameter is required." });
-            }
-            const result = await dboperations.get_meeting_area(userId);
-            if (!result || !result.length) {
-                return res.status(404).json({ error: "get_meeting_area error" });
-            }
-            return res.json(result[0]);
+        const userId = req.query['user_id'];
+        // Optionally, validate 'userId' here.
+        // For example, ensure that it's a non-empty string or a number.
+        if (!userId) {
+            return res.status(400).json({ error: "The 'user_id' parameter is required." });
+        }
+        const result = await dboperations.get_meeting_area(userId);
+        if (!result || !result.length) {
+            return res.status(404).json({ error: "get_meeting_area error" });
+        }
+        return res.json(result[0]);
 
-        } catch (err) {
+    } catch (err) {
         console.error('get_meeting_area error:', err);
         return res.status(500).json({ error: 'get_meeting_area error' });
     }
@@ -493,6 +516,7 @@ const handleLDAPAuthentication = (config, jobid, password, res) => {
         ad.authenticate('gfcth\\' + jobid, password, (err, auth) => {
             if (err) {
                 console.log('ERROR: ', JSON.stringify(err));
+                console.log('ERROR u: ', jobid, ' pw: ', password);
                 return res.status(500).json({ error: err });
             }
             if (auth) {
@@ -691,24 +715,26 @@ app.get('/set_sendmail', urlencodedParser, (req, res) => {
                 try {
                     //`<div style="text-align: right;">${value}</div>`
                     output = result[0]
-                    console.log(' output[0].email: ', output[0].email)
+                    console.log('/set_sendmail output[0].email: ', output[0].email)
                     let tbDateF_;
                     let formattedtbDateF;
                     let tbDateT_;
                     let formattedtbDateT;
+                    //console.log('output[0].datefrom: ', output[0].datefrom,'output[0].dateto: ', output[0].dateto)
 
                     tbDateF_ = moment.tz(output[0].datefrom, 'Asia/Bangkok');
                     formattedtbDateF = tbDateF_.format('DD-MM-YYYY');
                     tbDateT_ = moment.tz(output[0].dateto, 'Asia/Bangkok');
                     formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
+                    //console.log('formattedtbDateF: ', formattedtbDateF, 'formattedtbDateT: ', formattedtbDateT)
 
                     let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC`
-                    let body = `วันที่: ${tbDateF_} - ${tbDateT_}<br>
+                    let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
             พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
             ผู้ร้องขอ: ${output[0].requestor}<br>
             ตำแหน่งผู้ร้องขอ: ${output[0].position}<br>
-            กดลิงค์ด้านล่างเพื่อ อนุมัติ หรือ ปฏิเสธ<br><br>
-            (<a href="http://localhost:443/approvevrflst">link</a>)`;
+            กดลิ้งค์ด้านล่างเพื่อดำเนินการ<br><br>
+            (<a href="${process.env.CLIENT_URL}/approvevrflst">${process.env.CLIENT_URL}</a>)`;
 
                     let transporter = nodemailer.createTransport({
                         host: process.env.smtp_server,
@@ -718,7 +744,7 @@ app.get('/set_sendmail', urlencodedParser, (req, res) => {
                             user: process.env.mail_user_sender,
                             pass: process.env.mail_pass_sender,
                         },
-                        connectionTimeout: 3000000 // New timeout duration
+                        connectionTimeout: 5000000 // New timeout duration
                     });
                     let mailOptions
                     if (output[0].attach_file === '' || output[0].attach_file === null) {
@@ -746,11 +772,11 @@ app.get('/set_sendmail', urlencodedParser, (req, res) => {
                     }
                     transporter.sendMail(mailOptions, function (error, info) {
                         if (error) {
-                            console.log(error);
+                            console.log('sendMail error: ', error);
                         } else {
                             console.log('Email sent: ' + info.response);
                         }
-                    });
+                    })
                     // res.send("Email sent");            
                     // console.log('set_sendmail output: ', output[0].reason)
                     res.json(result)
@@ -761,6 +787,9 @@ app.get('/set_sendmail', urlencodedParser, (req, res) => {
                     // (Note: the exact output may be browser-dependent)
                 }
             }
+        }).catch((err) => {
+            console.log('get_mail_vrf_info error: ', err)
+            res.json({ error: err })
         })
     } catch (error) {
         console.error('error: ', error);
@@ -893,7 +922,10 @@ app.get('/get_vrf_list', urlencodedParser, (req, res) => {
 })
 app.get('/get_vrf_lst_for_security', urlencodedParser, (req, res) => {
     console.log('/get_vrf_list department_id: ', req.query['department_id']
-        , 'branch_id: ', req.query['branch_id'])
+        , 'branch_id: ', req.query['branch_id']
+        , 'role_id: ', req.query['role_id']
+        , 'division_id: ', req.query['division_id']
+    )
     try {
         dboperations.get_vrf_lst_for_security(
             req.query['department_id']
@@ -935,6 +967,56 @@ app.get('/get_vrf_approve_list', urlencodedParser, (req, res) => {
     }
 
 })
+app.get('/get_data_approve_list', urlencodedParser, (req, res) => {
+    console.log('/get_data_approve_list department_id: ', req.query['department_id']
+        , 'branch_id: ', req.query['branch_id']
+        , 'role_id: ', req.query['role_id']
+        , 'division_id: ', req.query['division_id']
+        , 'Id: ', req.query['Id'])
+    try {
+        dboperations.get_data_approve_list(
+            req.query['department_id']
+            , req.query['branch_id']
+            , req.query['role_id']
+            , req.query['division_id']
+            , req.query['Id']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
+app.get('/get_data_approve_list_for_security', urlencodedParser, (req, res) => {
+    console.log('get_data_approve_list_for_security department_id: ', req.query['department_id']
+        , 'branch_id: ', req.query['branch_id']
+        , 'role_id: ', req.query['role_id']
+        , 'division_id: ', req.query['division_id']
+        , 'Id: ', req.query['Id'])
+    try {
+        dboperations.get_data_approve_list_for_security(
+            req.query['department_id']
+            , req.query['branch_id']
+            , req.query['role_id']
+            , req.query['division_id']
+            , req.query['Id']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
 app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
     console.log('/get_templete_vrf_list department_id: ', req.query['department_id']
         , 'branch_id: ', req.query['branch_id'])
@@ -954,7 +1036,79 @@ app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
     }
 
 })
-app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => { 
+app.get('/get_search_vrf_for_guard', urlencodedParser, (req, res) => {
+    console.log('/get_search_vrf_for_guard req.query[tbDateF]: ', req.query['tbDateF']
+        , 'req.query[tbDateT]: ', req.query['tbDateT']
+        , 'req.query[requestor_id]: ', req.query['requestor_id']
+        , 'req.query[area_id]: ', req.query['area_id']
+        , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']
+        , 'req.query[department_id]: ', req.query['department_id']
+        , 'req.query[branch_id]: ', req.query['branch_id']
+        , 'req.query[checkin_status]: ', req.query['checkin_status']
+        , 'req.query[approve_status]: ', req.query['approve_status']
+        , 'req.query[contactor]: ', req.query['contactor']
+    )
+    try {
+        dboperations.get_search_vrf_for_guard(
+            req.query['tbDateF']
+            , req.query['tbDateT']
+            , req.query['requestor_id']
+            , req.query['area_id']
+            , req.query['requestor_dept_id']
+            , req.query['department_id']
+            , req.query['branch_id']
+            , req.query['checkin_status']
+            , req.query['role_id']
+            , req.query['approve_status']
+            , req.query['contactor']
+        ).then((result) => {
+            res.json(result)
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
+app.get('/get_search_vrf_approve_trans', urlencodedParser, (req, res) => {
+    console.log('/get_search_vrf_approve_trans req.query[tbDateF]: ', req.query['tbDateF']
+        , 'req.query[tbDateT]: ', req.query['tbDateT']
+        , 'req.query[requestor_id]: ', req.query['requestor_id']
+        , 'req.query[area_id]: ', req.query['area_id']
+        , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']
+        , 'req.query[department_id]: ', req.query['department_id']
+        , 'req.query[branch_id]: ', req.query['branch_id']
+        , 'req.query[checkin_status]: ', req.query['checkin_status']
+        , 'req.query[approve_status]: ', req.query['approve_status']
+    )
+    try {
+        dboperations.get_search_vrf_approve_trans(
+            req.query['tbDateF']
+            , req.query['tbDateT']
+            , req.query['requestor_id']
+            , req.query['area_id']
+            , req.query['requestor_dept_id']
+            , req.query['department_id']
+            , req.query['branch_id']
+            , req.query['checkin_status']
+            , req.query['role_id']
+            , req.query['approve_status']
+        ).then((result) => {
+            res.json(result)
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
+app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
     console.log('/get_search_vrf_trans req.query[tbDateF]: ', req.query['tbDateF']
         , 'req.query[tbDateT]: ', req.query['tbDateT']
         , 'req.query[requestor_id]: ', req.query['requestor_id']
@@ -989,13 +1143,13 @@ app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
     }
 
 })
-app.get('/get_search_vrf_list', urlencodedParser, (req, res) => { 
+app.get('/get_search_vrf_list', urlencodedParser, (req, res) => {
     console.log('/get_search_vrf_list req.query[tbDateF]: ', req.query['tbDateF']
         , 'req.query[tbDateT]: ', req.query['tbDateT']
         , 'req.query[requestor_id]: ', req.query['requestor_id']
         , 'req.query[area_id]: ', req.query['area_id']
-        , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']        
-        , 'req.query[branch_id]: ', req.query['branch_id']        
+        , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']
+        , 'req.query[branch_id]: ', req.query['branch_id']
         , 'req.query[approve_status]: ', req.query['approve_status']
     )
     try {
@@ -1007,7 +1161,7 @@ app.get('/get_search_vrf_list', urlencodedParser, (req, res) => {
             , req.query['requestor_dept_id']
             , req.query['branch_id']
             , req.query['approve_status']
-        ).then((result) => { 
+        ).then((result) => {
             //console.log('result: ', result)
             res.json(result)
         }).catch((err) => {
@@ -1074,6 +1228,28 @@ app.get('/get_search_user_vrf', urlencodedParser, (req, res) => {
     }
 
 })
+app.get('/get_search_vrf_templete', urlencodedParser, (req, res) => {
+    try {
+        dboperations.get_search_vrf_templete(
+            req.query['tbDateF']
+            , req.query['tbDateT']
+            , req.query['requestor_id']
+            , req.query['area_id']
+            , req.query['requestor_dept_id']
+            , req.query['department_id']
+            , req.query['branch_id']
+            , req.query['checkin_status']
+        ).then((result) => {
+            res.json(result)
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
 app.get('/get_search_vrf', urlencodedParser, (req, res) => {
     try {
         dboperations.get_search_vrf(
@@ -1096,6 +1272,100 @@ app.get('/get_search_vrf', urlencodedParser, (req, res) => {
         res.json({ error: error })
     }
 })
+
+// async function get_search_vrf(
+//     tbDateF,
+//     tbDateT,
+//     requestor_id,
+//     area_id,
+//     requestor_dept_id,
+//     department_id,
+//     branch_id,
+//     checkin_status
+//   ) {
+//     let tbDateF_;
+//     let formattedtbDateF;
+//     let tbDateT_;
+//     let formattedtbDateT;
+//     if (
+//       (tbDateF !== undefined && tbDateF !== '' && tbDateF !== null) &&
+//       (tbDateT !== undefined && tbDateT !== '' && tbDateT !== null)
+//     ) {
+//       tbDateF_ = moment.tz(tbDateF, 'Asia/Bangkok');
+//       formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
+//       tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
+//       formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
+//     } else {
+//       tbDateF_ = '';
+//       formattedtbDateF = '';
+//       tbDateT_ = '';
+//       formattedtbDateT = '';
+//     }
+//     let checkin_status_ =
+//       checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
+//         ? parseInt(checkin_status)
+//         : null;
+//     let requestor_id_ =
+//       requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
+//         ? parseInt(requestor_id)
+//         : null;
+//     let area_id_ =
+//       area_id !== undefined && area_id !== '' && area_id !== null && !isNaN(area_id)
+//         ? parseInt(area_id)
+//         : null;
+//     let requestor_dept_id_ =
+//       requestor_dept_id !== undefined &&
+//         requestor_dept_id !== '' &&
+//         requestor_dept_id !== null &&
+//         !isNaN(requestor_dept_id)
+//         ? parseInt(requestor_dept_id)
+//         : null;
+//     try {
+//       let pool = await sql.connect(config);
+
+//       let queryString = `select ROW_NUMBER() OVER(ORDER BY vrpt.[id] DESC) AS [no],* from vVRF_Report_template vrpt WHERE vrpt.[Status] = '1' `;
+//       let dateF = new Date(formattedtbDateF);
+//       let dateT = new Date(formattedtbDateT);
+
+//       let formattedDateF = `${dateF.getFullYear()}-${String(dateF.getMonth() + 1).padStart(2, '0')}-${String(dateF.getDate()).padStart(2, '0')}`;
+//       let formattedDateT = `${dateT.getFullYear()}-${String(dateT.getMonth() + 1).padStart(2, '0')}-${String(dateT.getDate()).padStart(2, '0')}`;
+
+//       requestor_id_
+//         ? (queryString += `AND vrpt.requestor_dept = ${requestor_id_} AND vrpt.branch_id = ${branch_id} `)
+//         : (queryString += `AND vrpt.branch_id = ${branch_id} `);
+//       queryString += formattedtbDateF && formattedtbDateT
+//        ? 
+//        //`AND vrpt.id IN (
+//       //   SELECT DISTINCT vrf_id
+//       //   FROM vVRF_Template_trans_master_det
+//       //   WHERE (
+//       //     CAST(date_from AS DATE) >= CAST('${formattedDateF}' AS DATE) AND CAST(date_to AS DATE) <= CAST('${formattedDateT}' AS DATE)
+//       //   )`
+//         ` AND CAST(vrpt.date_from AS DATE) <= CAST('${formattedDateF}' AS DATE) AND CAST(vrpt.date_to AS DATE) >= CAST('${formattedDateT}' AS DATE) `      
+//       : '';
+//       requestor_id_
+//         ? (queryString += `AND (${requestor_id_} IS NULL OR vrpt.requestor = ${requestor_id_}) `)
+//         : (queryString += '');
+//       area_id_
+//         ? (queryString += `AND (${area_id_} IS NULL OR vrpt.area_id = ${area_id_}) `)
+//         : (queryString += '');
+//       requestor_dept_id_
+//         ? (queryString += `AND (${requestor_dept_id_} IS NULL OR vrpt.requestor_dept = ${requestor_dept_id_}) `)
+//         : (queryString += '');
+//       if (checkin_status_) {
+//         checkin_status_ === 1 ? (queryString += `AND ( vrpt.checkin_by is not null ) `) : null;
+//         checkin_status_ === 2 ? (queryString += `AND ( vrpt.checkin_by is null ) `) : null;
+//       }
+//       console.log('queryString: ', queryString);
+//       let result = await pool.request().query(queryString);
+//       return result.recordset;
+//     } catch (error) {
+//       console.log('error: ', error);
+//       return [{ error: error }];
+//     }
+//   }
+
+
 // app.get('/getcctbranch', urlencodedParser, (req, res) => {  
 //     dboperations.getCashCenterData( req.query['CustomerID']  ).then((result, err) => {
 //         if (err) {
@@ -1518,16 +1788,93 @@ app.get('/update_user_vrf_status_all', urlencodedParser, (req, res) => {
         res.json({ error: error })
     }
 })
+app.get('/update_vrf_requester_trans_status_all', urlencodedParser, (req, res) => {
+    let output = null
+    let type_ = req.query['Type_']
+    //---tpe_ = 'approve' หรือ 'cancel'
+    try {
+        req.query['Id'].forEach((item) => {
+            dboperations.update_vrf_requester_trans_status_all(parseInt(item)
+                , req.query['Type_']
+                , req.query['user_id']
+                , req.query['role_id']
+                , req.query['work_flow_id']
+                , io
+            ).then((result) => {
+                output = result[0]
+            }).catch((err) => {
+                console.log('error: ', err)
+                res.json({ error: err })
+            })
+
+            if (type_ === 'cancel') {
+                dboperations.get_upload_filename(parseInt(item)).then((result, err) => {
+                    if (err) {
+                        console.log('error: ', err)
+                    }
+                    else {
+                        console.log('result[0]: ', result[0][0].attach_file)
+                        if ((result[0][0].attach_file !== '')
+                            && (result[0][0].attach_file !== null)
+                            && (result[0][0].attach_file !== undefined)
+                            && (result[0][0].attach_file !== 'undefined')
+                        ) {
+                            // ใช้ fs.stat
+                            fs.stat('./uploads/' + result[0][0].attach_file, (err, stats) => {
+                                if (err) {
+                                    console.log(`ไม่พบไฟล์: ${result[0][0].attach_file}`);
+                                } else {
+                                    fs.unlink('./uploads/' + result[0][0].attach_file, (err) => {
+                                        if (err) throw err;
+                                        console.log(result[0][0].attach_file + ' ถูกลบแล้ว');
+                                    });
+                                }
+                            });
+                        }
+                        output = result[0]
+                    }
+                })
+            }
+
+        })
+        res.json(output)
+
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
+//--------for approve all func in approve page
 app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
     let output = null
     let type_ = req.query['Type_']
     try {
         req.query['Id'].forEach((item) => {
+            // dboperations.update_vrf_trans_approve_status(parseInt(item)
+            //     , req.query['Type_']
+            //     , req.query['user_id']
+            //     , req.query['role_id']
+            //     , req.query['work_flow_id']
+            //     , req.query['department_id']
+            //     , req.query['branch_id']
+            //     , req.query['division_id']
+            //     , io
+            // ).then(async (result, err) => {
+            //     output = result[0]
+            // }).catch((err) => {
+            //     console.log('error: ', err)
+            //     res.json({ error: err })
+            // })
             dboperations.update_vrf_trans_status(parseInt(item)
                 , req.query['Type_']
                 , req.query['user_id']
                 , req.query['role_id']
                 , req.query['work_flow_id']
+                , req.query['department_id']
+                , req.query['branch_id']
+                , req.query['division_id']
+                ,io
             ).then((result) => {
                 output = result[0]
             }).catch((err) => {
@@ -1621,6 +1968,7 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, (req, res) => {
             , req.query['department_id']
             , req.query['branch_id']
             , req.query['division_id']
+            , io
         ).then(async (result, err) => {
             if (err) {
                 console.log('error: ', err)
@@ -1649,8 +1997,72 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, (req, res) => {
         console.error('error: ', error);
         res.json({ error: error })
     }
+})
+app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
+    console.log('/setSendMail_next_approver req.query[Id]:', req.query['Id']
+        , 'req.query[department_id]:', req.query['department_id']
+        , 'req.query[branch_id]:', req.query['branch_id']
+        , 'req.query[role_id]:', req.query['role_id']
+        , 'req.query[division_id]:', req.query['division_id']
+    )
+
+    try {
+        let result_sendmail
+        if ((req.query['role_id'] !== '3') && (req.query['role_id'] !== '8')) {
+            result_sendmail = await setSendMail_next_approver(req.query['Id']).catch(err => {
+                console.error('Error setSendMail_next_approver:', err);
+            });
+            console.log('setSendMail_next_approver result_sendmail: ', result_sendmail)
+        }
+        if (req.query['role_id'] === '8') {
+            result_sendmail = await setSendMail_final_approve(req.query['Id']).catch(err => {
+                console.error('Error setSendMail_final_approve:', err);
+            });
+            console.log('setSendMail_final_approve result_sendmail: ', result_sendmail)
+        }
+        //role_id=8 is ncc_manager
+        res.json(result_sendmail[0])
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
 
 })
+// app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
+//     const {
+//         Id,
+//         department_id,
+//         branch_id,
+//         division_id,
+//         role_id
+//     } = req.query;
+
+//     console.log('/update_vrf_trans_approve_status',
+//         'Id:', Id,
+//         'department_id:', department_id,
+//         'branch_id:', branch_id,
+//         'division_id:', division_id
+//     );
+
+//     try {
+//         let result_sendmail;
+
+//         // Handle role_id cases
+//         if (role_id !== '3' && role_id !== '8') {
+//             result_sendmail = await setSendMail_next_approver(Id);
+//             console.log('setSendMail_next_approver result_sendmail: ', result_sendmail);
+//         } else if (role_id === '8') { // role_id=8 is ncc_manager
+//             result_sendmail = await setSendMail_final_approve(Id);
+//             console.log('setSendMail_final_approve result_sendmail: ', result_sendmail);
+//         }
+
+//         res.json(result_sendmail[0]);
+
+//     } catch (error) {
+//         console.error('Error:', error);
+//         res.json({ error: error.message }); // Send just the error message for better readability
+//     }
+// });
 const setSendMail_final_approve = async (id) => {
     try {
         let result = await dboperations.get_mail_info_final_approve(id)
@@ -1669,12 +2081,16 @@ const setSendMail_final_approve = async (id) => {
         formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
 
         let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC อนุมัติแล้ว`
+        // let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
+        // พื้นที่ขอเข้าพบ: ${output.meeting_area}<br>
+        // ผู้ร้องขอ: ${output.requestor}<br>
+        // ตำแหน่งผู้ร้องขอ: ${output.position}<br>
+        // กดลิงค์ด้านล่างเพื่อเข้าไปดูรายละเอียด<br><br>
+        // (<a href="${process.env.CLIENT_URL}/requestvrflst">${process.env.CLIENT_URL}</a>)`;
         let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
         พื้นที่ขอเข้าพบ: ${output.meeting_area}<br>
         ผู้ร้องขอ: ${output.requestor}<br>
-        ตำแหน่งผู้ร้องขอ: ${output.position}<br>
-        กดลิงค์ด้านล่างเพื่อเข้าไปดูรายละเอียด<br><br>
-        (<a href="${process.env.CLIENT_URL}/requestvrflst">link_vrf</a>)`;
+        ตำแหน่งผู้ร้องขอ: ${output.position}<br>`;
         let transporter = nodemailer.createTransport({
             host: process.env.smtp_server,
             port: process.env.smtp_server_port,
@@ -1729,7 +2145,7 @@ const setSendMail_next_approver = async (id) => {
     try {
         let result = await dboperations.get_mail_info_next_approve(id)
         let output = result[0]
-        console.log(' output[0].email_next_approver: ', output[0].email_next_approver)
+        console.log('setSendMail_next_approver output[0].email_next_approver: ', output[0].email_next_approver)
 
         let tbDateF_;
         let formattedtbDateF;
@@ -1746,8 +2162,8 @@ const setSendMail_next_approver = async (id) => {
         พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
         ผู้ร้องขอ: ${output[0].requestor}<br>
         ตำแหน่งผู้ร้องขอ: ${output[0].position}<br>
-        กดลิงค์ด้านล่างเพื่อ อนุมัติ หรือ ปฏิเสธ<br><br>
-        (<a href="${process.env.CLIENT_URL}/approvevrflst">link_vrf</a>)`;
+        กดลิ้งค์ด้านล่างเพื่อดำเนินการ<br><br>
+        (<a href="${process.env.CLIENT_URL}/approvevrflst">${process.env.CLIENT_URL}</a>)`;
         let transporter = nodemailer.createTransport({
             host: process.env.smtp_server,
             port: process.env.smtp_server_port,
@@ -2005,6 +2421,9 @@ app.get('/delete_app_proc_det', urlencodedParser, (req, res) => {
 //       res.status(500).send(error);
 //     }
 // });
-app.listen(process.env.PORT, () => console.log(`running on localhost:${process.env.PORT}`))
+// app.listen(process.env.PORT, () => console.log(`running on localhost:${process.env.PORT}`))
+server.listen(process.env.PORT, () => {
+    console.log(`Server running on https://localhost:${process.env.PORT}`);
+});
 
 
