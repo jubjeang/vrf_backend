@@ -1973,18 +1973,22 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, (req, res) => {
             if (err) {
                 console.log('error: ', err)
             }
-            else {
+            else { 
+                let email_recipient = getEmail_recipient(req.query['Id']) 
+
                 if ((req.query['role_id'] !== '3') && (req.query['role_id'] !== '8')) {
-                    let result_sendmail = await setSendMail_next_approver(req.query['Id']).catch(err => {
-                        console.error('Error sending email:', err);
-                    });
-                    console.log('setSendMail_next_approver result_sendmail: ', result_sendmail)
+                    // let result_sendmail = await setSendMail_next_approver(req.query['Id']).catch(err => {
+                    //     console.error('Error sending email:', err);
+                    // });
+                    // console.log('setSendMail_next_approver result_sendmail: ', result_sendmail)
+                    console.log('in role not 3 and 8 email_recipient: ', email_recipient)
                 }
                 if (req.query['role_id'] === '8') {
-                    let result_sendmail = await setSendMail_final_approve(req.query['Id']).catch(err => {
-                        console.error('Error sending email:', err);
-                    });
-                    console.log('setSendMail_final_approve result_sendmail: ', result_sendmail)
+                    // let result_sendmail = await setSendMail_final_approve(req.query['Id']).catch(err => {
+                    //     console.error('Error sending email:', err);
+                    // });
+                    // console.log('setSendMail_final_approve result_sendmail: ', result_sendmail)
+                    console.log('in role  8 email_recipient: ', email_recipient)
                 }
                 //role_id=8 is ncc_manager
                 res.json(result[0])
@@ -1998,6 +2002,27 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, (req, res) => {
         res.json({ error: error })
     }
 })
+const getEmail_recipient = (Id) => {
+    const output = null;
+    try {
+        dboperations.getEmail_recipient(req.query['Id']).then(async (result, err) => {
+            if (err) {
+                console.log('error: ', err)
+                output = res.json({ error: err })
+            }
+            else { 
+                output = res.json(result[0])
+            }
+        }).catch((err) => {
+            console.log('error: ', err)
+            output = res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        output = res.json(result[0])
+    }
+    return output;
+};
 app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
     console.log('/setSendMail_next_approver req.query[Id]:', req.query['Id']
         , 'req.query[department_id]:', req.query['department_id']
@@ -2005,7 +2030,6 @@ app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
         , 'req.query[role_id]:', req.query['role_id']
         , 'req.query[division_id]:', req.query['division_id']
     )
-
     try {
         let result_sendmail
         if ((req.query['role_id'] !== '3') && (req.query['role_id'] !== '8')) {
@@ -2182,7 +2206,6 @@ const setSendMail_next_approver = async (id) => {
                 subject,
                 html: body
             };
-
         }
         else {
             mailOptions = {
@@ -2217,7 +2240,6 @@ const setSendMail_next_approver = async (id) => {
         //         return true
         //     }
         // });
-
         // res.send("Email sent");            
         //console.log('set_sendmail output: ', output[0].reason)
         // res.json(result)

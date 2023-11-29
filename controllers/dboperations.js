@@ -1304,6 +1304,19 @@ async function get_mail_vrf_info(Id
     return [{ error: error }];
   }
 }
+async function getEmail_recipient(Id) {
+  try {
+    let pool = await sql.connect(config);
+    let spGet_mail_vrf_info = await pool
+      .request()
+      .input("id", sql.Int, Id)     
+      .execute("spGet_mail_vrf_info");
+    return spGet_mail_vrf_info.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_templete_vrf(Id) {
   try {
     let pool = await sql.connect(config);
@@ -3638,6 +3651,7 @@ async function get_upload_filename(Id, Type_, user_id) {
 //   }
 // }
 module.exports = { 
+  getEmail_recipient:getEmail_recipient,
   get_data_approve_list_for_security: get_data_approve_list_for_security,
   get_data_approve_list: get_data_approve_list,
   get_search_vrf_approve_trans: get_search_vrf_approve_trans,
