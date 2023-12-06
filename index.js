@@ -693,7 +693,7 @@ app.get('/getActitySelectd', urlencodedParser, async (req, res) => {
     }
 });
 //------------getrole 
-app.get('/set_sendmail', urlencodedParser, (req, res) => {
+app.get('/set_sendmail', urlencodedParser, async (req, res) => {
     // let id = req.body['id']
     let output
     console.log('set_sendmail req.query[id]: ', req.query['id_']
@@ -702,100 +702,141 @@ app.get('/set_sendmail', urlencodedParser, (req, res) => {
         , 'req.query[division_id]: ', req.query['division_id']
     )
     try {
-        dboperations.get_mail_vrf_info(req.query['id_']
-            , req.query['department_id']
-            , req.query['branch_id']
-            , req.query['division_id']
-        ).then((result, err) => {
-            if (err) {
-                console.log('error: ', err)
-                res.json({ error: err })
-            }
-            else {
+       
+        if (req.query['role_id'] !== '8') { 
+            let email_recipient = await getEmail_recipient(req.query['id_']);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
                 try {
-                    //`<div style="text-align: right;">${value}</div>`
-                    output = result[0]
-                    console.log('/set_sendmail output[0].email: ', output[0].email)
-                    let tbDateF_;
-                    let formattedtbDateF;
-                    let tbDateT_;
-                    let formattedtbDateT;
-                    //console.log('output[0].datefrom: ', output[0].datefrom,'output[0].dateto: ', output[0].dateto)
-
-                    tbDateF_ = moment.tz(output[0].datefrom, 'Asia/Bangkok');
-                    formattedtbDateF = tbDateF_.format('DD-MM-YYYY');
-                    tbDateT_ = moment.tz(output[0].dateto, 'Asia/Bangkok');
-                    formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
-                    //console.log('formattedtbDateF: ', formattedtbDateF, 'formattedtbDateT: ', formattedtbDateT)
-
-                    let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC`
-                    let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
-            พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
-            ผู้ร้องขอ: ${output[0].requestor}<br>
-            ตำแหน่งผู้ร้องขอ: ${output[0].position}<br>
-            กดลิ้งค์ด้านล่างเพื่อดำเนินการ<br><br>
-            (<a href="${process.env.CLIENT_URL}/approvevrflst">${process.env.CLIENT_URL}</a>)`;
-
-                    let transporter = nodemailer.createTransport({
-                        host: process.env.smtp_server,
-                        port: process.env.smtp_server_port,
-                        secure: false,
-                        auth: {
-                            user: process.env.mail_user_sender,
-                            pass: process.env.mail_pass_sender,
-                        },
-                        connectionTimeout: 5000000 // New timeout duration
-                    });
-                    let mailOptions
-                    if (output[0].attach_file === '' || output[0].attach_file === null) {
-                        mailOptions = {
-                            from: `VRF <${process.env.mail_user_sender}>`,
-                            to: output[0].email,
-                            subject,
-                            html: body
-                        };
-
-                    }
-                    else {
-                        mailOptions = {
-                            from: `VRF <${process.env.mail_user_sender}>`,
-                            to: output[0].email,
-                            subject,
-                            html: body, // use html instead of text
-                            attachments: [
-                                {
-                                    // Path is now relative to your current directory
-                                    path: `./uploads/${output[0].attach_file}`
-                                }
-                            ]
-                        };
-                    }
-                    transporter.sendMail(mailOptions, function (error, info) {
-                        if (error) {
-                            console.log('sendMail error: ', error);
-                        } else {
-                            console.log('Email sent: ' + info.response);
-                        }
-                    })
-                    // res.send("Email sent");            
-                    // console.log('set_sendmail output: ', output[0].reason)
-                    res.json(result)
-                } catch (error) {
-                    res.json({ error: error })
-                    console.error(error)
-                    // Expected output: ReferenceError: nonExistentFunction is not defined
-                    // (Note: the exact output may be browser-dependent)
+                    let result_sendmail = await setSendMail_next_approver(req.query['id_'],recipient.email,recipient.user_id);
+                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                } catch (err) {
+                    console.error('Error sending email:', err);
                 }
             }
-        }).catch((err) => {
-            console.log('get_mail_vrf_info error: ', err)
-            res.json({ error: err })
-        })
-    } catch (error) {
-        console.error('error: ', error);
-        res.json({ error: error })
+        }
+        if (req.query['role_id'] === '8') {
+            let email_recipient = await getEmail_recipient(req.query['id_']);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
+                try {
+                    let result_sendmail = await setSendMail_final_approve(req.query['id_'],recipient.email,recipient.user_id);
+                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                } catch (err) {
+                    console.error('Error sending email:', err);
+                }
+            }
+        }
+        res.json({ success: true });
+        
+    } catch (err) {
+        console.error('error: ', err);
+        res.json({ error: err.message || err });
     }
 })
+// app.get('/set_sendmail', urlencodedParser, (req, res) => {
+//     // let id = req.body['id']
+//     let output
+//     console.log('set_sendmail req.query[id]: ', req.query['id_']
+//         , 'req.query[department_id]: ', req.query['department_id']
+//         , 'req.query[branch_id]: ', req.query['branch_id']
+//         , 'req.query[division_id]: ', req.query['division_id']
+//     )
+//     try {
+//         dboperations.get_mail_vrf_info(req.query['id_']
+//             , req.query['department_id']
+//             , req.query['branch_id']
+//             , req.query['division_id']
+//         ).then((result, err) => {
+//             if (err) {
+//                 console.log('error: ', err)
+//                 res.json({ error: err })
+//             }
+//             else {
+//                 try {
+//                     //`<div style="text-align: right;">${value}</div>`
+//                     output = result[0]
+//                     console.log('/set_sendmail output[0].email: ', output[0].email)
+//                     let tbDateF_;
+//                     let formattedtbDateF;
+//                     let tbDateT_;
+//                     let formattedtbDateT;
+//                     //console.log('output[0].datefrom: ', output[0].datefrom,'output[0].dateto: ', output[0].dateto)
+
+//                     tbDateF_ = moment.tz(output[0].datefrom, 'Asia/Bangkok');
+//                     formattedtbDateF = tbDateF_.format('DD-MM-YYYY');
+//                     tbDateT_ = moment.tz(output[0].dateto, 'Asia/Bangkok');
+//                     formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
+//                     //console.log('formattedtbDateF: ', formattedtbDateF, 'formattedtbDateT: ', formattedtbDateT)
+
+//                     let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC`
+//                     let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
+//             พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
+//             ผู้ร้องขอ: ${output[0].requestor}<br>
+//             ตำแหน่งผู้ร้องขอ: ${output[0].position}<br>
+//             กดลิ้งค์ด้านล่างเพื่อดำเนินการ<br><br>
+//             (<a href="${process.env.CLIENT_URL}/approvevrflst">${process.env.CLIENT_URL}</a>)`;
+
+//                     let transporter = nodemailer.createTransport({
+//                         host: process.env.smtp_server,
+//                         port: process.env.smtp_server_port,
+//                         secure: false,
+//                         auth: {
+//                             user: process.env.mail_user_sender,
+//                             pass: process.env.mail_pass_sender,
+//                         },
+//                         connectionTimeout: 5000000 // New timeout duration
+//                     });
+//                     let mailOptions
+//                     if (output[0].attach_file === '' || output[0].attach_file === null) {
+//                         mailOptions = {
+//                             from: `VRF <${process.env.mail_user_sender}>`,
+//                             to: output[0].email,
+//                             subject,
+//                             html: body
+//                         };
+
+//                     }
+//                     else {
+//                         mailOptions = {
+//                             from: `VRF <${process.env.mail_user_sender}>`,
+//                             to: output[0].email,
+//                             subject,
+//                             html: body, // use html instead of text
+//                             attachments: [
+//                                 {
+//                                     // Path is now relative to your current directory
+//                                     path: `./uploads/${output[0].attach_file}`
+//                                 }
+//                             ]
+//                         };
+//                     }
+//                     transporter.sendMail(mailOptions, function (error, info) {
+//                         if (error) {
+//                             console.log('sendMail error: ', error);
+//                         } else {
+//                             console.log('Email sent: ' + info.response);
+//                         }
+//                     })
+//                     // res.send("Email sent");            
+//                     // console.log('set_sendmail output: ', output[0].reason)
+//                     res.json(result)
+//                 } catch (error) {
+//                     res.json({ error: error })
+//                     console.error(error)
+//                     // Expected output: ReferenceError: nonExistentFunction is not defined
+//                     // (Note: the exact output may be browser-dependent)
+//                 }
+//             }
+//         }).catch((err) => {
+//             console.log('get_mail_vrf_info error: ', err)
+//             res.json({ error: err })
+//         })
+//     } catch (error) {
+//         console.error('error: ', error);
+//         res.json({ error: error })
+//     }
+// })
 app.get('/getrole', urlencodedParser, (req, res) => {
     // let type_ = ''
     // type_ = req.query['type_']
@@ -965,7 +1006,6 @@ app.get('/get_vrf_approve_list', urlencodedParser, (req, res) => {
         console.error('error: ', error);
         res.json({ error: error })
     }
-
 })
 app.get('/get_data_approve_list', urlencodedParser, (req, res) => {
     console.log('/get_data_approve_list department_id: ', req.query['department_id']
@@ -1953,223 +1993,110 @@ app.get('/update_vrfstatus_all', urlencodedParser, (req, res) => {
     //     }
     // })
 })
-app.get('/update_vrf_trans_approve_status', urlencodedParser, (req, res) => {
+app.get('/update_vrf_approve_status_from_mail', urlencodedParser, async (req, res) => {
+    console.log('/update_vrf_trans_approve_status req.query[userId]:', req.query['user_id']
+        , 'req.query[vrf_id]:', req.query['vrf_id']
+        , 'req.query[type]:', req.query['type']
+    )
+    try {
+        const result = await dboperations.update_vrf_approve_status_from_mail(req.query['user_id']
+        , req.query['vrf_id']
+        , req.query['type']
+        , io
+    );        
+        if (req.query['role_id'] !== '8') { 
+            let email_recipient = await getEmail_recipient(req.query['Id']);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
+                try {
+                    let result_sendmail = await setSendMail_next_approver(req.query['Id'],recipient.email,recipient.user_id);
+                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                } catch (err) {
+                    console.error('Error sending email:', err);
+                }
+            }
+        }
+        if (req.query['role_id'] === '8') {
+            let email_recipient = await getEmail_recipient(req.query['Id']);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
+                try {
+                    let result_sendmail = await setSendMail_final_approve(req.query['Id'],recipient.email,recipient.user_id);
+                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                } catch (err) {
+                    console.error('Error sending email:', err);
+                }
+            }
+        }
+        res.json(result[0])
+        
+    } catch (err) {
+        console.error('error: ', err);
+        res.json({ error: err.message || err });
+    }
+});
+app.get('/update_vrf_trans_approve_status', urlencodedParser, async (req, res) => {
     console.log('/update_vrf_trans_approve_status req.query[Id]:', req.query['Id']
         , 'req.query[department_id]:', req.query['department_id']
         , 'req.query[branch_id]:', req.query['branch_id']
         , 'req.query[division_id]:', req.query['division_id']
     )
     try {
-        dboperations.update_vrf_trans_approve_status(req.query['Id']
-            , req.query['Type_']
-            , req.query['user_id']
-            , req.query['role_id']
-            , req.query['work_flow_id']
-            , req.query['department_id']
-            , req.query['branch_id']
-            , req.query['division_id']
-            , io
-        ).then(async (result, err) => {
-            if (err) {
-                console.log('error: ', err)
-            }
-            else { 
-                let email_recipient = getEmail_recipient(req.query['Id']) 
-
-                if ((req.query['role_id'] !== '3') && (req.query['role_id'] !== '8')) {
-                    // let result_sendmail = await setSendMail_next_approver(req.query['Id']).catch(err => {
-                    //     console.error('Error sending email:', err);
-                    // });
-                    // console.log('setSendMail_next_approver result_sendmail: ', result_sendmail)
-                    console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+        const result = await dboperations.update_vrf_trans_approve_status(req.query['Id']
+        , req.query['Type_']
+        , req.query['user_id']
+        , req.query['role_id']
+        , req.query['work_flow_id']
+        , req.query['department_id']
+        , req.query['branch_id']
+        , req.query['division_id']
+        , io
+    );        
+        if (req.query['role_id'] !== '8') { 
+            let email_recipient = await getEmail_recipient(req.query['Id']);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
+                try {
+                    let result_sendmail = await setSendMail_next_approver(req.query['Id'],recipient.email,recipient.user_id);
+                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                } catch (err) {
+                    console.error('Error sending email:', err);
                 }
-                if (req.query['role_id'] === '8') {
-                    // let result_sendmail = await setSendMail_final_approve(req.query['Id']).catch(err => {
-                    //     console.error('Error sending email:', err);
-                    // });
-                    // console.log('setSendMail_final_approve result_sendmail: ', result_sendmail)
-                    console.log('in role  8 email_recipient: ', email_recipient)
-                }
-                //role_id=8 is ncc_manager
-                res.json(result[0])
             }
-        }).catch((err) => {
-            console.log('error: ', err)
-            res.json({ error: err })
-        })
-    } catch (error) {
-        console.error('error: ', error);
-        res.json({ error: error })
-    }
-})
-const getEmail_recipient = (Id) => {
-    const output = null;
-    try {
-        dboperations.getEmail_recipient(req.query['Id']).then(async (result, err) => {
-            if (err) {
-                console.log('error: ', err)
-                output = res.json({ error: err })
-            }
-            else { 
-                output = res.json(result[0])
-            }
-        }).catch((err) => {
-            console.log('error: ', err)
-            output = res.json({ error: err })
-        })
-    } catch (error) {
-        console.error('error: ', error);
-        output = res.json(result[0])
-    }
-    return output;
-};
-app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
-    console.log('/setSendMail_next_approver req.query[Id]:', req.query['Id']
-        , 'req.query[department_id]:', req.query['department_id']
-        , 'req.query[branch_id]:', req.query['branch_id']
-        , 'req.query[role_id]:', req.query['role_id']
-        , 'req.query[division_id]:', req.query['division_id']
-    )
-    try {
-        let result_sendmail
-        if ((req.query['role_id'] !== '3') && (req.query['role_id'] !== '8')) {
-            result_sendmail = await setSendMail_next_approver(req.query['Id']).catch(err => {
-                console.error('Error setSendMail_next_approver:', err);
-            });
-            console.log('setSendMail_next_approver result_sendmail: ', result_sendmail)
         }
         if (req.query['role_id'] === '8') {
-            result_sendmail = await setSendMail_final_approve(req.query['Id']).catch(err => {
-                console.error('Error setSendMail_final_approve:', err);
-            });
-            console.log('setSendMail_final_approve result_sendmail: ', result_sendmail)
+            let email_recipient = await getEmail_recipient(req.query['Id']);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
+                try {
+                    let result_sendmail = await setSendMail_final_approve(req.query['Id'],recipient.email,recipient.user_id);
+                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                } catch (err) {
+                    console.error('Error sending email:', err);
+                }
+            }
         }
-        //role_id=8 is ncc_manager
-        res.json(result_sendmail[0])
+        res.json(result[0])
+        
+    } catch (err) {
+        console.error('error: ', err);
+        res.json({ error: err.message || err });
+    }
+});
+const getEmail_recipient = async (Id) => {
+    try {
+        const result = await dboperations.getEmail_recipient(Id);
+        return result[0]; // คืนกลับข้อมูลที่ต้องการ
     } catch (error) {
         console.error('error: ', error);
-        res.json({ error: error })
+        return { error: error.message }; // คืนกลับข้อผิดพลาด
     }
-
-})
-// app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
-//     const {
-//         Id,
-//         department_id,
-//         branch_id,
-//         division_id,
-//         role_id
-//     } = req.query;
-
-//     console.log('/update_vrf_trans_approve_status',
-//         'Id:', Id,
-//         'department_id:', department_id,
-//         'branch_id:', branch_id,
-//         'division_id:', division_id
-//     );
-
-//     try {
-//         let result_sendmail;
-
-//         // Handle role_id cases
-//         if (role_id !== '3' && role_id !== '8') {
-//             result_sendmail = await setSendMail_next_approver(Id);
-//             console.log('setSendMail_next_approver result_sendmail: ', result_sendmail);
-//         } else if (role_id === '8') { // role_id=8 is ncc_manager
-//             result_sendmail = await setSendMail_final_approve(Id);
-//             console.log('setSendMail_final_approve result_sendmail: ', result_sendmail);
-//         }
-
-//         res.json(result_sendmail[0]);
-
-//     } catch (error) {
-//         console.error('Error:', error);
-//         res.json({ error: error.message }); // Send just the error message for better readability
-//     }
-// });
-const setSendMail_final_approve = async (id) => {
-    try {
-        let result = await dboperations.get_mail_info_final_approve(id)
-        console.log('setSendMail_final_approve result: ', result)
-        let output = result[0][0]
-        console.log('setSendMail_final_approve output: ', output)
-
-        console.log(' output.email_final_approve: ', output.email_final_approve)
-        let tbDateF_;
-        let formattedtbDateF;
-        let tbDateT_;
-        let formattedtbDateT;
-        tbDateF_ = moment.tz(output.datefrom, 'Asia/Bangkok');
-        formattedtbDateF = tbDateF_.format('DD-MM-YYYY');
-        tbDateT_ = moment.tz(output.dateto, 'Asia/Bangkok');
-        formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
-
-        let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC อนุมัติแล้ว`
-        // let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
-        // พื้นที่ขอเข้าพบ: ${output.meeting_area}<br>
-        // ผู้ร้องขอ: ${output.requestor}<br>
-        // ตำแหน่งผู้ร้องขอ: ${output.position}<br>
-        // กดลิงค์ด้านล่างเพื่อเข้าไปดูรายละเอียด<br><br>
-        // (<a href="${process.env.CLIENT_URL}/requestvrflst">${process.env.CLIENT_URL}</a>)`;
-        let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
-        พื้นที่ขอเข้าพบ: ${output.meeting_area}<br>
-        ผู้ร้องขอ: ${output.requestor}<br>
-        ตำแหน่งผู้ร้องขอ: ${output.position}<br>`;
-        let transporter = nodemailer.createTransport({
-            host: process.env.smtp_server,
-            port: process.env.smtp_server_port,
-            secure: false,
-            auth: {
-                user: process.env.mail_user_sender,
-                pass: process.env.mail_pass_sender,
-            },
-            connectionTimeout: 3000000 // New timeout duration
-        });
-        let mailOptions
-        if (output.attach_file === '' || output.attach_file === null) {
-            mailOptions = {
-                from: `VRF <${process.env.mail_user_sender}>`,
-                to: output.email_final_approve,
-                subject,
-                html: body
-            };
-        }
-        else {
-            mailOptions = {
-                from: `VRF <${process.env.mail_user_sender}>`,
-                to: output.email_final_approve,
-                subject,
-                html: body, // use html instead of text
-                attachments: [
-                    {
-                        // Path is now relative to your current directory
-                        path: `./uploads/${output.attach_file}`
-                    }
-                ]
-            };
-        }
-        return new Promise((resolve, reject) => {
-            transporter.sendMail(mailOptions, function (error, info) {
-                if (error) {
-                    console.log(error);
-                    reject(error);
-                } else {
-                    console.log('Email sent: ' + info.response);
-                    resolve(true);
-                }
-            });
-        });
-
-    }
-    catch (err) {
-        console.log('error: ', err);
-    }
-}
-const setSendMail_next_approver = async (id) => {
+};
+const setSendMail_next_approver = async (id,email_next_approver,user_id) => {
     try {
         let result = await dboperations.get_mail_info_next_approve(id)
         let output = result[0]
-        console.log('setSendMail_next_approver output[0].email_next_approver: ', output[0].email_next_approver)
+        console.log('setSendMail_next_approver output[0].email_next_approver: ', email_next_approver)
 
         let tbDateF_;
         let formattedtbDateF;
@@ -2180,14 +2107,18 @@ const setSendMail_next_approver = async (id) => {
         formattedtbDateF = tbDateF_.format('DD-MM-YYYY');
         tbDateT_ = moment.tz(output[0].dateto, 'Asia/Bangkok');
         formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
-
+        let link = `${process.env.CLIENT_URL}/approvevrfpage?vrf_id=${id}&user_id=${user_id}`
         let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC`
         let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
         พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
+        ชื่อบริษัทผู้มาติดต่อ: ${output[0].contactor}<br>
+        เหตุผลในการเข้าพบ: ${output[0].reason}<br>
         ผู้ร้องขอ: ${output[0].requestor}<br>
         ตำแหน่งผู้ร้องขอ: ${output[0].position}<br>
-        กดลิ้งค์ด้านล่างเพื่อดำเนินการ<br><br>
-        (<a href="${process.env.CLIENT_URL}/approvevrflst">${process.env.CLIENT_URL}</a>)`;
+        ชื่อผู้นำพา: ${output[0].navigator}<br><br>
+        
+        กดลิ้งค์ด้านล่างเพื่อดำเนินการ<br><br><br>
+        (<a href="${link}" target="_blank">${process.env.CLIENT_URL}</a>)`;
         let transporter = nodemailer.createTransport({
             host: process.env.smtp_server,
             port: process.env.smtp_server_port,
@@ -2202,7 +2133,7 @@ const setSendMail_next_approver = async (id) => {
         if (output[0].attach_file === '' || output[0].attach_file === null) {
             mailOptions = {
                 from: `VRF <${process.env.mail_user_sender}>`,
-                to: output[0].email_next_approver,
+                to: email_next_approver,
                 subject,
                 html: body
             };
@@ -2210,7 +2141,7 @@ const setSendMail_next_approver = async (id) => {
         else {
             mailOptions = {
                 from: `VRF <${process.env.mail_user_sender}>`,
-                to: output[0].email_next_approver,
+                to: email_next_approver,
                 subject,
                 html: body, // use html instead of text
                 attachments: [
@@ -2243,6 +2174,129 @@ const setSendMail_next_approver = async (id) => {
         // res.send("Email sent");            
         //console.log('set_sendmail output: ', output[0].reason)
         // res.json(result)
+
+    }
+    catch (err) {
+        console.log('error: ', err);
+    }
+}
+app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
+    console.log('/setSendMail_next_approver req.query[Id]:', req.query['Id']
+        , 'req.query[department_id]:', req.query['department_id']
+        , 'req.query[branch_id]:', req.query['branch_id']
+        , 'req.query[role_id]:', req.query['role_id']
+        , 'req.query[division_id]:', req.query['division_id']
+    )
+    try {
+        let result_sendmail
+        if ((req.query['role_id'] !== '3') && (req.query['role_id'] !== '8')) { 
+
+            let email_recipient = await getEmail_recipient(req.query['Id']);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
+                try {
+                    let result_sendmail = await setSendMail_next_approver(req.query['Id'],recipient.email,recipient.user_id);                    
+                } catch (err) {
+                    console.error('Error sending email:', err);
+                }
+            }           
+        }
+        if (req.query['role_id'] === '8') {
+            let email_recipient = await getEmail_recipient(req.query['Id']);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
+                try {
+                    let result_sendmail = await setSendMail_final_approve(req.query['Id'],recipient.email,recipient.user_id);
+                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                } catch (err) {
+                    console.error('Error sending email:', err);
+                }
+            }
+        }
+        //role_id=8 is ncc_manager
+        res.json({ message: 'success' })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
+const setSendMail_final_approve = async (id,email_next_approver,user_id) => {
+    try {
+        let result = await dboperations.get_mail_info_final_approve(id)
+        console.log('setSendMail_final_approve result: ', result)
+        let output = result[0][0]
+        console.log('setSendMail_final_approve output: ', output)
+
+        console.log(' email_final_approve: ', email_next_approver)
+        let tbDateF_;
+        let formattedtbDateF;
+        let tbDateT_;
+        let formattedtbDateT;
+        tbDateF_ = moment.tz(output.datefrom, 'Asia/Bangkok');
+        formattedtbDateF = tbDateF_.format('DD-MM-YYYY');
+        tbDateT_ = moment.tz(output.dateto, 'Asia/Bangkok');
+        formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
+
+        let link = `${process.env.CLIENT_URL}/requestvrflst?vrf_id=${id}&user_id=${user_id}`
+        let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC อนุมัติแล้ว`
+        // let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
+        // พื้นที่ขอเข้าพบ: ${output.meeting_area}<br>
+        // ผู้ร้องขอ: ${output.requestor}<br>
+        // ตำแหน่งผู้ร้องขอ: ${output.position}<br>
+        // กดลิงค์ด้านล่างเพื่อเข้าไปดูรายละเอียด<br><br>
+        // (<a href="${link}/requestvrflst">${process.env.CLIENT_URL}</a>)`;
+        let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
+        พื้นที่ขอเข้าพบ: ${output.meeting_area}<br>
+        ชื่อบริษัทผู้มาติดต่อ: ${output.contactor}<br>
+        เหตุผลในการเข้าพบ: ${output.reason}<br>
+        ผู้ร้องขอ: ${output.requestor}<br>
+        ตำแหน่งผู้ร้องขอ: ${output.position}<br>
+        ชื่อผู้นำพา: ${output.navigator}<br>`;
+        let transporter = nodemailer.createTransport({
+            host: process.env.smtp_server,
+            port: process.env.smtp_server_port,
+            secure: false,
+            auth: {
+                user: process.env.mail_user_sender,
+                pass: process.env.mail_pass_sender,
+            },
+            connectionTimeout: 3000000 // New timeout duration
+        });
+        let mailOptions
+        if (output.attach_file === '' || output.attach_file === null) {
+            mailOptions = {
+                from: `VRF <${process.env.mail_user_sender}>`,
+                to: email_next_approver,
+                subject,
+                html: body
+            };
+        }
+        else {
+            mailOptions = {
+                from: `VRF <${process.env.mail_user_sender}>`,
+                to: email_next_approver,
+                subject,
+                html: body, // use html instead of text
+                attachments: [
+                    {
+                        // Path is now relative to your current directory
+                        path: `./uploads/${output.attach_file}`
+                    }
+                ]
+            };
+        }
+        return new Promise((resolve, reject) => {
+            transporter.sendMail(mailOptions, function (error, info) {
+                if (error) {
+                    console.log(error);
+                    reject(error);
+                } else {
+                    console.log('Email sent: ' + info.response);
+                    resolve(true);
+                }
+            });
+        });
 
     }
     catch (err) {

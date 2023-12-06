@@ -1028,7 +1028,6 @@ async function get_search_user_vrf(
     return [{ error: error }];
   }
 }
-
 async function get_templete_vrf_list(
   department_id,
   branch_id
@@ -1307,11 +1306,11 @@ async function get_mail_vrf_info(Id
 async function getEmail_recipient(Id) {
   try {
     let pool = await sql.connect(config);
-    let spGet_mail_vrf_info = await pool
+    let spGetEmail_recipient = await pool
       .request()
       .input("id", sql.Int, Id)     
-      .execute("spGet_mail_vrf_info");
-    return spGet_mail_vrf_info.recordsets;
+      .execute("spGetEmail_recipient");
+    return spGetEmail_recipient.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -3507,6 +3506,37 @@ async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
     console.log(err);
   }
 }
+async function update_vrf_approve_status_from_mail(user_id, vrf_id
+  ,type,io
+) {
+  console.log('update_vrf_approve_status_from_mail userId: ', user_id
+  , 'vrf_id: ', vrf_id
+  , 'type: ', type
+  )
+  try {
+    
+    let pool = await sql.connect(config);
+    //let type_new_vrf_send_approve = parseInt(role_id) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
+    let sp_update_vrf_approve_from_mail = await pool
+      .request()
+      .input("Id_", sql.Int, Id)
+      .input("Type_", sql.NVarChar, type)
+      .input("user_id", sql.Int, user_id)      
+      .execute("sp_update_vrf_approve_from_mail");
+      let approveStatus = sp_update_vrf_approve_from_mail.recordsets[0][0].approve_status;
+      console.log('approveStatus: ',approveStatus)
+      io.emit(type_new_vrf_send_approve, { 
+        message: type_new_vrf_send_approve,
+        Id: Id,
+        user_id: user_id,
+        role_id: role_id,
+        approve_status: approveStatus         
+      });
+    return sp_update_vrf_approve_from_mail.recordsets;
+  } catch (err) {
+    console.log(err);
+  }
+}
 async function update_vrf_trans_approve_status(Id, Type_
   , user_id
   , role_id
@@ -3651,6 +3681,7 @@ async function get_upload_filename(Id, Type_, user_id) {
 //   }
 // }
 module.exports = { 
+  update_vrf_approve_status_from_mail: update_vrf_approve_status_from_mail,
   getEmail_recipient:getEmail_recipient,
   get_data_approve_list_for_security: get_data_approve_list_for_security,
   get_data_approve_list: get_data_approve_list,
