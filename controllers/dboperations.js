@@ -810,7 +810,7 @@ async function get_search_vrf_for_guard(
       ? approve_status
       : null;
   let contactor_ =
-  contactor !== undefined && contactor !== '' && contactor !== null && !isNaN(contactor)
+    contactor !== undefined && contactor !== '' && contactor !== null && !isNaN(contactor)
       ? contactor
       : null;
   let requestor_id_ =
@@ -838,9 +838,9 @@ async function get_search_vrf_for_guard(
       , 'formattedDateT: ', formattedDateT
       , 'approve_status: ', approve_status
       , 'role_id: ', role_id
-      , 'contactor: ', contactor_ 
-      , 'branch_id: ', branch_id      
-      );
+      , 'contactor: ', contactor_
+      , 'branch_id: ', branch_id
+    );
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -1056,6 +1056,10 @@ async function get_vrf_lst_for_security(
   try {
     let pool = await sql.connect(config);
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    console.log('get_vrf_lst_for_security department_id: '
+    , department_id , 'branch_id: '
+    , branch_id , 'role_id: '
+    , role_id , 'division_id: ', division_id)       
     let spGet_vrf_lst_for_security = await pool
       .request()
       .input("department_id", sql.Int, department_id)
@@ -1102,10 +1106,10 @@ async function get_data_approve_list_for_security(
     let pool = await sql.connect(config);
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
     console.log('get_data_approve_list_for_security department_id: ', department_id
-    , 'branch_id: ', branch_id
-    , 'role_id: ', role_id
-    , 'division_id: ', division_id
-    , 'Id: ',Id)
+      , 'branch_id: ', branch_id
+      , 'role_id: ', role_id
+      , 'division_id: ', division_id
+      , 'Id: ', Id)
     let spGet_data_approve_list = await pool
       .request()
       .input("department_id", sql.Int, department_id)
@@ -1131,10 +1135,10 @@ async function get_data_approve_list(
     let pool = await sql.connect(config);
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
     console.log('get_data_approve_list department_id: ', department_id
-    , 'branch_id: ', branch_id
-    , 'role_id: ', role_id
-    , 'division_id: ', division_id
-    , 'Id: ',Id)
+      , 'branch_id: ', branch_id
+      , 'role_id: ', role_id
+      , 'division_id: ', division_id
+      , 'Id: ', Id)
     let spGet_data_approve_list = await pool
       .request()
       .input("department_id", sql.Int, department_id)
@@ -1219,6 +1223,20 @@ async function get_vrf_det(Id) {
     return [{ error: error }];
   }
 }
+async function get_vrf_security_det(Id) {
+  console.log('get_vrf_security_det Id: ', Id)
+  try {
+    let pool = await sql.connect(config);
+    let sp_Get_vrf_security_det_by_selected = await pool
+      .request()
+      .input("id", sql.Int, Id)
+      .execute("sp_Get_vrf_security_det_by_selected");
+    return sp_Get_vrf_security_det_by_selected.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_templete_vrf_det(Id) {
   try {
     let pool = await sql.connect(config);
@@ -1239,6 +1257,20 @@ async function get_vrf(Id) {
       .request()
       .input("id", sql.Int, Id)
       .execute("sp_Get_vrf_by_selected");
+    return sp_Get_vrf_by_selected.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_vrf_apprve_page(Id, user_id) {
+  try {
+    let pool = await sql.connect(config);
+    let sp_Get_vrf_by_selected = await pool
+      .request()
+      .input("id", sql.Int, Id)
+      .input("user_id", sql.Int, user_id)
+      .execute("sp_Get_vrf_apprve_page");
     return sp_Get_vrf_by_selected.recordsets;
   } catch (error) {
     console.log("error: ", error);
@@ -1308,7 +1340,7 @@ async function getEmail_recipient(Id) {
     let pool = await sql.connect(config);
     let spGetEmail_recipient = await pool
       .request()
-      .input("id", sql.Int, Id)     
+      .input("id", sql.Int, Id)
       .execute("spGetEmail_recipient");
     return spGetEmail_recipient.recordsets;
   } catch (error) {
@@ -2293,6 +2325,159 @@ async function add_manual_order(gfccp_order) {
     console.log(err);
   }
   //return add_manual_order.recordsets
+}
+async function set_update_urgentcase_vrf_det(obj_json) {
+  try {
+    console.log('set_update_urgentcase_vrf_det obj_json: ', obj_json)
+    for (let index in obj_json) {
+      if ((obj_json.length > 0) && (index === '0')) {
+        let pool = await sql.connect(config);
+        let sp_set_vrf_urgentcase = await pool
+          .request()
+          .input("vrf_id", sql.Int, obj_json[0].vrf_id)
+          .input("req_urgentcase_by", sql.Int, obj_json[0].user_id)
+          .execute("sp_set_vrf_urgentcase");
+        let output_ = sp_set_vrf_urgentcase.recordsets;
+      }
+      if (obj_json[index].hasOwnProperty('id')) {
+        let pool = await sql.connect(config);
+        let sp_set_urgentcase_vrf_det = await pool
+          .request()
+          .input("id", sql.Int, obj_json[index].id)
+          .input("req_urgentcase_by", sql.Int, obj_json[index].user_id)
+          .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgent)
+          .execute("sp_set_urgentcase_vrf_det");
+        let output_ = sp_set_urgentcase_vrf_det.recordsets;
+      } else {
+        let pool = await sql.connect(config);
+        let sp_add_urgentcase_person_vrf = await pool
+          .request()
+          .input("vrf_id", sql.Int, obj_json[index].vrf_id)
+          .input("fullname", sql.NVarChar, obj_json[index].fullname)
+          .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
+          .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
+          .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
+          .input("card_no", sql.NVarChar, obj_json[index].card_no)
+          .input("remark_urgent", sql.NVarChar, obj_json[index].remark_urgent)
+          .input("user_id", sql.Int, obj_json[index].user_id)
+          .execute("sp_add_urgentcase_person_vrf");
+        let output_ = sp_add_urgentcase_person_vrf.recordsets;
+      }
+    }
+    return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
+  } catch (err) {
+    console.log(err);
+  }
+}
+async function set_update_urgentcase_vrf(obj_json) {
+  try {
+    console.log('set_update_urgentcase_vrf obj_json: ', obj_json)
+    for (let index in obj_json) {
+      if (obj_json[index].id && obj_json[index].urgentcase_type === 'Additional') {
+        let pool = await sql.connect(config);
+        let sp_set_deactive_urgentcase_vrf = await pool
+          .request()
+          .input("vrf_id", sql.Int, obj_json[index].vrf_id)
+          .input("ModifyBy", sql.Int, obj_json[index].user_id)
+          .execute("sp_set_deactive_urgentcase_vrf");
+        let output_ = sp_set_deactive_urgentcase_vrf.recordsets;
+      }
+    }
+    for (let index in obj_json) {
+      if (
+        obj_json[index].id !== null
+        && (obj_json[index].urgentcase_type === 'Absent'
+          || obj_json[index].urgentcase_type === null
+        )
+      ) 
+      { //existing vrf_det
+        if(obj_json[index].remark_urgentcase !== null 
+          && obj_json[index].remark_urgentcase !== '' 
+          && obj_json[index].urgentcase_type === null )
+        { 
+          let pool = await sql.connect(config);
+          let sp_update_urgentcase_vrf = await pool
+            .request()
+            .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
+            .input("urgentcase_type", sql.NVarChar, obj_json[index].urgentcase_type)
+            .input("id", sql.Int, obj_json[index].id)
+            .input("ModifyBy", sql.Int, obj_json[index].user_id)
+            .input("type", sql.NVarChar, 'Update new urgentcase of existing vrf_det')
+            .execute("sp_update_urgentcase_vrf");
+          let output_ = sp_update_urgentcase_vrf.recordsets;
+        }
+        else if( (obj_json[index].remark_urgentcase === null 
+          || obj_json[index].remark_urgentcase === '' ) 
+          && obj_json[index].urgentcase_type !== null )
+        { 
+          let pool = await sql.connect(config);
+          let sp_update_urgentcase_vrf = await pool
+            .request()
+            .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
+            .input("urgentcase_type", sql.NVarChar, obj_json[index].urgentcase_type)
+            .input("id", sql.Int, obj_json[index].id)
+            .input("ModifyBy", sql.Int, obj_json[index].user_id)
+            .input("type", sql.NVarChar, 'Update null to urgentcase of existing vrf_det')
+            .execute("sp_update_urgentcase_vrf");
+          let output_ = sp_update_urgentcase_vrf.recordsets;
+
+        } 
+        else if( (obj_json[index].remark_urgentcase !== null 
+          || obj_json[index].remark_urgentcase !== '' ) 
+          && obj_json[index].urgentcase_type !== null )
+        { 
+          let pool = await sql.connect(config);
+          let sp_update_urgentcase_vrf = await pool
+            .request()
+            .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
+            .input("urgentcase_type", sql.NVarChar, obj_json[index].urgentcase_type)
+            .input("id", sql.Int, obj_json[index].id)
+            .input("ModifyBy", sql.Int, obj_json[index].user_id)
+            .input("type", sql.NVarChar, 'Update remark only to urgentcase of existing vrf_det')
+            .execute("sp_update_urgentcase_vrf");
+          let output_ = sp_update_urgentcase_vrf.recordsets;
+
+        }
+      }
+      else if (!obj_json[index].id)
+      {
+        let sp_add_urgentcase_person_vrf = await pool
+        .request()
+        .input("vrf_id", sql.Int, obj_json[index].vrf_id)
+        .input("fullname", sql.NVarChar, obj_json[index].fullname)
+        .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
+        .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
+        .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
+        .input("card_no", sql.NVarChar, obj_json[index].card_no)
+        .input("remark_urgent", sql.NVarChar, obj_json[index].remark_urgentcase)
+        .input("user_id", sql.Int, obj_json[index].remark_urgent)
+        .execute("sp_add_urgentcase_person_vrf");
+        let output_ = sp_add_urgentcase_person_vrf.recordsets;
+      }
+      else if (obj_json[index].id && obj_json[index].urgentcase_type === 'Additional')
+      {
+        let pool = await sql.connect(config);
+        let sp_add_urgentcase_person_vrf = await pool
+        .request()
+        .input("vrf_id", sql.Int, obj_json[index].vrf_id)
+        .input("fullname", sql.NVarChar, obj_json[index].fullname)
+        .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
+        .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
+        .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
+        .input("card_no", sql.NVarChar, obj_json[index].card_no)
+        .input("remark_urgent", sql.NVarChar, obj_json[index].remark_urgentcase)
+        .input("user_id", sql.Int, obj_json[index].remark_urgent)
+        .execute("sp_add_urgentcase_person_vrf");
+        let output_ = sp_add_urgentcase_person_vrf.recordsets;
+
+      }
+    }
+
+    return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
+  } catch (err) {
+    console.log({ error: err });
+    return ({ error: err })
+  }
 }
 async function set_manual_update_vrf_det_trans(obj_json) {
   try {
@@ -3400,9 +3585,10 @@ async function update_vrf_requester_trans_status_all(Id
   , user_id
   , role_id
   , work_flow_id
-  ,io
-  ) {
+  , io
+) {
   try {
+    console.log('update_vrf_requester_trans_status_all Id: ', Id, 'Type_: ', Type_, 'user_id: ', user_id, 'role_id: ', role_id, 'work_flow_id: ', work_flow_id)
     let pool = await sql.connect(config);
     let update_vrf_requester_trans_status_all = await pool
       .request()
@@ -3412,16 +3598,20 @@ async function update_vrf_requester_trans_status_all(Id
       .input("role_id", sql.Int, role_id)
       .input("work_flow_id", sql.Int, work_flow_id)
       .execute("spUpdate_vrf_requester_trans_status");
-
+    if (update_vrf_requester_trans_status_all.recordsets.length > 0 &&
+      update_vrf_requester_trans_status_all.recordsets[0].length > 0) {
       let approveStatus = update_vrf_requester_trans_status_all.recordsets[0][0].approve_status;
-      console.log('approveStatus: ',approveStatus)
-      io.emit('new_vrf_send_approve', { 
+      console.log('approveStatus: ', approveStatus);
+      io.emit('new_vrf_send_approve', {
         message: 'new_vrf_send_approve!',
         Id: Id,
         user_id: user_id,
         role_id: role_id,
-        approve_status: approveStatus         
+        approve_status: approveStatus
       });
+    } else {
+      console.log('No data found');
+    }
 
     return update_vrf_requester_trans_status_all.recordsets;
   } catch (err) {
@@ -3434,14 +3624,14 @@ async function update_vrf_trans_status(Id
   , user_id
   , role_id
   , work_flow_id
-  ,department_id
-  ,branch_id
-  ,division_id
-  ,io
-  ) {
-  try { 
+  , department_id
+  , branch_id
+  , division_id
+  , io
+) {
+  try {
     let type_new_vrf_send_approve = parseInt(role_id) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
-    console.log('type_new_vrf_send_approve: ',type_new_vrf_send_approve)
+    console.log('type_new_vrf_send_approve: ', type_new_vrf_send_approve)
     let pool = await sql.connect(config);
     let update_vrf_trans_status = await pool
       .request()
@@ -3454,15 +3644,15 @@ async function update_vrf_trans_status(Id
       .input("branch_id", sql.Int, branch_id)
       .input("division_id", sql.Int, division_id)
       .execute("spUpdate_vrf_trans_status");
-      let approveStatus = update_vrf_trans_status.recordsets[0][0].approve_status;
-      console.log('approveStatus: ',approveStatus)
-      io.emit(type_new_vrf_send_approve, { 
-        message: type_new_vrf_send_approve,
-        Id: Id,
-        user_id: user_id,
-        role_id: role_id,
-        approve_status: approveStatus         
-      });
+    let approveStatus = update_vrf_trans_status.recordsets[0][0].approve_status;
+    console.log('approveStatus: ', approveStatus)
+    io.emit(type_new_vrf_send_approve, {
+      message: type_new_vrf_send_approve,
+      Id: Id,
+      user_id: user_id,
+      role_id: role_id,
+      approve_status: approveStatus
+    });
 
     return update_vrf_trans_status.recordsets;
   } catch (err) {
@@ -3489,6 +3679,68 @@ async function update_vrf_trans_status(Id
 //     console.log(err);
 //   }
 // }
+async function set_update_vrf_det_cancelcheckinout(Id,
+  Type_,
+  user_id,
+  checkincheckout_det_id
+) {
+  console.log('set_update_vrf_det_cancelcheckinout Id: '
+  , Id, 'Type: ', Type_
+  , 'user_id: ', user_id
+  , 'checkincheckout_det_id: ', checkincheckout_det_id
+  )
+  try {
+    let pool = await sql.connect(config);
+    let sp_update_vrf_det_cancelcheckinout = await pool
+      .request()
+      .input("Id_", sql.Int, Id)
+      .input("Type_", sql.NVarChar, Type_)
+      .input("user_id", sql.Int, user_id)
+      .input("checkincheckout_det_id", sql.Int, checkincheckout_det_id)
+      //  .input("comment", sql.NVarChar, comment)
+      .execute("sp_update_vrf_det_cancelcheckinout");
+    return sp_update_vrf_det_cancelcheckinout.recordsets;
+  } catch (err) {
+    console.log(err);
+  }
+ }
+async function set_sp_update_vrf_det_checkinout(Id,
+  Type_,
+  user_id
+) {
+  console.log('set_sp_update_vrf_det_checkinout Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id
+  )
+  try {
+    let pool = await sql.connect(config);
+    let sp_update_vrf_det_checkinout = await pool
+      .request()
+      .input("Id_", sql.Int, Id)
+      .input("Type_", sql.NVarChar, Type_)
+      .input("user_id", sql.Int, user_id)
+      //  .input("comment", sql.NVarChar, comment)
+      .execute("sp_update_vrf_det_checkinout");
+    return sp_update_vrf_det_checkinout.recordsets;
+  } catch (err) {
+    console.log(err);
+  }
+}
+// async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
+//   console.log('Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'comment: '
+//     , comment)
+//   try {
+//     let pool = await sql.connect(config);
+//     let sp_update_vrf_checkinount = await pool
+//       .request()
+//       .input("Id_", sql.Int, Id)
+//       .input("Type_", sql.NVarChar, Type_)
+//       .input("user_id", sql.Int, user_id)
+//       .input("comment", sql.NVarChar, comment)
+//       .execute("sp_update_vrf_checkinount");
+//     return sp_update_vrf_checkinount.recordsets;
+//   } catch (err) {
+//     console.log(err);
+//   }
+// }
 async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
   console.log('Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'comment: '
     , comment)
@@ -3507,31 +3759,40 @@ async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
   }
 }
 async function update_vrf_approve_status_from_mail(user_id, vrf_id
-  ,type,io
+  , type, io
 ) {
   console.log('update_vrf_approve_status_from_mail userId: ', user_id
-  , 'vrf_id: ', vrf_id
-  , 'type: ', type
+    , 'vrf_id: ', vrf_id
+    , 'type: ', type
   )
   try {
-    
+
     let pool = await sql.connect(config);
     //let type_new_vrf_send_approve = parseInt(role_id) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
     let sp_update_vrf_approve_from_mail = await pool
       .request()
-      .input("Id_", sql.Int, Id)
+      .input("vrf_id", sql.Int, vrf_id)
       .input("Type_", sql.NVarChar, type)
-      .input("user_id", sql.Int, user_id)      
+      .input("user_id", sql.Int, user_id)
       .execute("sp_update_vrf_approve_from_mail");
-      let approveStatus = sp_update_vrf_approve_from_mail.recordsets[0][0].approve_status;
-      console.log('approveStatus: ',approveStatus)
-      io.emit(type_new_vrf_send_approve, { 
+    let approveStatus = sp_update_vrf_approve_from_mail.recordsets[0][0].approve_status;
+    console.log('update_vrf_approve_status_from_mail approveStatus: '
+      , approveStatus
+      , 'role_id_approver: '
+      , sp_update_vrf_approve_from_mail.recordsets[0][0].role_id_approver
+    )
+    if (sp_update_vrf_approve_from_mail.recordsets[0][0].Id) {
+      let Id = sp_update_vrf_approve_from_mail.recordsets[0][0].Id;
+      let type_new_vrf_send_approve = parseInt(sp_update_vrf_approve_from_mail.recordsets[0][0].role_id_approver) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
+      io.emit(type_new_vrf_send_approve, {
         message: type_new_vrf_send_approve,
         Id: Id,
         user_id: user_id,
         role_id: role_id,
-        approve_status: approveStatus         
+        approve_status: approveStatus
       });
+    }
+
     return sp_update_vrf_approve_from_mail.recordsets;
   } catch (err) {
     console.log(err);
@@ -3544,12 +3805,12 @@ async function update_vrf_trans_approve_status(Id, Type_
   , department_id
   , branch_id
   , division_id
-  ,io
+  , io
 ) {
   console.log('update_vrf_trans_approve_status Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'role_id: '
     , role_id, 'work_flow_id', work_flow_id)
   try {
-    
+
     let pool = await sql.connect(config);
     let type_new_vrf_send_approve = parseInt(role_id) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
     let sp_update_vrf_trans_approve_status = await pool
@@ -3563,15 +3824,15 @@ async function update_vrf_trans_approve_status(Id, Type_
       .input("branch_id", sql.Int, branch_id)
       .input("division_id", sql.Int, division_id)
       .execute("sp_update_vrf_trans_approve_status");
-      let approveStatus = sp_update_vrf_trans_approve_status.recordsets[0][0].approve_status;
-      console.log('approveStatus: ',approveStatus)
-      io.emit(type_new_vrf_send_approve, { 
-        message: type_new_vrf_send_approve,
-        Id: Id,
-        user_id: user_id,
-        role_id: role_id,
-        approve_status: approveStatus         
-      });
+    let approveStatus = sp_update_vrf_trans_approve_status.recordsets[0][0].approve_status;
+    console.log('approveStatus: ', approveStatus)
+    io.emit(type_new_vrf_send_approve, {
+      message: type_new_vrf_send_approve,
+      Id: Id,
+      user_id: user_id,
+      role_id: role_id,
+      approve_status: approveStatus
+    });
     return sp_update_vrf_trans_approve_status.recordsets;
   } catch (err) {
     console.log(err);
@@ -3589,100 +3850,15 @@ async function get_upload_filename(Id, Type_, user_id) {
     console.log(err);
   }
 }
-// async function get_search_vrf(
-//   tbDateF,
-//   tbDateT,
-//   requestor_id,
-//   area_id,
-//   requestor_dept_id,
-//   department_id,
-//   branch_id,
-//   checkin_status
-// ) {
-//   let tbDateF_;
-//   let formattedtbDateF;
-//   let tbDateT_;
-//   let formattedtbDateT;
-//   if (
-//     (tbDateF !== undefined && tbDateF !== '' && tbDateF !== null) &&
-//     (tbDateT !== undefined && tbDateT !== '' && tbDateT !== null)
-//   ) {
-//     tbDateF_ = moment.tz(tbDateF, 'Asia/Bangkok');
-//     formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
-//     tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
-//     formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
-//   } else {
-//     tbDateF_ = '';
-//     formattedtbDateF = '';
-//     tbDateT_ = '';
-//     formattedtbDateT = '';
-//   }
-//   let checkin_status_ =
-//     checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
-//       ? parseInt(checkin_status)
-//       : null;
-//   let requestor_id_ =
-//     requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
-//       ? parseInt(requestor_id)
-//       : null;
-//   let area_id_ =
-//     area_id !== undefined && area_id !== '' && area_id !== null && !isNaN(area_id)
-//       ? parseInt(area_id)
-//       : null;
-//   let requestor_dept_id_ =
-//     requestor_dept_id !== undefined &&
-//       requestor_dept_id !== '' &&
-//       requestor_dept_id !== null &&
-//       !isNaN(requestor_dept_id)
-//       ? parseInt(requestor_dept_id)
-//       : null;
-//   try {
-//     let pool = await sql.connect(config);
-
-//     let queryString = `select ROW_NUMBER() OVER(ORDER BY vrpt.[id] DESC) AS [no],* from vVRF_Report_template vrpt WHERE vrpt.[Status] = '1' `;
-//     let dateF = new Date(formattedtbDateF);
-//     let dateT = new Date(formattedtbDateT);
-
-//     let formattedDateF = `${dateF.getFullYear()}-${String(dateF.getMonth() + 1).padStart(2, '0')}-${String(dateF.getDate()).padStart(2, '0')}`;
-//     let formattedDateT = `${dateT.getFullYear()}-${String(dateT.getMonth() + 1).padStart(2, '0')}-${String(dateT.getDate()).padStart(2, '0')}`;
-
-//     requestor_id_
-//       ? (queryString += `AND vrpt.requestor_dept = ${requestor_id_} AND vrpt.branch_id = ${branch_id} `)
-//       : (queryString += `AND vrpt.branch_id = ${branch_id} `);
-//     queryString += formattedtbDateF && formattedtbDateT
-//      ? 
-//      //`AND vrpt.id IN (
-//     //   SELECT DISTINCT vrf_id
-//     //   FROM vVRF_Template_trans_master_det
-//     //   WHERE (
-//     //     CAST(date_from AS DATE) >= CAST('${formattedDateF}' AS DATE) AND CAST(date_to AS DATE) <= CAST('${formattedDateT}' AS DATE)
-//     //   )`
-//       ` AND CAST(vrpt.date_from AS DATE) <= CAST('${formattedDateF}' AS DATE) AND CAST(vrpt.date_to AS DATE) >= CAST('${formattedDateT}' AS DATE) `      
-//     : '';
-//     requestor_id_
-//       ? (queryString += `AND (${requestor_id_} IS NULL OR vrpt.requestor = ${requestor_id_}) `)
-//       : (queryString += '');
-//     area_id_
-//       ? (queryString += `AND (${area_id_} IS NULL OR vrpt.area_id = ${area_id_}) `)
-//       : (queryString += '');
-//     requestor_dept_id_
-//       ? (queryString += `AND (${requestor_dept_id_} IS NULL OR vrpt.requestor_dept = ${requestor_dept_id_}) `)
-//       : (queryString += '');
-//     if (checkin_status_) {
-//       checkin_status_ === 1 ? (queryString += `AND ( vrpt.checkin_by is not null ) `) : null;
-//       checkin_status_ === 2 ? (queryString += `AND ( vrpt.checkin_by is null ) `) : null;
-//     }
-//     console.log('queryString: ', queryString);
-//     let result = await pool.request().query(queryString);
-//     return result.recordset;
-//   } catch (error) {
-//     console.log('error: ', error);
-//     return [{ error: error }];
-//   }
-// }
 module.exports = { 
+  set_update_vrf_det_cancelcheckinout: set_update_vrf_det_cancelcheckinout,
+  get_vrf_security_det: get_vrf_security_det,
+  set_update_urgentcase_vrf: set_update_urgentcase_vrf,
+  set_update_urgentcase_vrf_det: set_update_urgentcase_vrf_det,
+  set_sp_update_vrf_det_checkinout: set_sp_update_vrf_det_checkinout,
+  get_vrf_apprve_page: get_vrf_apprve_page,
   update_vrf_approve_status_from_mail: update_vrf_approve_status_from_mail,
-  getEmail_recipient:getEmail_recipient,
+  getEmail_recipient: getEmail_recipient,
   get_data_approve_list_for_security: get_data_approve_list_for_security,
   get_data_approve_list: get_data_approve_list,
   get_search_vrf_approve_trans: get_search_vrf_approve_trans,

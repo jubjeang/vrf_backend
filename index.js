@@ -1650,6 +1650,102 @@ app.post('/set_manual_add_vrf_det', urlencodedParser, (req, res) => {
         res.json({ error: error })
     }
 })
+// จัดการกับ uncaughtException ที่ระดับแอปพลิเคชัน
+process.on('uncaughtException', (err) => {
+    console.error('There was an uncaught error', err);
+    // ทำการ log ข้อผิดพลาดและอาจจะรีสตาร์ทการทำงานหรือทำการแก้ไขอื่นๆ
+});
+app.post('/update_urgentcase_vrf_det', urlencodedParser, (req, res) => {
+    try {
+        let data_ = req.body
+        let obj = null
+        for (let x in data_) {
+            obj = x
+        }        
+        let obj_json = JSON.parse(obj)        
+        // console.log('/update_urgentcase_vrf_det obj_json.role_id: ', obj_json[0].role_id)
+        //Type_: 'send_approve',
+        dboperations.set_update_urgentcase_vrf_det(obj_json).then(async (result) => {            
+            let updateResult = await updateVrfTransApproveStatus(obj_json, io);
+            res.json(updateResult)
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+        
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
+// สร้างฟังก์ชันใหม่ด้วย arrow function
+const updateVrfTransApproveStatus = async (queryParams, io) => {
+    console.log('/updateVrfTransApproveStatus queryParams[0].role_id: ', queryParams[0].role_id)
+    try {
+        const result = await dboperations.update_vrf_trans_approve_status(
+            queryParams[0].vrf_id,//vrf_id
+            'send_approve',
+            queryParams[0].user_id,
+            queryParams[0].role_id,
+            queryParams[0].work_flow_id,
+            queryParams[0].department_id,
+            queryParams[0].branch_id,
+            queryParams[0].division_id,
+            io
+        );
+        // ... โค้ดส่วนที่เหลือสำหรับการส่งอีเมล
+        if (queryParams[0].role_id !== '8') { 
+            let email_recipient = await getEmail_recipient(queryParams[0].vrf_id);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
+                try {
+                    let result_sendmail = await setSendMail_next_approver(queryParams[0].vrf_id,recipient.email,recipient.user_id);
+                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                } catch (err) {
+                    console.error('Error sending email:', err);
+                }
+            }
+        }
+        if (queryParams[0].role_id === '8') {
+            let email_recipient = await getEmail_recipient(queryParams[0].vrf_id);
+            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            for (const recipient of email_recipient) {
+                try {
+                    let result_sendmail = await setSendMail_final_approve(queryParams[0].vrf_id,recipient.email,recipient.user_id);
+                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                } catch (err) {
+                    console.error('Error sending email:', err);
+                }
+            }
+        }
+        return result[0];
+    } catch (err) {
+        console.error('error: ', err);
+        throw err;
+    }
+};
+
+app.post('/set_update_urgentcase_vrf', urlencodedParser, (req, res) => {
+    try {
+        let data_ = req.body
+        let obj = null
+        for (let x in data_) {
+            obj = x
+        }
+        //console.log('/set_update_urgentcase_vrf obj: ', obj)
+        let obj_json = JSON.parse(obj)
+        dboperations.set_update_urgentcase_vrf(obj_json).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
 app.post('/set_manual_update_vrf_det_trans', urlencodedParser, (req, res) => {
     try {
         let data_ = req.body
@@ -1670,8 +1766,6 @@ app.post('/set_manual_update_vrf_det_trans', urlencodedParser, (req, res) => {
         console.error('error: ', error);
         res.json({ error: error })
     }
-
-
 })
 app.post('/set_manual_update_vrf_det', urlencodedParser, (req, res) => {
     try {
@@ -1736,6 +1830,21 @@ app.get('/get_templete_vrf', urlencodedParser, (req, res) => {
     }
 
 })
+app.get('/get_vrf_apprve_page', urlencodedParser, (req, res) => {
+    //console.log('/getcashorder req.query[Id] :', req.query['Id'])
+    try {
+        dboperations.get_vrf_apprve_page(req.query['Id'],req.query['user_id']).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
 app.get('/get_vrf', urlencodedParser, (req, res) => {
     //console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
@@ -1776,6 +1885,36 @@ app.get('/get_vrf_file/:name', (req, res) => {
     }
 
 });
+app.get('/get_currentDateTime', urlencodedParser, (req, res) => {
+    //console.log('/getcashorder req.query[Id] :', req.query['Id'])
+    try {
+        dboperations.get_vrf_security_det(req.query['Id']).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
+app.get('/get_vrf_security_det', urlencodedParser, (req, res) => {
+    //console.log('/getcashorder req.query[Id] :', req.query['Id'])
+    try {
+        dboperations.get_vrf_security_det(req.query['Id']).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
 app.get('/get_vrf_det', urlencodedParser, (req, res) => {
     //console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
@@ -1829,19 +1968,27 @@ app.get('/update_user_vrf_status_all', urlencodedParser, (req, res) => {
     }
 })
 app.get('/update_vrf_requester_trans_status_all', urlencodedParser, (req, res) => {
-    let output = null
+    let output = []
     let type_ = req.query['Type_']
     //---tpe_ = 'approve' หรือ 'cancel'
     try {
-        req.query['Id'].forEach((item) => {
+        console.log('req.query: ', req.query)
+        req.query['Id'].forEach((item) => { 
+            console.log('item: ', item)
             dboperations.update_vrf_requester_trans_status_all(parseInt(item)
                 , req.query['Type_']
                 , req.query['user_id']
                 , req.query['role_id']
                 , req.query['work_flow_id']
                 , io
-            ).then((result) => {
-                output = result[0]
+            ).then((result) => { 
+                if (result && result.length > 0) {
+                    // output = result[0]
+                    output.push(result[0]);
+                } else {
+                    output.push({ message: "No data found for item " });
+                }
+                
             }).catch((err) => {
                 console.log('error: ', err)
                 res.json({ error: err })
@@ -1866,24 +2013,29 @@ app.get('/update_vrf_requester_trans_status_all', urlencodedParser, (req, res) =
                                 } else {
                                     fs.unlink('./uploads/' + result[0][0].attach_file, (err) => {
                                         if (err) throw err;
-                                        console.log(result[0][0].attach_file + ' ถูกลบแล้ว');
+                                        console.log(result[0][0].attach_file + ' ถูกลบแล้ว')
                                     });
                                 }
                             });
                         }
-                        output = result[0]
+                        if (result && result.length > 0 && result[0].length > 0 ) { 
+                            // output = result[0]
+                            output.push(result[0]);
+                        }
+                        else
+                        { 
+                            output.push({ message: "No data found for item " })
+                        }
                     }
                 })
             }
 
         })
         res.json(output)
-
     } catch (error) {
         console.error('error: ', error);
         res.json({ error: error })
     }
-
 })
 //--------for approve all func in approve page
 app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
@@ -1994,41 +2146,52 @@ app.get('/update_vrfstatus_all', urlencodedParser, (req, res) => {
     // })
 })
 app.get('/update_vrf_approve_status_from_mail', urlencodedParser, async (req, res) => {
-    console.log('/update_vrf_trans_approve_status req.query[userId]:', req.query['user_id']
+    console.log('update_vrf_approve_status_from_mail req.query[userId]:', req.query['user_id']
         , 'req.query[vrf_id]:', req.query['vrf_id']
         , 'req.query[type]:', req.query['type']
     )
     try {
         const result = await dboperations.update_vrf_approve_status_from_mail(req.query['user_id']
-        , req.query['vrf_id']
-        , req.query['type']
-        , io
-    );        
-        if (req.query['role_id'] !== '8') { 
-            let email_recipient = await getEmail_recipient(req.query['Id']);
-            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
-            for (const recipient of email_recipient) {
-                try {
-                    let result_sendmail = await setSendMail_next_approver(req.query['Id'],recipient.email,recipient.user_id);
-                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
-                } catch (err) {
-                    console.error('Error sending email:', err);
+            , req.query['vrf_id']
+            , req.query['type']
+            , io
+        );        
+        console.log('/update_vrf_approve_status_from_mail result: ', result)
+        if(result[0][0].role_id_approver)
+        { 
+            let role_id_approver = result[0][0].role_id_approver;
+            if (role_id_approver !== '8') { 
+                let email_recipient = await getEmail_recipient(req.query['vrf_id']);
+                console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+                for (const recipient of email_recipient) {
+                    try {
+                        let result_sendmail = await setSendMail_next_approver(req.query['vrf_id'],recipient.email,recipient.user_id);
+                        // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                    } catch (err) {
+                        console.error('Error sending email:', err);
+                    }
                 }
             }
-        }
-        if (req.query['role_id'] === '8') {
-            let email_recipient = await getEmail_recipient(req.query['Id']);
-            console.log('in role not 3 and 8 email_recipient: ', email_recipient)
-            for (const recipient of email_recipient) {
-                try {
-                    let result_sendmail = await setSendMail_final_approve(req.query['Id'],recipient.email,recipient.user_id);
-                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
-                } catch (err) {
-                    console.error('Error sending email:', err);
+            if (role_id_approver === '8') {
+                let email_recipient = await getEmail_recipient(req.query['vrf_id']);
+                console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+                for (const recipient of email_recipient) {
+                    try {
+                        let result_sendmail = await setSendMail_final_approve(req.query['vrf_id'],recipient.email,recipient.user_id);
+                        // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                    } catch (err) {
+                        console.error('Error sending email:', err);
+                    }
                 }
             }
+            res.json(result[0])
         }
-        res.json(result[0])
+        else
+        {
+            res.json({error: 'error'})
+        }
+
+
         
     } catch (err) {
         console.error('error: ', err);
@@ -2303,6 +2466,41 @@ const setSendMail_final_approve = async (id,email_next_approver,user_id) => {
         console.log('error: ', err);
     }
 }
+app.get('/set_update_vrf_det_cancelcheckinout', urlencodedParser, (req, res) => {
+    try {
+        dboperations.set_update_vrf_det_cancelcheckinout(req.query['Id']
+            , req.query['Type_']
+            , req.query['user_id']
+            , req.query['checkincheckout_det_id']
+            // , req.query['comment']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
+app.get('/set_sp_update_vrf_det_checkinout', urlencodedParser, (req, res) => {
+    try {
+        dboperations.set_sp_update_vrf_det_checkinout(req.query['Id']
+            , req.query['Type_']
+            , req.query['user_id']
+            // , req.query['comment']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
 app.get('/set_sp_update_vrf_checkinount', urlencodedParser, (req, res) => {
     try {
         dboperations.set_sp_update_vrf_checkinount(req.query['Id']
@@ -2319,8 +2517,6 @@ app.get('/set_sp_update_vrf_checkinount', urlencodedParser, (req, res) => {
         console.error('error: ', error);
         res.json({ error: error })
     }
-
-
 })
 app.get('/update_user_vrf_status', urlencodedParser, (req, res) => {
 
