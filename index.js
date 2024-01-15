@@ -708,7 +708,7 @@ app.get('/set_sendmail', urlencodedParser, async (req, res) => {
             console.log('in role not 3 and 8 email_recipient: ', email_recipient)
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_next_approver(req.query['id_'],recipient.email,recipient.user_id);
+                    let result_sendmail = await setSendMail_next_approver(req.query['id_'],recipient.email,recipient.user_id,'');
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -720,7 +720,7 @@ app.get('/set_sendmail', urlencodedParser, async (req, res) => {
             console.log('in role not 3 and 8 email_recipient: ', email_recipient)
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_final_approve(req.query['id_'],recipient.email,recipient.user_id);
+                    let result_sendmail = await setSendMail_final_approve(req.query['id_'],recipient.email,recipient.user_id,'');
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -942,6 +942,24 @@ app.get('/get_user_list_by_dept', urlencodedParser, (req, res) => {
         res.json({ error: error })
     }
 })
+app.get('/get_all_vrf_list', urlencodedParser, (req, res) => {
+    // console.log('/get_vrf_list department_id: ', req.query['department_id']
+    //     , 'branch_id: ', req.query['branch_id'])
+    try {
+        dboperations.get_all_vrf_list(
+            req.query['department_id']
+            , req.query['branch_id']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
 app.get('/get_vrf_list', urlencodedParser, (req, res) => {
     // console.log('/get_vrf_list department_id: ', req.query['department_id']
     //     , 'branch_id: ', req.query['branch_id'])
@@ -1087,6 +1105,8 @@ app.get('/get_search_vrf_for_guard', urlencodedParser, (req, res) => {
         , 'req.query[checkin_status]: ', req.query['checkin_status']
         , 'req.query[approve_status]: ', req.query['approve_status']
         , 'req.query[contactor]: ', req.query['contactor']
+        , 'req.query[requestor]: ', req.query['requestor']
+        , 'req.query[card_no]: ', req.query['card_no']
     )
     try {
         dboperations.get_search_vrf_for_guard(
@@ -1101,6 +1121,8 @@ app.get('/get_search_vrf_for_guard', urlencodedParser, (req, res) => {
             , req.query['role_id']
             , req.query['approve_status']
             , req.query['contactor']
+            , req.query['requestor']
+            , req.query['card_no']
         ).then((result) => {
             res.json(result)
         }).catch((err) => {
@@ -1617,8 +1639,34 @@ app.post('/set_manual_add_vrf_trans_det', urlencodedParser, (req, res) => {
             obj = x
         }
         let obj_json = JSON.parse(obj)
+        let newid = obj_json.newid;
+        let role_id = obj_json.role_id;
         // console.log('obj_json: ', obj_json)
-        dboperations.set_manual_add_vrf_trans_det(obj_json).then((result) => {
+        dboperations.set_manual_add_vrf_trans_det(obj_json).then(async (result) => { 
+            if (role_id !== '8') { 
+                let email_recipient = await getEmail_recipient(newid);
+                console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+                for (const recipient of email_recipient) {
+                    try {
+                        let result_sendmail = await setSendMail_next_approver(newid,recipient.email,recipient.user_id,'');                    
+                    } catch (err) {
+                        console.error('Error sending email:', err);
+                    }
+                }
+            }
+            if (role_id === '8') {
+                let email_recipient = await getEmail_recipient(newid);
+                console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+                for (const recipient of email_recipient) {
+                    try {
+                        let result_sendmail = await setSendMail_final_approve(newid,recipient.email,recipient.user_id,'');
+                        // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                    } catch (err) {
+                        console.error('Error sending email:', err);
+                    }
+                }
+            }
+
             res.json(result)
         }).catch((err) => {
             console.log('error: ', err)
@@ -1665,8 +1713,33 @@ app.post('/update_urgentcase_vrf_det', urlencodedParser, (req, res) => {
         let obj_json = JSON.parse(obj)        
         // console.log('/update_urgentcase_vrf_det obj_json.role_id: ', obj_json[0].role_id)
         //Type_: 'send_approve',
+        let newid = obj_json[0].vrf_id;
+        let role_id = obj_json[0].role_id;
         dboperations.set_update_urgentcase_vrf_det(obj_json).then(async (result) => {            
             let updateResult = await updateVrfTransApproveStatus(obj_json, io);
+            if (role_id !== '8') { 
+                let email_recipient = await getEmail_recipient(newid);
+                console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+                for (const recipient of email_recipient) {
+                    try {
+                        let result_sendmail = await setSendMail_next_approver(newid,recipient.email,recipient.user_id,'urgentcase');                    
+                    } catch (err) {
+                        console.error('Error sending email:', err);
+                    }
+                }
+            }
+            if (role_id === '8') {
+                let email_recipient = await getEmail_recipient(newid);
+                console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+                for (const recipient of email_recipient) {
+                    try {
+                        let result_sendmail = await setSendMail_final_approve(newid,recipient.email,recipient.user_id,'urgentcase');
+                        // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                    } catch (err) {
+                        console.error('Error sending email:', err);
+                    }
+                }
+            }
             res.json(updateResult)
         }).catch((err) => {
             console.log('error: ', err)
@@ -1699,7 +1772,7 @@ const updateVrfTransApproveStatus = async (queryParams, io) => {
             console.log('in role not 3 and 8 email_recipient: ', email_recipient)
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_next_approver(queryParams[0].vrf_id,recipient.email,recipient.user_id);
+                    let result_sendmail = await setSendMail_next_approver(queryParams[0].vrf_id,recipient.email,recipient.user_id,'');
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -1711,7 +1784,7 @@ const updateVrfTransApproveStatus = async (queryParams, io) => {
             console.log('in role not 3 and 8 email_recipient: ', email_recipient)
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_final_approve(queryParams[0].vrf_id,recipient.email,recipient.user_id);
+                    let result_sendmail = await setSendMail_final_approve(queryParams[0].vrf_id,recipient.email,recipient.user_id,'');
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -1888,7 +1961,7 @@ app.get('/get_vrf_file/:name', (req, res) => {
 app.get('/get_currentDateTime', urlencodedParser, (req, res) => {
     //console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
-        dboperations.get_vrf_security_det(req.query['Id']).then((result) => {
+        dboperations.get_currentDateTime(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
             console.log('error: ', err)
@@ -2157,6 +2230,7 @@ app.get('/update_vrf_approve_status_from_mail', urlencodedParser, async (req, re
             , io
         );        
         console.log('/update_vrf_approve_status_from_mail result: ', result)
+        let type_ = req.query['req_urgentcase_by'] ?  'urgentcase' : ''
         if(result[0][0].role_id_approver)
         { 
             let role_id_approver = result[0][0].role_id_approver;
@@ -2165,7 +2239,9 @@ app.get('/update_vrf_approve_status_from_mail', urlencodedParser, async (req, re
                 console.log('in role not 3 and 8 email_recipient: ', email_recipient)
                 for (const recipient of email_recipient) {
                     try {
-                        let result_sendmail = await setSendMail_next_approver(req.query['vrf_id'],recipient.email,recipient.user_id);
+                        let result_sendmail = await setSendMail_next_approver(req.query['vrf_id'],recipient.email
+                        ,recipient.user_id
+                        ,type_);
                         // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                     } catch (err) {
                         console.error('Error sending email:', err);
@@ -2177,7 +2253,7 @@ app.get('/update_vrf_approve_status_from_mail', urlencodedParser, async (req, re
                 console.log('in role not 3 and 8 email_recipient: ', email_recipient)
                 for (const recipient of email_recipient) {
                     try {
-                        let result_sendmail = await setSendMail_final_approve(req.query['vrf_id'],recipient.email,recipient.user_id);
+                        let result_sendmail = await setSendMail_final_approve(req.query['vrf_id'],recipient.email,recipient.user_id,type_);
                         // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                     } catch (err) {
                         console.error('Error sending email:', err);
@@ -2220,8 +2296,7 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, async (req, res) =
             console.log('in role not 3 and 8 email_recipient: ', email_recipient)
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_next_approver(req.query['Id'],recipient.email,recipient.user_id);
-                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                    let result_sendmail = await setSendMail_next_approver(req.query['Id'],recipient.email,recipient.user_id,'');                    
                 } catch (err) {
                     console.error('Error sending email:', err);
                 }
@@ -2232,7 +2307,7 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, async (req, res) =
             console.log('in role not 3 and 8 email_recipient: ', email_recipient)
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_final_approve(req.query['Id'],recipient.email,recipient.user_id);
+                    let result_sendmail = await setSendMail_final_approve(req.query['Id'],recipient.email,recipient.user_id,'');
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -2255,7 +2330,7 @@ const getEmail_recipient = async (Id) => {
         return { error: error.message }; // คืนกลับข้อผิดพลาด
     }
 };
-const setSendMail_next_approver = async (id,email_next_approver,user_id) => {
+const setSendMail_next_approver = async (id,email_next_approver,user_id,type_) => {
     try {
         let result = await dboperations.get_mail_info_next_approve(id)
         let output = result[0]
@@ -2271,8 +2346,8 @@ const setSendMail_next_approver = async (id,email_next_approver,user_id) => {
         tbDateT_ = moment.tz(output[0].dateto, 'Asia/Bangkok');
         formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
         let link = `${process.env.CLIENT_URL}/approvevrfpage?vrf_id=${id}&user_id=${user_id}`
-        let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC`
-        let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
+        let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC  ${ type_ ? ` (เคสด่วน)` : ``}`
+        let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT} ${type_ ? ` (เคสด่วน)` : ``}<br>
         พื้นที่ขอเข้าพบ: ${output[0].meeting_area}<br>
         ชื่อบริษัทผู้มาติดต่อ: ${output[0].contactor}<br>
         เหตุผลในการเข้าพบ: ${output[0].reason}<br>
@@ -2358,7 +2433,7 @@ app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
             console.log('in role not 3 and 8 email_recipient: ', email_recipient)
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_next_approver(req.query['Id'],recipient.email,recipient.user_id);                    
+                    let result_sendmail = await setSendMail_next_approver(req.query['Id'],recipient.email,recipient.user_id,'');                    
                 } catch (err) {
                     console.error('Error sending email:', err);
                 }
@@ -2369,7 +2444,7 @@ app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
             console.log('in role not 3 and 8 email_recipient: ', email_recipient)
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_final_approve(req.query['Id'],recipient.email,recipient.user_id);
+                    let result_sendmail = await setSendMail_final_approve(req.query['Id'],recipient.email,recipient.user_id,'');
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -2384,7 +2459,7 @@ app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
     }
 
 })
-const setSendMail_final_approve = async (id,email_next_approver,user_id) => {
+const setSendMail_final_approve = async (id,email_next_approver,user_id,type_) => {
     try {
         let result = await dboperations.get_mail_info_final_approve(id)
         console.log('setSendMail_final_approve result: ', result)
@@ -2402,14 +2477,14 @@ const setSendMail_final_approve = async (id,email_next_approver,user_id) => {
         formattedtbDateT = tbDateT_.format('DD-MM-YYYY');
 
         let link = `${process.env.CLIENT_URL}/requestvrflst?vrf_id=${id}&user_id=${user_id}`
-        let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC อนุมัติแล้ว`
+        let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC อนุมัติแล้ว ${ type_ ? ` (เคสด่วน)` : ``}`
         // let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
         // พื้นที่ขอเข้าพบ: ${output.meeting_area}<br>
         // ผู้ร้องขอ: ${output.requestor}<br>
         // ตำแหน่งผู้ร้องขอ: ${output.position}<br>
         // กดลิงค์ด้านล่างเพื่อเข้าไปดูรายละเอียด<br><br>
         // (<a href="${link}/requestvrflst">${process.env.CLIENT_URL}</a>)`;
-        let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT}<br>
+        let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT} ${ type_ ? ` (เคสด่วน)` : ``}<br>
         พื้นที่ขอเข้าพบ: ${output.meeting_area}<br>
         ชื่อบริษัทผู้มาติดต่อ: ${output.contactor}<br>
         เหตุผลในการเข้าพบ: ${output.reason}<br>
@@ -2466,13 +2541,16 @@ const setSendMail_final_approve = async (id,email_next_approver,user_id) => {
         console.log('error: ', err);
     }
 }
-app.get('/set_update_vrf_det_cancelcheckinout', urlencodedParser, (req, res) => {
+app.get('/set_update_vrf_det_cancelcheckinout', urlencodedParser, (req, res) => { 
+    console.log('req.query[Id] ',req.query['Id']
+    ,'req.query[Type_] ',req.query['Type_']
+    ,'req.query[user_id] ',req.query['user_id']
+    ,'req.query[checkincheckout_det_id] ',req.query['checkincheckout_det_id'])
     try {
         dboperations.set_update_vrf_det_cancelcheckinout(req.query['Id']
             , req.query['Type_']
             , req.query['user_id']
             , req.query['checkincheckout_det_id']
-            // , req.query['comment']
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {

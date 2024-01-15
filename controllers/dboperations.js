@@ -766,7 +766,9 @@ async function get_search_vrf_for_guard(
   checkin_status,
   role_id,
   approve_status,
-  contactor
+  contactor,
+  requestor,
+  card_no
 ) {
   let tbDateF_;
   let formattedtbDateF;
@@ -801,33 +803,44 @@ async function get_search_vrf_for_guard(
     dateT = '';
     formattedDateT = null;
   }
-  let checkin_status_ =
-    checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
-      ? parseInt(checkin_status)
-      : null;
-  let approve_status_ =
-    approve_status !== undefined && approve_status !== '' && approve_status !== null && !isNaN(approve_status)
-      ? approve_status
-      : null;
-  let contactor_ =
-    contactor !== undefined && contactor !== '' && contactor !== null && !isNaN(contactor)
-      ? contactor
-      : null;
-  let requestor_id_ =
-    requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
-      ? parseInt(requestor_id)
-      : null;
+  let checkin_status_ = checkin_status ? parseInt(checkin_status) : null;    
+  // let checkin_status_ =
+  //     checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
+  //       ? parseInt(checkin_status)
+  //       : null;
+  let approve_status_ = approve_status ? approve_status : null;
+    
+  // let approve_status_ =
+  //   approve_status !== undefined && approve_status !== '' && approve_status !== null && !isNaN(approve_status)
+  //     ? approve_status
+  //     : null;
+  let contactor_ = contactor ? contactor : null;
+  // let contactor_ =
+  //     contactor !== undefined && contactor !== '' && contactor !== null && !isNaN(contactor)
+  //       ? contactor
+  //       : null;
+  let requestor_id_ = requestor_id ? parseInt(requestor_id) : null;
+  // let requestor_id_ =
+  //   requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
+  //     ? parseInt(requestor_id)
+  //     : null;
   let area_id_ =
-    area_id !== undefined && area_id !== '' && area_id !== null && !isNaN(area_id)
-      ? parseInt(area_id)
-      : null;
+    area_id ? parseInt(area_id) : null;
+  // let area_id_ =
+  //     area_id !== undefined && area_id !== '' && area_id !== null && !isNaN(area_id)
+  //       ? parseInt(area_id)
+  //       : null;    
   let requestor_dept_id_ =
-    requestor_dept_id !== undefined &&
-      requestor_dept_id !== '' &&
-      requestor_dept_id !== null &&
-      !isNaN(requestor_dept_id)
-      ? parseInt(requestor_dept_id)
-      : null;
+    requestor_dept_id ? parseInt(requestor_dept_id) : null;
+      // let requestor_dept_id_ =
+      // requestor_dept_id !== undefined &&
+      //   requestor_dept_id !== '' &&
+      //   requestor_dept_id !== null &&
+      //   !isNaN(requestor_dept_id)
+      //   ? parseInt(requestor_dept_id)
+      //   : null; 
+  let requestor_ = requestor ? requestor : null;
+  let card_no_ = card_no ? card_no : null;    
 
   try {
     let pool = await sql.connect(config);
@@ -839,7 +852,10 @@ async function get_search_vrf_for_guard(
       , 'approve_status: ', approve_status
       , 'role_id: ', role_id
       , 'contactor: ', contactor_
+      , 'contactor: ', contactor
       , 'branch_id: ', branch_id
+      , 'requestor_: ', requestor_
+      , 'card_no_: ', card_no_
     );
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
@@ -852,6 +868,8 @@ async function get_search_vrf_for_guard(
     request.input('checkin_status', sql.Int, checkin_status_);
     request.input('approve_status', sql.NVarChar, approve_status_);
     request.input('contactor', sql.NVarChar, contactor_);
+    request.input('requestor', sql.NVarChar, requestor_);
+    request.input('card_no', sql.NVarChar, card_no_);
 
 
     // เรียกใช้ stored procedure
@@ -1191,6 +1209,24 @@ async function get_user_list(
     return [{ error: error }];
   }
 }
+async function get_all_vrf_list(
+  department_id,
+  branch_id
+) {
+  try {
+    let pool = await sql.connect(config);
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let spGet_all_vrf_list = await pool
+      .request()
+      // .input("department_id", sql.Int, department_id)
+      // .input("branch_id", sql.Int, branch_id)
+      .execute("spGet_all_vrf_list");
+    return spGet_all_vrf_list.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_vrf_list(
   department_id,
   branch_id
@@ -1237,6 +1273,20 @@ async function get_vrf_security_det(Id) {
     return [{ error: error }];
   }
 }
+async function get_currentDateTime(Id) {
+  console.log('get_vrf_security_det Id: ', Id)
+  try {
+    let pool = await sql.connect(config);
+    let sp_Get_CheckInCurrenTime = await pool
+      .request()
+      //.input("id", sql.Int, Id)
+      .execute("sp_Get_CheckInCurrenTime");
+    return sp_Get_CheckInCurrenTime.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_templete_vrf_det(Id) {
   try {
     let pool = await sql.connect(config);
@@ -1266,12 +1316,12 @@ async function get_vrf(Id) {
 async function get_vrf_apprve_page(Id, user_id) {
   try {
     let pool = await sql.connect(config);
-    let sp_Get_vrf_by_selected = await pool
+    let sp_Get_vrf_apprve_page = await pool
       .request()
       .input("id", sql.Int, Id)
       .input("user_id", sql.Int, user_id)
       .execute("sp_Get_vrf_apprve_page");
-    return sp_Get_vrf_by_selected.recordsets;
+    return sp_Get_vrf_apprve_page.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -3618,7 +3668,6 @@ async function update_vrf_requester_trans_status_all(Id
     console.log(err);
   }
 }
-
 async function update_vrf_trans_status(Id
   , Type_
   , user_id
@@ -3851,6 +3900,8 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_all_vrf_list:get_all_vrf_list, 
+  get_currentDateTime:get_currentDateTime,
   set_update_vrf_det_cancelcheckinout: set_update_vrf_det_cancelcheckinout,
   get_vrf_security_det: get_vrf_security_det,
   set_update_urgentcase_vrf: set_update_urgentcase_vrf,
