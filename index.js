@@ -48,27 +48,6 @@ io.on('connection', (socket) => {
 
     // สามารถเพิ่ม handlers อื่นๆ ที่นี่
 });
-
-const setordernumber = (value) => {
-    try {
-        const now = new Date()
-        const day = ('0' + now.getDate()).slice(-2)
-        const month = ('0' + (now.getMonth() + 1)).slice(-2)
-        const year = now.getFullYear()
-        const hours = ('0' + now.getHours()).slice(-2)
-        const minutes = ('0' + now.getMinutes()).slice(-2)
-        // const seconds = ('0' + now.getSeconds()).slice(-2)
-        const milliseconds_0 = ('0' + now.getMilliseconds()).slice(-2)
-        const milliseconds = ('00' + value).slice(-2)
-        console.log('milliseconds: ', milliseconds)
-        console.log('value: ', value)
-        // const milliseconds = ('00' + now.getMilliseconds()).slice(-3)
-        return `${day}${month}${year}${hours}${milliseconds_0}${milliseconds}`
-    } catch (error) {
-        console.error(error);
-        res.json({ error: error })
-    }
-}
 const storage = multer.diskStorage({
     filename: function (req, file, cb) {
         //console.log('storage filename req.body.reason: ', req.body.reason)     
@@ -96,26 +75,7 @@ const upload = multer({
     // dest: './uploads'
     storage: storage
 })
-const checkValue = (value_, type_) => {
-    try {
-        switch (type_) {
-            case 'float':
-                return value_ === '' || value_ === null ? 0.00 : parseFloat(value_);
 
-            case 'string':
-                return value_ === '' || value_ === null ? '' : String(value_);
-
-            default:
-                throw new Error(`Invalid type: ${type_}`);
-        }
-    } catch (error) {
-        console.error('checkValue error: ', error);
-        // If you intend to send this error to a client, make sure 'res' is defined
-        // or handle this differently.
-        // res.json({ error: error.message });
-        return null;  // Or some default value or behavior
-    }
-}
 const adjustDate = (inputDate) => {
     const date = new Date(inputDate);
     date.setDate(date.getDate() + 1);

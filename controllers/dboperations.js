@@ -2395,7 +2395,7 @@ async function set_update_urgentcase_vrf_det(obj_json) {
           .request()
           .input("id", sql.Int, obj_json[index].id)
           .input("req_urgentcase_by", sql.Int, obj_json[index].user_id)
-          .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgent)
+          .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
           .execute("sp_set_urgentcase_vrf_det");
         let output_ = sp_set_urgentcase_vrf_det.recordsets;
       } else {
@@ -2408,7 +2408,7 @@ async function set_update_urgentcase_vrf_det(obj_json) {
           .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
           .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
           .input("card_no", sql.NVarChar, obj_json[index].card_no)
-          .input("remark_urgent", sql.NVarChar, obj_json[index].remark_urgent)
+          .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
           .input("user_id", sql.Int, obj_json[index].user_id)
           .execute("sp_add_urgentcase_person_vrf");
         let output_ = sp_add_urgentcase_person_vrf.recordsets;
@@ -2499,8 +2499,8 @@ async function set_update_urgentcase_vrf(obj_json) {
         .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
         .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
         .input("card_no", sql.NVarChar, obj_json[index].card_no)
-        .input("remark_urgent", sql.NVarChar, obj_json[index].remark_urgentcase)
-        .input("user_id", sql.Int, obj_json[index].remark_urgent)
+        .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
+        .input("user_id", sql.Int, obj_json[index].user_id)
         .execute("sp_add_urgentcase_person_vrf");
         let output_ = sp_add_urgentcase_person_vrf.recordsets;
       }
@@ -2515,8 +2515,8 @@ async function set_update_urgentcase_vrf(obj_json) {
         .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
         .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
         .input("card_no", sql.NVarChar, obj_json[index].card_no)
-        .input("remark_urgent", sql.NVarChar, obj_json[index].remark_urgentcase)
-        .input("user_id", sql.Int, obj_json[index].remark_urgent)
+        .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
+        .input("user_id", sql.Int, obj_json[index].user_id)
         .execute("sp_add_urgentcase_person_vrf");
         let output_ = sp_add_urgentcase_person_vrf.recordsets;
 
