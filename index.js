@@ -1626,7 +1626,6 @@ app.post('/set_manual_add_vrf_trans_det', urlencodedParser, (req, res) => {
                     }
                 }
             }
-
             res.json(result)
         }).catch((err) => {
             console.log('error: ', err)
@@ -2076,21 +2075,7 @@ app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
     let type_ = req.query['Type_']
     try {
         req.query['Id'].forEach((item) => {
-            // dboperations.update_vrf_trans_approve_status(parseInt(item)
-            //     , req.query['Type_']
-            //     , req.query['user_id']
-            //     , req.query['role_id']
-            //     , req.query['work_flow_id']
-            //     , req.query['department_id']
-            //     , req.query['branch_id']
-            //     , req.query['division_id']
-            //     , io
-            // ).then(async (result, err) => {
-            //     output = result[0]
-            // }).catch((err) => {
-            //     console.log('error: ', err)
-            //     res.json({ error: err })
-            // })
+
             dboperations.update_vrf_trans_status(parseInt(item)
                 , req.query['Type_']
                 , req.query['user_id']

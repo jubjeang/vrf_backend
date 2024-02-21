@@ -1540,18 +1540,21 @@ async function set_manual_add_vrf_trans_det(obj_json) {
       if (key !== 'newid') {
         // console.log("key: ", key, "value: ", obj_json[key]);
         // console.log("obj_json[key].tbDateF ", obj_json[key].tbDateF);
-        let pool = await sql.connect(config);
-        let spAdd_vrf_det = await pool
-          .request()
-          .input("vrf_id", sql.Int, newid)
-          .input("fullname", sql.NVarChar, obj_json[key].tbFullName)
-          .input("vehicle_registration", sql.NVarChar, obj_json[key].tbVehicle_Registration)
-          .input("vehicle_brand", sql.Int, obj_json[key].ddlvehicle_brand)
-          .input("vehicle_color", sql.Int, obj_json[key].ddlvehicle_color)
-          .input("card_no", sql.NVarChar, obj_json[key].tbCardNo)
-          .input("createby", sql.NVarChar, obj_json[key].user_id)
-          .execute("spAdd_vrf_det");
-        output = spAdd_vrf_det.recordsets;
+        if(obj_json[key].tbFullName)
+        {
+            let pool = await sql.connect(config);
+            let spAdd_vrf_det = await pool
+            .request()
+            .input("vrf_id", sql.Int, newid)
+            .input("fullname", sql.NVarChar, obj_json[key].tbFullName)
+            .input("vehicle_registration", sql.NVarChar, obj_json[key].tbVehicle_Registration)
+            .input("vehicle_brand", sql.Int, obj_json[key].ddlvehicle_brand)
+            .input("vehicle_color", sql.Int, obj_json[key].ddlvehicle_color)
+            .input("card_no", sql.NVarChar, obj_json[key].tbCardNo)
+            .input("createby", sql.NVarChar, obj_json[key].user_id)
+            .execute("spAdd_vrf_det");
+            output = spAdd_vrf_det.recordsets;
+        }        
       }
     }
   } catch (err) {
@@ -3668,66 +3671,6 @@ async function update_vrf_requester_trans_status_all(Id
     console.log(err);
   }
 }
-async function update_vrf_trans_status(Id
-  , Type_
-  , user_id
-  , role_id
-  , work_flow_id
-  , department_id
-  , branch_id
-  , division_id
-  , io
-) {
-  try {
-    let type_new_vrf_send_approve = parseInt(role_id) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
-    console.log('type_new_vrf_send_approve: ', type_new_vrf_send_approve)
-    let pool = await sql.connect(config);
-    let update_vrf_trans_status = await pool
-      .request()
-      .input("Id_", sql.Int, Id)
-      .input("Type_", sql.NVarChar, Type_)
-      .input("user_id", sql.NVarChar, user_id)
-      .input("role_id", sql.Int, role_id)
-      .input("work_flow_id", sql.Int, work_flow_id)
-      .input("department_id", sql.Int, department_id)
-      .input("branch_id", sql.Int, branch_id)
-      .input("division_id", sql.Int, division_id)
-      .execute("spUpdate_vrf_trans_status");
-    let approveStatus = update_vrf_trans_status.recordsets[0][0].approve_status;
-    console.log('approveStatus: ', approveStatus)
-    io.emit(type_new_vrf_send_approve, {
-      message: type_new_vrf_send_approve,
-      Id: Id,
-      user_id: user_id,
-      role_id: role_id,
-      approve_status: approveStatus
-    });
-
-    return update_vrf_trans_status.recordsets;
-  } catch (err) {
-    console.log(err);
-  }
-}
-// async function update_vrf_trans_status(Id
-//   , Type_
-//   , user_id
-//   , role_id
-//   , work_flow_id) {
-//   try {
-//     let pool = await sql.connect(config);
-//     let update_vrf_trans_status = await pool
-//       .request()
-//       .input("Id_", sql.Int, Id)
-//       .input("Type_", sql.NVarChar, Type_)
-//       .input("user_id", sql.NVarChar, user_id)
-//       .input("role_id", sql.Int, role_id)
-//       .input("work_flow_id", sql.Int, work_flow_id)
-//       .execute("spUpdate_vrf_trans_status");
-//     return update_vrf_trans_status.recordsets;
-//   } catch (err) {
-//     console.log(err);
-//   }
-// }
 async function set_update_vrf_det_cancelcheckinout(Id,
   Type_,
   user_id,
@@ -3843,6 +3786,46 @@ async function update_vrf_approve_status_from_mail(user_id, vrf_id
     }
 
     return sp_update_vrf_approve_from_mail.recordsets;
+  } catch (err) {
+    console.log(err);
+  }
+}
+async function update_vrf_trans_status(Id
+  , Type_
+  , user_id
+  , role_id
+  , work_flow_id
+  , department_id
+  , branch_id
+  , division_id
+  , io
+) {
+  try {
+    let type_new_vrf_send_approve = parseInt(role_id) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
+    console.log('type_new_vrf_send_approve: ', type_new_vrf_send_approve)
+    let pool = await sql.connect(config);
+    let update_vrf_trans_status = await pool
+      .request()
+      .input("Id_", sql.Int, Id)
+      .input("Type_", sql.NVarChar, Type_)
+      .input("user_id", sql.NVarChar, user_id)
+      .input("role_id", sql.Int, role_id)
+      .input("work_flow_id", sql.Int, work_flow_id)
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)
+      .input("division_id", sql.Int, division_id)
+      .execute("spUpdate_vrf_trans_status");
+    let approveStatus = update_vrf_trans_status.recordsets[0][0].approve_status;
+    console.log('approveStatus: ', approveStatus)
+    io.emit(type_new_vrf_send_approve, {
+      message: type_new_vrf_send_approve,
+      Id: Id,
+      user_id: user_id,
+      role_id: role_id,
+      approve_status: approveStatus
+    });
+
+    return update_vrf_trans_status.recordsets;
   } catch (err) {
     console.log(err);
   }
