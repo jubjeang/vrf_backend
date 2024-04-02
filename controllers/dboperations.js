@@ -889,7 +889,8 @@ async function get_search_vrf_list(
   area_id,
   requestor_dept_id,
   branch_id,
-  approve_status
+  approve_status,
+  contactor
 ) {
   let tbDateF_;
   let formattedtbDateF;
@@ -927,6 +928,8 @@ async function get_search_vrf_list(
   console.log('approve_status: ', approve_status);
   let approve_status_ =
     approve_status !== undefined && approve_status !== '' && approve_status !== null ? approve_status : null;
+    let contactor_ =
+    contactor !== undefined && contactor !== '' && contactor !== null ? contactor : null;
   let requestor_id_ =
     requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
       ? parseInt(requestor_id)
@@ -962,6 +965,7 @@ async function get_search_vrf_list(
     request.input('requestor_id', sql.Int, requestor_id_);
     request.input('area_id', sql.Int, area_id_);
     request.input('approve_status', sql.NVarChar, approve_status_);
+    request.input('contactor', sql.NVarChar, contactor_);
 
     // เรียกใช้ stored procedure
     let result = await request.execute('spGet_search_vrf_list');
@@ -1095,7 +1099,8 @@ async function get_vrf_approve_list(
   department_id,
   branch_id,
   role_id,
-  division_id
+  division_id,
+  user_id
 ) {
   try {
     let pool = await sql.connect(config);
@@ -1106,6 +1111,7 @@ async function get_vrf_approve_list(
       .input("branch_id", sql.Int, branch_id)
       .input("role_id", sql.Int, role_id)
       .input("division_id", sql.Int, division_id)
+      .input("user_id", sql.Int, user_id)
       .execute("spGet_vrf_approve_list");
     return spGet_vrf_approve_list.recordsets;
   } catch (error) {
@@ -1229,7 +1235,8 @@ async function get_all_vrf_list(
 }
 async function get_vrf_list(
   department_id,
-  branch_id
+  branch_id,
+  user_id
 ) {
 
   try {
@@ -1239,6 +1246,7 @@ async function get_vrf_list(
       .request()
       .input("department_id", sql.Int, department_id)
       .input("branch_id", sql.Int, branch_id)
+      .input("user_id", sql.Int, user_id)
       .execute("spGet_vrf_list");
     return spGet_vrf_list.recordsets;
   } catch (error) {
@@ -3780,7 +3788,7 @@ async function update_vrf_approve_status_from_mail(user_id, vrf_id
         message: type_new_vrf_send_approve,
         Id: Id,
         user_id: user_id,
-        role_id: role_id,
+        role_id: sp_update_vrf_approve_from_mail.recordsets[0][0].role_id_approver,
         approve_status: approveStatus
       });
     }
