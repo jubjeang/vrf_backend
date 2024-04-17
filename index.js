@@ -83,7 +83,7 @@ const adjustDate = (inputDate) => {
 };
 app.post('/set_add_user_vrf', upload.single('file'), async (req, res) => {
     try {
-        console.log('set_manual_add_vrf_trans req.body: ', req.body);
+        console.log('set_add_user_vrf req.body: ', req.body);
         console.log('req.body.first_name: ', req.body.first_name);
 
         let data = {
@@ -137,7 +137,7 @@ app.post('/set_manual_add_vrf_trans', upload.single('file'), async (req, res) =>
             date_to: adjustDate(req.body.date_to),
         };
         try {
-            const result = await dboperations.set_manual_add_vrf_trans(data);
+            const result = await dboperations.set_manual_add_vrf_trans(data,io);
             res.json(result);
         } catch (err) {
             console.log('Database error: ', err);
@@ -1349,8 +1349,9 @@ app.post('/set_manual_add_vrf', urlencodedParser, (req, res) => {
         for (let x in data_) {
             obj = x
         }
+        console.log('set_manual_add_vrf obj: ', obj)
         let obj_json = JSON.parse(obj)
-        // console.log('obj_json: ', obj_json)
+        console.log('obj_json: ', obj_json)
         dboperations.set_manual_add_vrf(obj_json).then((result) => {
             res.json(result)
         }).catch((err) => {
@@ -1866,9 +1867,19 @@ app.get('/update_vrf_requester_trans_status_all', urlencodedParser, (req, res) =
 app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
     let output = null
     let type_ = req.query['Type_']
+    let ids = req.query['Id']; // สมมติว่า 'Id' เป็นอาร์เรย์
+    let totalItems = ids.length; // รับจำนวนรวมขององค์ประกอบในอาร์เรย์
+    let lastrow = false
     try {
-        req.query['Id'].forEach((item) => {
-
+        req.query['Id'].forEach((item, index) => { 
+            if (index === totalItems - 1) {
+                console.log('รอบสุดท้าย');
+                lastrow = true
+            }
+            else
+            { 
+                lastrow = false
+            }
             dboperations.update_vrf_trans_status(parseInt(item)
                 , req.query['Type_']
                 , req.query['user_id']
@@ -1877,6 +1888,7 @@ app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
                 , req.query['department_id']
                 , req.query['branch_id']
                 , req.query['division_id']
+                ,lastrow
                 ,io
             ).then((result) => {
                 output = result[0]
@@ -2491,7 +2503,10 @@ app.get('/update_user_vrf_status', urlencodedParser, (req, res) => {
 });
 app.get('/update_vrf_trans_status', urlencodedParser, (req, res) => {
     let attach_file_primitive = req.query['attach_file_primitive']
-    dboperations.update_vrf_trans_status(req.query['Id'], req.query['Type_'], req.query['user_id'], req.query['attach_file_primitive'])
+    dboperations.update_vrf_trans_status(req.query['Id']
+    , req.query['Type_']
+    , req.query['user_id']
+    , req.query['attach_file_primitive'])
         .then((result) => {
             try {
                 if (attach_file_primitive && attach_file_primitive !== 'undefined') {
@@ -2550,105 +2565,6 @@ app.get('/delete_app_proc_det', urlencodedParser, (req, res) => {
     }
 
 })
-// const getReportFilename = (path_) => {
-//     let output = []
-//     let countfile = 0
-//     //let output0={}
-//     console.log('start getReportFilename path_: ', path_)
-//     try { 
-//         fs.readdirSync(path_).forEach(file => {
-//             if (file) {
-//                 if (countfile === 0) {
-//                     output.push({ file1: file })
-//                     console.log('file1: ', file)
-//                     countfile++
-//                 }
-//                 else {
-//                     // output0={file2: file}
-//                     output.push({ file2: file })
-//                     console.log('file2: ', file)
-//                     countfile = 0
-//                 }
-//             }
-//         })       
-//     } catch (error) {
-//         console.error('error: ',error);
-//         res.json({ error: error })        
-//     }
-//     // console.log('output0: ',output0)
-//     // output.push( output0 )
-//     return output
-// }
-// app.get('/update_vrf_trans_status', urlencodedParser, (req, res) => {
-//     let attach_file_primitive = req.query['attach_file_primitive']
-//     dboperations.update_vrf_trans_status(req.query['Id']
-//         , req.query['Type_']
-//         , req.query['user_id']
-//         , req.query['attach_file_primitive']).then((result, err) => {
-//             if (err) {
-//                 console.log('error: ', err)
-//             }
-//             else {
-//                 if ((attach_file_primitive !== '')
-//                     && (attach_file_primitive !== null)
-//                     && (attach_file_primitive !== undefined)
-//                     && (attach_file_primitive !== 'undefined')
-//                 ) {
-//                     // ใช้ fs.stat
-//                     fs.stat('./uploads/' + attach_file_primitive, (err, stats) => {
-//                         if (err) {
-//                             console.log(`ไม่พบไฟล์: ${attach_file_primitive}`);
-//                         } else {
-//                             fs.unlink('./uploads/' + attach_file_primitive, (err) => {
-//                                 if (err) throw err;
-//                                 console.log(attach_file_primitive + ' ถูกลบแล้ว');
-//                             });
-//                         }
-//                     });
-//                 }
-//                 res.json(result[0])
-//             }
-//         })
-// })
-// app.post('/downloadExcel',bodyParser.json(), async (req, res) => {
-//     try {
-
-//       const data = req.body; // ข้อมูลที่ส่งมาจาก frontend
-//       console.log('req.body: ',req.body)  
-//       let workbook = new ExcelJS.Workbook();
-//       let worksheet = workbook.addWorksheet('Sheet 1');  
-//       worksheet.columns = [
-//         { header: 'No', key: 'no' },
-//         { header: 'ชื่อผู้มาติดต่อ', key: 'contactor' },        
-//         { header: 'วันที่เริ่มเข้า', key: 'date_from' },
-//         { header: 'วันที่สุดท้ายที่เข้า', key: 'date_to' },
-//         { header: 'พื้นที่ที่เข้าพบ', key: 'meeting_area' },
-//         { header: 'เหตุผลที่เข้าพบ', key: 'reason' },
-//         { header: 'ผู้นำพา', key: 'navigator' },
-//         { header: 'สถานะการขอเข้าพื้นที่', key: 'approve_status' },
-//         // ใส่คีย์อื่น ๆ ที่ตรงกับข้อมูลของคุณที่นี่...
-//       ];  
-//       data.forEach(item => {
-//         item.date_from = format(new Date(item.date_from), 'dd-MM-yyyy')
-//         item.date_to = format(new Date(item.date_to), 'dd-MM-yyyy')
-//         worksheet.addRow(item);
-//       });  
-//       res.setHeader(
-//         'Content-Type',
-//         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-//       );
-//       res.setHeader(
-//         'Content-Disposition',
-//         'attachment; filename=' + 'report.xlsx',
-//       );  
-//       await workbook.xlsx.write(res);
-//       res.end();
-//     } catch (error) {
-//         console.log('error: ',error);
-//       res.status(500).send(error);
-//     }
-// });
-// app.listen(process.env.PORT, () => console.log(`running on localhost:${process.env.PORT}`))
 server.listen(process.env.PORT, () => {
     console.log(`Server running on https://localhost:${process.env.PORT}`);
 });

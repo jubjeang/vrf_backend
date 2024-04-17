@@ -1,10 +1,10 @@
 require('dotenv').config()
-//Local
+// // PROD
 // const config = {
-//     user :'sa',
-//     password :'ahost!1234',
-//     server:'192.168.100.176',
-//     database:'CIT_ReportDB_GFCCP_PROD',
+//     user : process.env.DB_UN,//'sa',
+//     password : process.env.DB_PW,//'ahost!1234',
+//     server: process.env.DB_SERVER,
+//     database:process.env.DB_DATABASE,//'CIT_ReportDB_GFCCP_PROD',
 //     options:{
 //         validateBulkLoadParameters: false,
 //         rowCollectionOnRequestCompletion: true,
@@ -13,12 +13,12 @@ require('dotenv').config()
 //         enableArithAbort: true
 //     },
 // }
-//UAT
+// // UAT
 // const config = {
-//     user :'sa',
-//     password :'ahost!1234',
-//     server:'192.168.100.176',
-//     database:'CIT_ReportDB_GFCCP_PROD',
+//     user : process.env.DB_UN,//'sa',
+//     password : process.env.DB_PW,//'ahost!1234',
+//     server: process.env.DB_SERVER,
+//     database:process.env.DB_DATABASE,//'CIT_ReportDB_GFCCP_PROD',
 //     options:{
 //         validateBulkLoadParameters: false,
 //         rowCollectionOnRequestCompletion: true,
@@ -27,7 +27,7 @@ require('dotenv').config()
 //         enableArithAbort: true
 //     },
 // }
-// PROD
+// DEV
 const config = {
     user : process.env.DB_UN,//'sa',
     password : process.env.DB_PW,//'ahost!1234',

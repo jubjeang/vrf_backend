@@ -1476,10 +1476,11 @@ async function set_add_user_vrf(obj_json) {
     output = output_[0];
     return output[''];
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
-async function set_manual_add_vrf_trans(obj_json) {
+async function set_manual_add_vrf_trans(obj_json,io) {
   let output_ = null;
   let output = null;
   console.log("set_manual_add_vrf_trans obj_json: ", obj_json);
@@ -1506,9 +1507,18 @@ async function set_manual_add_vrf_trans(obj_json) {
     output_ = spAdd_vrf.recordsets;
     output_ = output_[0];
     output = output_[0];
+    io.emit('new_vrf_send_approve', {
+      message: 'new_vrf_send_approve',
+      Id: 0,
+      user_id: obj_json.createby,
+      role_id: 0,
+      approve_status: ''
+    });
+
     return output[''];
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function set_manual_add_vrf(obj_json) {
@@ -1529,6 +1539,7 @@ async function set_manual_add_vrf(obj_json) {
       .input("area", sql.Int, obj_json.area)
       .input("date_from", sql.DateTime, obj_json.date_from)
       .input("date_to", sql.DateTime, obj_json.date_to)
+      //.input("createby", sql.NVarChar, obj_json.createby)
       .input("createby", sql.NVarChar, obj_json.user_id)
       .execute("spAdd_vrf_template");
     output_ = spAdd_vrf_template.recordsets;
@@ -1536,7 +1547,8 @@ async function set_manual_add_vrf(obj_json) {
     output = output_[0];
     return output[''];
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function set_manual_add_vrf_trans_det(obj_json) {
@@ -1566,7 +1578,8 @@ async function set_manual_add_vrf_trans_det(obj_json) {
       }
     }
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   } finally {
     return ({ state: 1 })
   }
@@ -1598,795 +1611,13 @@ async function set_manual_add_vrf_det(obj_json) {
       }
     }
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   } finally {
     return ({ state: 1 })
   }
 }
-async function add_manual_order(gfccp_order) {
-  let NULL_ = null;
-  let FLOAT_NULL_ = 0;
-  let roleid = gfccp_order["roleid"];
-  let approve_setting_id = gfccp_order["approve_setting_id"];
-  let approve_setting_version = gfccp_order["approve_setting_version"];
-  let customerID = gfccp_order["customerID"];
-  let order_category = gfccp_order["order_category"];
-  let servicetype = gfccp_order["servicetype"];
-  let refno = gfccp_order["refno"] !== undefined ? gfccp_order["refno"] : NULL_;
-  let order_date = gfccp_order["order_date"];
-  let branchorigin_code = gfccp_order["branchorigin_code"];
-  let branchorigin_name = gfccp_order["branchorigin_name"];
-  let branchdest_code = gfccp_order["branchdest_code"];
-  let branchdest_name = gfccp_order["branchdest_name"];
-  let remark =
-    gfccp_order["remark"] !== undefined ? gfccp_order["remark"] : NULL_;
-  //---note
-  let note_new_1000 =
-    gfccp_order["note_new_1000"] !== undefined
-      ? parseFloat(gfccp_order["note_new_1000"])
-      : FLOAT_NULL_;
-  let note_new_500 =
-    gfccp_order["note_new_500"] !== undefined
-      ? parseFloat(gfccp_order["note_new_500"])
-      : FLOAT_NULL_;
-  let note_new_100 =
-    gfccp_order["note_new_100"] !== undefined
-      ? parseFloat(gfccp_order["note_new_100"])
-      : FLOAT_NULL_;
-  let note_new_50 =
-    gfccp_order["note_new_50"] !== undefined
-      ? parseFloat(gfccp_order["note_new_50"])
-      : FLOAT_NULL_;
-  let note_new_20 =
-    gfccp_order["note_new_20"] !== undefined
-      ? parseFloat(gfccp_order["note_new_20"])
-      : FLOAT_NULL_;
-  let note_new_10 =
-    gfccp_order["note_new_10"] !== undefined
-      ? parseFloat(gfccp_order["note_new_10"])
-      : FLOAT_NULL_;
-  let note_fit_1000 =
-    gfccp_order["note_fit_1000"] !== undefined
-      ? parseFloat(gfccp_order["note_fit_1000"])
-      : FLOAT_NULL_;
-  let note_fit_500 =
-    gfccp_order["note_fit_500"] !== undefined
-      ? parseFloat(gfccp_order["note_fit_500"])
-      : FLOAT_NULL_;
-  let note_fit_100 =
-    gfccp_order["note_fit_100"] !== undefined
-      ? parseFloat(gfccp_order["note_fit_100"])
-      : FLOAT_NULL_;
-  let note_fit_50 =
-    gfccp_order["note_fit_50"] !== undefined
-      ? parseFloat(gfccp_order["note_fit_50"])
-      : FLOAT_NULL_;
-  let note_fit_20 =
-    gfccp_order["note_fit_20"] !== undefined
-      ? parseFloat(gfccp_order["note_fit_20"])
-      : FLOAT_NULL_;
-  let note_fit_10 =
-    gfccp_order["note_fit_10"] !== undefined
-      ? parseFloat(gfccp_order["note_fit_10"])
-      : FLOAT_NULL_;
-  let note_uncount_1000 =
-    gfccp_order["note_uncount_1000"] !== undefined
-      ? parseFloat(gfccp_order["note_uncount_1000"])
-      : FLOAT_NULL_;
-  let note_uncount_500 =
-    gfccp_order["note_uncount_500"] !== undefined
-      ? parseFloat(gfccp_order["note_uncount_500"])
-      : FLOAT_NULL_;
-  let note_uncount_100 =
-    gfccp_order["note_uncount_100"] !== undefined
-      ? parseFloat(gfccp_order["note_uncount_100"])
-      : FLOAT_NULL_;
-  let note_uncount_50 =
-    gfccp_order["note_uncount_50"] !== undefined
-      ? parseFloat(gfccp_order["note_uncount_50"])
-      : FLOAT_NULL_;
-  let note_uncount_20 =
-    gfccp_order["note_uncount_20"] !== undefined
-      ? parseFloat(gfccp_order["note_uncount_20"])
-      : FLOAT_NULL_;
-  let note_uncount_10 =
-    gfccp_order["note_uncount_10"] !== undefined
-      ? parseFloat(gfccp_order["note_uncount_10"])
-      : FLOAT_NULL_;
-  let note_unfit_1000 =
-    gfccp_order["note_unfit_1000"] !== undefined
-      ? parseFloat(gfccp_order["note_unfit_1000"])
-      : FLOAT_NULL_;
-  let note_unfit_500 =
-    gfccp_order["note_unfit_500"] !== undefined
-      ? parseFloat(gfccp_order["note_unfit_500"])
-      : FLOAT_NULL_;
-  let note_unfit_100 =
-    gfccp_order["note_unfit_100"] !== undefined
-      ? parseFloat(gfccp_order["note_unfit_100"])
-      : FLOAT_NULL_;
-  let note_unfit_50 =
-    gfccp_order["note_unfit_50"] !== undefined
-      ? parseFloat(gfccp_order["note_unfit_50"])
-      : FLOAT_NULL_;
-  let note_unfit_20 =
-    gfccp_order["note_unfit_20"] !== undefined
-      ? parseFloat(gfccp_order["note_unfit_20"])
-      : FLOAT_NULL_;
-  let note_unfit_10 =
-    gfccp_order["note_unfit_10"] !== undefined
-      ? parseFloat(gfccp_order["note_unfit_10"])
-      : FLOAT_NULL_;
-  //----coin
-  let coin_new_10 =
-    gfccp_order["coin_new_10"] !== undefined
-      ? parseFloat(gfccp_order["coin_new_10"])
-      : FLOAT_NULL_;
-  let coin_new_5 =
-    gfccp_order["coin_new_5"] !== undefined
-      ? parseFloat(gfccp_order["coin_new_5"])
-      : FLOAT_NULL_;
-  let coin_new_2 =
-    gfccp_order["coin_new_2"] !== undefined
-      ? parseFloat(gfccp_order["coin_new_2"])
-      : FLOAT_NULL_;
-  let coin_new_1 =
-    gfccp_order["coin_new_1"] !== undefined
-      ? parseFloat(gfccp_order["coin_new_1"])
-      : FLOAT_NULL_;
-  let coin_new_05 =
-    gfccp_order["coin_new_05"] !== undefined
-      ? parseFloat(gfccp_order["coin_new_05"])
-      : FLOAT_NULL_;
-  let coin_new_025 =
-    gfccp_order["coin_new_025"] !== undefined
-      ? parseFloat(gfccp_order["coin_new_025"])
-      : FLOAT_NULL_;
-  let coin_fit_10 =
-    gfccp_order["coin_fit_10"] !== undefined
-      ? parseFloat(gfccp_order["coin_fit_10"])
-      : FLOAT_NULL_;
-  let coin_fit_5 =
-    gfccp_order["coin_fit_5"] !== undefined
-      ? parseFloat(gfccp_order["coin_fit_5"])
-      : FLOAT_NULL_;
-  let coin_fit_2 =
-    gfccp_order["coin_fit_2"] !== undefined
-      ? parseFloat(gfccp_order["coin_fit_2"])
-      : FLOAT_NULL_;
-  let coin_fit_1 =
-    gfccp_order["coin_fit_1"] !== undefined
-      ? parseFloat(gfccp_order["coin_fit_1"])
-      : FLOAT_NULL_;
-  let coin_fit_05 =
-    gfccp_order["coin_fit_05"] !== undefined
-      ? parseFloat(gfccp_order["coin_fit_05"])
-      : FLOAT_NULL_;
-  let coin_fit_025 =
-    gfccp_order["coin_fit_025"] !== undefined
-      ? parseFloat(gfccp_order["coin_fit_025"])
-      : FLOAT_NULL_;
-  let coin_uncount_10 =
-    gfccp_order["coin_uncount_10"] !== undefined
-      ? parseFloat(gfccp_order["coin_uncount_10"])
-      : FLOAT_NULL_;
-  let coin_uncount_5 =
-    gfccp_order["coin_uncount_5"] !== undefined
-      ? parseFloat(gfccp_order["coin_uncount_5"])
-      : FLOAT_NULL_;
-  let coin_uncount_2 =
-    gfccp_order["coin_uncount_2"] !== undefined
-      ? parseFloat(gfccp_order["coin_uncount_2"])
-      : FLOAT_NULL_;
-  let coin_uncount_1 =
-    gfccp_order["coin_uncount_1"] !== undefined
-      ? parseFloat(gfccp_order["coin_uncount_1"])
-      : FLOAT_NULL_;
-  let coin_uncount_05 =
-    gfccp_order["coin_uncount_05"] !== undefined
-      ? parseFloat(gfccp_order["coin_uncount_05"])
-      : FLOAT_NULL_;
-  let coin_uncount_025 =
-    gfccp_order["coin_uncount_025"] !== undefined
-      ? parseFloat(gfccp_order["coin_uncount_025"])
-      : FLOAT_NULL_;
-  let coin_unfit_10 =
-    gfccp_order["coin_unfit_10"] !== undefined
-      ? parseFloat(gfccp_order["coin_unfit_10"])
-      : FLOAT_NULL_;
-  let coin_unfit_5 =
-    gfccp_order["coin_unfit_5"] !== undefined
-      ? parseFloat(gfccp_order["coin_unfit_5"])
-      : FLOAT_NULL_;
-  let coin_unfit_2 =
-    gfccp_order["coin_unfit_2"] !== undefined
-      ? parseFloat(gfccp_order["coin_unfit_2"])
-      : FLOAT_NULL_;
-  let coin_unfit_1 =
-    gfccp_order["coin_unfit_1"] !== undefined
-      ? parseFloat(gfccp_order["coin_unfit_1"])
-      : FLOAT_NULL_;
-  let coin_unfit_05 =
-    gfccp_order["coin_unfit_05"] !== undefined
-      ? parseFloat(gfccp_order["coin_unfit_05"])
-      : FLOAT_NULL_;
-  let coin_unfit_025 =
-    gfccp_order["coin_unfit_025"] !== undefined
-      ? parseFloat(gfccp_order["coin_unfit_025"])
-      : FLOAT_NULL_;
-  //----pcs
-  //---pcs note
-  let pcs_note_new_1000 =
-    gfccp_order["pcs_note_new_1000"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_new_1000"])
-      : FLOAT_NULL_;
-  let pcs_note_new_500 =
-    gfccp_order["pcs_note_new_500"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_new_500"])
-      : FLOAT_NULL_;
-  let pcs_note_new_100 =
-    gfccp_order["pcs_note_new_100"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_new_100"])
-      : FLOAT_NULL_;
-  let pcs_note_new_50 =
-    gfccp_order["pcs_note_new_50"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_new_50"])
-      : FLOAT_NULL_;
-  let pcs_note_new_20 =
-    gfccp_order["pcs_note_new_20"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_new_20"])
-      : FLOAT_NULL_;
-  let pcs_note_new_10 =
-    gfccp_order["pcs_note_new_10"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_new_10"])
-      : FLOAT_NULL_;
-  let pcs_note_fit_1000 =
-    gfccp_order["pcs_note_fit_1000"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_fit_1000"])
-      : FLOAT_NULL_;
-  let pcs_note_fit_500 =
-    gfccp_order["pcs_note_fit_500"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_fit_500"])
-      : FLOAT_NULL_;
-  let pcs_note_fit_100 =
-    gfccp_order["pcs_note_fit_100"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_fit_100"])
-      : FLOAT_NULL_;
-  let pcs_note_fit_50 =
-    gfccp_order["pcs_note_fit_50"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_fit_50"])
-      : FLOAT_NULL_;
-  let pcs_note_fit_20 =
-    gfccp_order["pcs_note_fit_20"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_fit_20"])
-      : FLOAT_NULL_;
-  let pcs_note_fit_10 =
-    gfccp_order["pcs_note_fit_10"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_fit_10"])
-      : FLOAT_NULL_;
-  let pcs_note_uncount_1000 =
-    gfccp_order["pcs_note_uncount_1000"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_uncount_1000"])
-      : FLOAT_NULL_;
-  let pcs_note_uncount_500 =
-    gfccp_order["pcs_note_uncount_500"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_uncount_500"])
-      : FLOAT_NULL_;
-  let pcs_note_uncount_100 =
-    gfccp_order["pcs_note_uncount_100"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_uncount_100"])
-      : FLOAT_NULL_;
-  let pcs_note_uncount_50 =
-    gfccp_order["pcs_note_uncount_50"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_uncount_50"])
-      : FLOAT_NULL_;
-  let pcs_note_uncount_20 =
-    gfccp_order["pcs_note_uncount_20"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_uncount_20"])
-      : FLOAT_NULL_;
-  let pcs_note_uncount_10 =
-    gfccp_order["pcs_note_uncount_10"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_uncount_10"])
-      : FLOAT_NULL_;
-  let pcs_note_unfit_1000 =
-    gfccp_order["pcs_note_unfit_1000"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_unfit_1000"])
-      : FLOAT_NULL_;
-  let pcs_note_unfit_500 =
-    gfccp_order["pcs_note_unfit_500"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_unfit_500"])
-      : FLOAT_NULL_;
-  let pcs_note_unfit_100 =
-    gfccp_order["pcs_note_unfit_100"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_unfit_100"])
-      : FLOAT_NULL_;
-  let pcs_note_unfit_50 =
-    gfccp_order["pcs_note_unfit_50"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_unfit_50"])
-      : FLOAT_NULL_;
-  let pcs_note_unfit_20 =
-    gfccp_order["pcs_note_unfit_20"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_unfit_20"])
-      : FLOAT_NULL_;
-  let pcs_note_unfit_10 =
-    gfccp_order["pcs_note_unfit_10"] !== undefined
-      ? parseFloat(gfccp_order["pcs_note_unfit_10"])
-      : FLOAT_NULL_;
-  //----pcs coin
-  let pcs_coin_new_10 =
-    gfccp_order["pcs_coin_new_10"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_new_10"])
-      : FLOAT_NULL_;
-  let pcs_coin_new_5 =
-    gfccp_order["pcs_coin_new_5"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_new_5"])
-      : FLOAT_NULL_;
-  let pcs_coin_new_2 =
-    gfccp_order["pcs_coin_new_2"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_new_2"])
-      : FLOAT_NULL_;
-  let pcs_coin_new_1 =
-    gfccp_order["pcs_coin_new_1"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_new_1"])
-      : FLOAT_NULL_;
-  let pcs_coin_new_05 =
-    gfccp_order["pcs_coin_new_05"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_new_05"])
-      : FLOAT_NULL_;
-  let pcs_coin_new_025 =
-    gfccp_order["pcs_coin_new_025"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_new_025"])
-      : FLOAT_NULL_;
-  let pcs_coin_fit_10 =
-    gfccp_order["pcs_coin_fit_10"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_fit_10"])
-      : FLOAT_NULL_;
-  let pcs_coin_fit_5 =
-    gfccp_order["pcs_coin_fit_5"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_fit_5"])
-      : FLOAT_NULL_;
-  let pcs_coin_fit_2 =
-    gfccp_order["pcs_coin_fit_2"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_fit_2"])
-      : FLOAT_NULL_;
-  let pcs_coin_fit_1 =
-    gfccp_order["pcs_coin_fit_1"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_fit_1"])
-      : FLOAT_NULL_;
-  let pcs_coin_fit_05 =
-    gfccp_order["pcs_coin_fit_05"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_fit_05"])
-      : FLOAT_NULL_;
-  let pcs_coin_fit_025 =
-    gfccp_order["pcs_coin_fit_025"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_fit_025"])
-      : FLOAT_NULL_;
-  let pcs_coin_uncount_10 =
-    gfccp_order["pcs_coin_uncount_10"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_uncount_10"])
-      : FLOAT_NULL_;
-  let pcs_coin_uncount_5 =
-    gfccp_order["pcs_coin_uncount_5"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_uncount_5"])
-      : FLOAT_NULL_;
-  let pcs_coin_uncount_2 =
-    gfccp_order["pcs_coin_uncount_2"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_uncount_2"])
-      : FLOAT_NULL_;
-  let pcs_coin_uncount_1 =
-    gfccp_order["pcs_coin_uncount_1"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_uncount_1"])
-      : FLOAT_NULL_;
-  let pcs_coin_uncount_05 =
-    gfccp_order["pcs_coin_uncount_05"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_uncount_05"])
-      : FLOAT_NULL_;
-  let pcs_coin_uncount_025 =
-    gfccp_order["pcs_coin_uncount_025"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_uncount_025"])
-      : FLOAT_NULL_;
-  let pcs_coin_unfit_10 =
-    gfccp_order["pcs_coin_unfit_10"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_unfit_10"])
-      : FLOAT_NULL_;
-  let pcs_coin_unfit_5 =
-    gfccp_order["pcs_coin_unfit_5"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_unfit_5"])
-      : FLOAT_NULL_;
-  let pcs_coin_unfit_2 =
-    gfccp_order["pcs_coin_unfit_2"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_unfit_2"])
-      : FLOAT_NULL_;
-  let pcs_coin_unfit_1 =
-    gfccp_order["pcs_coin_unfit_1"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_unfit_1"])
-      : FLOAT_NULL_;
-  let pcs_coin_unfit_05 =
-    gfccp_order["pcs_coin_unfit_05"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_unfit_05"])
-      : FLOAT_NULL_;
-  let pcs_coin_unfit_025 =
-    gfccp_order["pcs_coin_unfit_025"] !== undefined
-      ? parseFloat(gfccp_order["pcs_coin_unfit_025"])
-      : FLOAT_NULL_;
-  //----unit
-  //---unit note
-  let unit_note_new_1000 =
-    gfccp_order["unit_note_new_1000"] !== undefined
-      ? gfccp_order["unit_note_new_1000"]
-      : NULL_;
-  let unit_note_new_500 =
-    gfccp_order["unit_note_new_500"] !== undefined
-      ? gfccp_order["unit_note_new_500"]
-      : NULL_;
-  let unit_note_new_100 =
-    gfccp_order["unit_note_new_100"] !== undefined
-      ? gfccp_order["unit_note_new_100"]
-      : NULL_;
-  let unit_note_new_50 =
-    gfccp_order["unit_note_new_50"] !== undefined
-      ? gfccp_order["unit_note_new_50"]
-      : NULL_;
-  let unit_note_new_20 =
-    gfccp_order["unit_note_new_20"] !== undefined
-      ? gfccp_order["unit_note_new_20"]
-      : NULL_;
-  let unit_note_new_10 =
-    gfccp_order["unit_note_new_10"] !== undefined
-      ? gfccp_order["unit_note_new_10"]
-      : NULL_;
-  let unit_note_fit_1000 =
-    gfccp_order["unit_note_fit_1000"] !== undefined
-      ? gfccp_order["unit_note_fit_1000"]
-      : NULL_;
-  let unit_note_fit_500 =
-    gfccp_order["unit_note_fit_500"] !== undefined
-      ? gfccp_order["unit_note_fit_500"]
-      : NULL_;
-  let unit_note_fit_100 =
-    gfccp_order["unit_note_fit_100"] !== undefined
-      ? gfccp_order["unit_note_fit_100"]
-      : NULL_;
-  let unit_note_fit_50 =
-    gfccp_order["unit_note_fit_50"] !== undefined
-      ? gfccp_order["unit_note_fit_50"]
-      : NULL_;
-  let unit_note_fit_20 =
-    gfccp_order["unit_note_fit_20"] !== undefined
-      ? gfccp_order["unit_note_fit_20"]
-      : NULL_;
-  let unit_note_fit_10 =
-    gfccp_order["unit_note_fit_10"] !== undefined
-      ? gfccp_order["unit_note_fit_10"]
-      : NULL_;
-  let unit_note_uncount_1000 =
-    gfccp_order["unit_note_uncount_1000"] !== undefined
-      ? gfccp_order["unit_note_uncount_1000"]
-      : NULL_;
-  let unit_note_uncount_500 =
-    gfccp_order["unit_note_uncount_500"] !== undefined
-      ? gfccp_order["unit_note_uncount_500"]
-      : NULL_;
-  let unit_note_uncount_100 =
-    gfccp_order["unit_note_uncount_100"] !== undefined
-      ? gfccp_order["unit_note_uncount_100"]
-      : NULL_;
-  let unit_note_uncount_50 =
-    gfccp_order["unit_note_uncount_50"] !== undefined
-      ? gfccp_order["unit_note_uncount_50"]
-      : NULL_;
-  let unit_note_uncount_20 =
-    gfccp_order["unit_note_uncount_20"] !== undefined
-      ? gfccp_order["unit_note_uncount_20"]
-      : NULL_;
-  let unit_note_uncount_10 =
-    gfccp_order["unit_note_uncount_10"] !== undefined
-      ? gfccp_order["unit_note_uncount_10"]
-      : NULL_;
-  let unit_note_unfit_1000 =
-    gfccp_order["unit_note_unfit_1000"] !== undefined
-      ? gfccp_order["unit_note_unfit_1000"]
-      : NULL_;
-  let unit_note_unfit_500 =
-    gfccp_order["unit_note_unfit_500"] !== undefined
-      ? gfccp_order["unit_note_unfit_500"]
-      : NULL_;
-  let unit_note_unfit_100 =
-    gfccp_order["unit_note_unfit_100"] !== undefined
-      ? gfccp_order["unit_note_unfit_100"]
-      : NULL_;
-  let unit_note_unfit_50 =
-    gfccp_order["unit_note_unfit_50"] !== undefined
-      ? gfccp_order["unit_note_unfit_50"]
-      : NULL_;
-  let unit_note_unfit_20 =
-    gfccp_order["unit_note_unfit_20"] !== undefined
-      ? gfccp_order["unit_note_unfit_20"]
-      : NULL_;
-  let unit_note_unfit_10 =
-    gfccp_order["unit_note_unfit_10"] !== undefined
-      ? gfccp_order["unit_note_unfit_10"]
-      : NULL_;
-  //----unit coin
-  let unit_coin_new_10 =
-    gfccp_order["unit_coin_new_10"] !== undefined
-      ? gfccp_order["unit_coin_new_10"]
-      : NULL_;
-  let unit_coin_new_5 =
-    gfccp_order["unit_coin_new_5"] !== undefined
-      ? gfccp_order["unit_coin_new_5"]
-      : NULL_;
-  let unit_coin_new_2 =
-    gfccp_order["unit_coin_new_2"] !== undefined
-      ? gfccp_order["unit_coin_new_2"]
-      : NULL_;
-  let unit_coin_new_1 =
-    gfccp_order["unit_coin_new_1"] !== undefined
-      ? gfccp_order["unit_coin_new_1"]
-      : NULL_;
-  let unit_coin_new_05 =
-    gfccp_order["unit_coin_new_05"] !== undefined
-      ? gfccp_order["unit_coin_new_05"]
-      : NULL_;
-  let unit_coin_new_025 =
-    gfccp_order["unit_coin_new_025"] !== undefined
-      ? gfccp_order["unit_coin_new_025"]
-      : NULL_;
-  let unit_coin_fit_10 =
-    gfccp_order["unit_coin_fit_10"] !== undefined
-      ? gfccp_order["unit_coin_fit_10"]
-      : NULL_;
-  let unit_coin_fit_5 =
-    gfccp_order["unit_coin_fit_5"] !== undefined
-      ? gfccp_order["unit_coin_fit_5"]
-      : NULL_;
-  let unit_coin_fit_2 =
-    gfccp_order["unit_coin_fit_2"] !== undefined
-      ? gfccp_order["unit_coin_fit_2"]
-      : NULL_;
-  let unit_coin_fit_1 =
-    gfccp_order["unit_coin_fit_1"] !== undefined
-      ? gfccp_order["unit_coin_fit_1"]
-      : NULL_;
-  let unit_coin_fit_05 =
-    gfccp_order["unit_coin_fit_05"] !== undefined
-      ? gfccp_order["unit_coin_fit_05"]
-      : NULL_;
-  let unit_coin_fit_025 =
-    gfccp_order["unit_coin_fit_025"] !== undefined
-      ? gfccp_order["unit_coin_fit_025"]
-      : NULL_;
-  let unit_coin_uncount_10 =
-    gfccp_order["unit_coin_uncount_10"] !== undefined
-      ? gfccp_order["unit_coin_uncount_10"]
-      : NULL_;
-  let unit_coin_uncount_5 =
-    gfccp_order["unit_coin_uncount_5"] !== undefined
-      ? gfccp_order["unit_coin_uncount_5"]
-      : NULL_;
-  let unit_coin_uncount_2 =
-    gfccp_order["unit_coin_uncount_2"] !== undefined
-      ? gfccp_order["unit_coin_uncount_2"]
-      : NULL_;
-  let unit_coin_uncount_1 =
-    gfccp_order["unit_coin_uncount_1"] !== undefined
-      ? gfccp_order["unit_coin_uncount_1"]
-      : NULL_;
-  let unit_coin_uncount_05 =
-    gfccp_order["unit_coin_uncount_05"] !== undefined
-      ? gfccp_order["unit_coin_uncount_05"]
-      : NULL_;
-  let unit_coin_uncount_025 =
-    gfccp_order["unit_coin_uncount_025"] !== undefined
-      ? gfccp_order["unit_coin_uncount_025"]
-      : NULL_;
-  let unit_coin_unfit_10 =
-    gfccp_order["unit_coin_unfit_10"] !== undefined
-      ? gfccp_order["unit_coin_unfit_10"]
-      : NULL_;
-  let unit_coin_unfit_5 =
-    gfccp_order["unit_coin_unfit_5"] !== undefined
-      ? gfccp_order["unit_coin_unfit_5"]
-      : NULL_;
-  let unit_coin_unfit_2 =
-    gfccp_order["unit_coin_unfit_2"] !== undefined
-      ? gfccp_order["unit_coin_unfit_2"]
-      : NULL_;
-  let unit_coin_unfit_1 =
-    gfccp_order["unit_coin_unfit_1"] !== undefined
-      ? gfccp_order["unit_coin_unfit_1"]
-      : NULL_;
-  let unit_coin_unfit_05 =
-    gfccp_order["unit_coin_unfit_05"] !== undefined
-      ? gfccp_order["unit_coin_unfit_05"]
-      : NULL_;
-  let unit_coin_unfit_025 =
-    gfccp_order["unit_coin_unfit_025"] !== undefined
-      ? gfccp_order["unit_coin_unfit_025"]
-      : NULL_;
 
-  let row_type = "normal";
-  let input_type = "manual_add";
-  let user_id = gfccp_order["user_id"];
-  let tbGrandTotalAmount = gfccp_order["tbGrandTotalAmount"];
-  // console.log(unit_note_new_1000)
-  // console.log(note_new_1000)
-  try {
-    let pool = await sql.connect(config);
-    let add_manual_order = await pool
-      .request()
-      .input("approve_setting_id", sql.Int, approve_setting_id)
-      .input("approve_setting_version", sql.Float, approve_setting_version)
-      .input("customerID", sql.NVarChar, customerID)
-      .input("order_category", sql.NVarChar, order_category)
-      .input("servicetype", sql.NVarChar, servicetype)
-      .input("refno", sql.NVarChar, refno)
-      .input("order_date", sql.DateTime, order_date)
-      .input("branchorigin_code", sql.NVarChar, branchorigin_code)
-      .input("branchorigin_name", sql.NVarChar, branchorigin_name)
-      .input("branchdest_code", sql.NVarChar, branchdest_code)
-      .input("branchdest_name", sql.NVarChar, branchdest_name)
-      .input("remark", sql.NVarChar, remark)
-      //---note
-      .input("note_new_1000", sql.Float, note_new_1000)
-      .input("note_new_500", sql.Float, note_new_500)
-      .input("note_new_100", sql.Float, note_new_100)
-      .input("note_new_50", sql.Float, note_new_50)
-      .input("note_new_20", sql.Float, note_new_20)
-      .input("note_new_10", sql.Float, note_new_10)
-      .input("note_fit_1000", sql.Float, note_fit_1000)
-      .input("note_fit_500", sql.Float, note_fit_500)
-      .input("note_fit_100", sql.Float, note_fit_100)
-      .input("note_fit_50", sql.Float, note_fit_50)
-      .input("note_fit_20", sql.Float, note_fit_20)
-      .input("note_fit_10", sql.Float, note_fit_10)
-      .input("note_uncount_1000", sql.Float, note_uncount_1000)
-      .input("note_uncount_500", sql.Float, note_uncount_500)
-      .input("note_uncount_100", sql.Float, note_uncount_100)
-      .input("note_uncount_50", sql.Float, note_uncount_50)
-      .input("note_uncount_20", sql.Float, note_uncount_20)
-      .input("note_uncount_10", sql.Float, note_uncount_10)
-      .input("note_unfit_1000", sql.Float, note_unfit_1000)
-      .input("note_unfit_500", sql.Float, note_unfit_500)
-      .input("note_unfit_100", sql.Float, note_unfit_100)
-      .input("note_unfit_50", sql.Float, note_unfit_50)
-      .input("note_unfit_20", sql.Float, note_unfit_20)
-      .input("note_unfit_10", sql.Float, note_unfit_10)
-      //----coin
-      .input("coin_new_10", sql.Float, coin_new_10)
-      .input("coin_new_5", sql.Float, coin_new_5)
-      .input("coin_new_2", sql.Float, coin_new_2)
-      .input("coin_new_1", sql.Float, coin_new_1)
-      .input("coin_new_05", sql.Float, coin_new_05)
-      .input("coin_new_025", sql.Float, coin_new_025)
-      .input("coin_fit_10", sql.Float, coin_fit_10)
-      .input("coin_fit_5", sql.Float, coin_fit_5)
-      .input("coin_fit_2", sql.Float, coin_fit_2)
-      .input("coin_fit_1", sql.Float, coin_fit_1)
-      .input("coin_fit_05", sql.Float, coin_fit_05)
-      .input("coin_fit_025", sql.Float, coin_fit_025)
-      .input("coin_uncount_10", sql.Float, coin_uncount_10)
-      .input("coin_uncount_5", sql.Float, coin_uncount_5)
-      .input("coin_uncount_2", sql.Float, coin_uncount_2)
-      .input("coin_uncount_1", sql.Float, coin_uncount_1)
-      .input("coin_uncount_05", sql.Float, coin_uncount_05)
-      .input("coin_uncount_025", sql.Float, coin_uncount_025)
-      .input("coin_unfit_10", sql.Float, coin_unfit_10)
-      .input("coin_unfit_5", sql.Float, coin_unfit_5)
-      .input("coin_unfit_2", sql.Float, coin_unfit_2)
-      .input("coin_unfit_1", sql.Float, coin_unfit_1)
-      .input("coin_unfit_05", sql.Float, coin_unfit_05)
-      .input("coin_unfit_025", sql.Float, coin_unfit_025)
-      //----pcs
-      .input("pcs_note_new_1000", sql.Float, pcs_note_new_1000)
-      .input("pcs_note_new_500", sql.Float, pcs_note_new_500)
-      .input("pcs_note_new_100", sql.Float, pcs_note_new_100)
-      .input("pcs_note_new_50", sql.Float, pcs_note_new_50)
-      .input("pcs_note_new_20", sql.Float, pcs_note_new_20)
-      .input("pcs_note_new_10", sql.Float, pcs_note_new_10)
-      .input("pcs_note_fit_1000", sql.Float, pcs_note_fit_1000)
-      .input("pcs_note_fit_500", sql.Float, pcs_note_fit_500)
-      .input("pcs_note_fit_100", sql.Float, pcs_note_fit_100)
-      .input("pcs_note_fit_50", sql.Float, pcs_note_fit_50)
-      .input("pcs_note_fit_20", sql.Float, pcs_note_fit_20)
-      .input("pcs_note_fit_10", sql.Float, pcs_note_fit_10)
-      .input("pcs_note_uncount_1000", sql.Float, pcs_note_uncount_1000)
-      .input("pcs_note_uncount_500", sql.Float, pcs_note_uncount_500)
-      .input("pcs_note_uncount_100", sql.Float, pcs_note_uncount_100)
-      .input("pcs_note_uncount_50", sql.Float, pcs_note_uncount_50)
-      .input("pcs_note_uncount_20", sql.Float, pcs_note_uncount_20)
-      .input("pcs_note_uncount_10", sql.Float, pcs_note_uncount_10)
-      .input("pcs_note_unfit_1000", sql.Float, pcs_note_unfit_1000)
-      .input("pcs_note_unfit_500", sql.Float, pcs_note_unfit_500)
-      .input("pcs_note_unfit_100", sql.Float, pcs_note_unfit_100)
-      .input("pcs_note_unfit_50", sql.Float, pcs_note_unfit_50)
-      .input("pcs_note_unfit_20", sql.Float, pcs_note_unfit_20)
-      .input("pcs_note_unfit_10", sql.Float, pcs_note_unfit_10)
-      .input("pcs_coin_new_10", sql.Float, pcs_coin_new_10)
-      .input("pcs_coin_new_5", sql.Float, pcs_coin_new_5)
-      .input("pcs_coin_new_2", sql.Float, pcs_coin_new_2)
-      .input("pcs_coin_new_1", sql.Float, pcs_coin_new_1)
-      .input("pcs_coin_new_05", sql.Float, pcs_coin_new_05)
-      .input("pcs_coin_new_025", sql.Float, pcs_coin_new_025)
-      .input("pcs_coin_fit_10", sql.Float, pcs_coin_fit_10)
-      .input("pcs_coin_fit_5", sql.Float, pcs_coin_fit_5)
-      .input("pcs_coin_fit_2", sql.Float, pcs_coin_fit_2)
-      .input("pcs_coin_fit_1", sql.Float, pcs_coin_fit_1)
-      .input("pcs_coin_fit_05", sql.Float, pcs_coin_fit_05)
-      .input("pcs_coin_fit_025", sql.Float, pcs_coin_fit_025)
-      .input("pcs_coin_uncount_10", sql.Float, pcs_coin_uncount_10)
-      .input("pcs_coin_uncount_5", sql.Float, pcs_coin_uncount_5)
-      .input("pcs_coin_uncount_2", sql.Float, pcs_coin_uncount_2)
-      .input("pcs_coin_uncount_1", sql.Float, pcs_coin_uncount_1)
-      .input("pcs_coin_uncount_05", sql.Float, pcs_coin_uncount_05)
-      .input("pcs_coin_uncount_025", sql.Float, pcs_coin_uncount_025)
-      .input("pcs_coin_unfit_10", sql.Float, pcs_coin_unfit_10)
-      .input("pcs_coin_unfit_5", sql.Float, pcs_coin_unfit_5)
-      .input("pcs_coin_unfit_2", sql.Float, pcs_coin_unfit_2)
-      .input("pcs_coin_unfit_1", sql.Float, pcs_coin_unfit_1)
-      .input("pcs_coin_unfit_05", sql.Float, pcs_coin_unfit_05)
-      .input("pcs_coin_unfit_025", sql.Float, pcs_coin_unfit_025)
-      //----unit
-      .input("unit_note_new_1000", sql.NVarChar, unit_note_new_1000)
-      .input("unit_note_new_500", sql.NVarChar, unit_note_new_500)
-      .input("unit_note_new_100", sql.NVarChar, unit_note_new_100)
-      .input("unit_note_new_50", sql.NVarChar, unit_note_new_50)
-      .input("unit_note_new_20", sql.NVarChar, unit_note_new_20)
-      .input("unit_note_new_10", sql.NVarChar, unit_note_new_10)
-      .input("unit_note_fit_1000", sql.NVarChar, unit_note_fit_1000)
-      .input("unit_note_fit_500", sql.NVarChar, unit_note_fit_500)
-      .input("unit_note_fit_100", sql.NVarChar, unit_note_fit_100)
-      .input("unit_note_fit_50", sql.NVarChar, unit_note_fit_50)
-      .input("unit_note_fit_20", sql.NVarChar, unit_note_fit_20)
-      .input("unit_note_fit_10", sql.NVarChar, unit_note_fit_10)
-      .input("unit_note_uncount_1000", sql.NVarChar, unit_note_uncount_1000)
-      .input("unit_note_uncount_500", sql.NVarChar, unit_note_uncount_500)
-      .input("unit_note_uncount_100", sql.NVarChar, unit_note_uncount_100)
-      .input("unit_note_uncount_50", sql.NVarChar, unit_note_uncount_50)
-      .input("unit_note_uncount_20", sql.NVarChar, unit_note_uncount_20)
-      .input("unit_note_uncount_10", sql.NVarChar, unit_note_uncount_10)
-      .input("unit_note_unfit_1000", sql.NVarChar, unit_note_unfit_1000)
-      .input("unit_note_unfit_500", sql.NVarChar, unit_note_unfit_500)
-      .input("unit_note_unfit_100", sql.NVarChar, unit_note_unfit_100)
-      .input("unit_note_unfit_50", sql.NVarChar, unit_note_unfit_50)
-      .input("unit_note_unfit_20", sql.NVarChar, unit_note_unfit_20)
-      .input("unit_note_unfit_10", sql.NVarChar, unit_note_unfit_10)
-      .input("unit_coin_new_10", sql.NVarChar, unit_coin_new_10)
-      .input("unit_coin_new_5", sql.NVarChar, unit_coin_new_5)
-      .input("unit_coin_new_2", sql.NVarChar, unit_coin_new_2)
-      .input("unit_coin_new_1", sql.NVarChar, unit_coin_new_1)
-      .input("unit_coin_new_05", sql.NVarChar, unit_coin_new_05)
-      .input("unit_coin_new_025", sql.NVarChar, unit_coin_new_025)
-      .input("unit_coin_fit_10", sql.NVarChar, unit_coin_fit_10)
-      .input("unit_coin_fit_5", sql.NVarChar, unit_coin_fit_5)
-      .input("unit_coin_fit_2", sql.NVarChar, unit_coin_fit_2)
-      .input("unit_coin_fit_1", sql.NVarChar, unit_coin_fit_1)
-      .input("unit_coin_fit_05", sql.NVarChar, unit_coin_fit_05)
-      .input("unit_coin_fit_025", sql.NVarChar, unit_coin_fit_025)
-      .input("unit_coin_uncount_10", sql.NVarChar, unit_coin_uncount_10)
-      .input("unit_coin_uncount_5", sql.NVarChar, unit_coin_uncount_5)
-      .input("unit_coin_uncount_2", sql.NVarChar, unit_coin_uncount_2)
-      .input("unit_coin_uncount_1", sql.NVarChar, unit_coin_uncount_1)
-      .input("unit_coin_uncount_05", sql.NVarChar, unit_coin_uncount_05)
-      .input("unit_coin_uncount_025", sql.NVarChar, unit_coin_uncount_025)
-      .input("unit_coin_unfit_10", sql.NVarChar, unit_coin_unfit_10)
-      .input("unit_coin_unfit_5", sql.NVarChar, unit_coin_unfit_5)
-      .input("unit_coin_unfit_2", sql.NVarChar, unit_coin_unfit_2)
-      .input("unit_coin_unfit_1", sql.NVarChar, unit_coin_unfit_1)
-      .input("unit_coin_unfit_05", sql.NVarChar, unit_coin_unfit_05)
-      .input("unit_coin_unfit_025", sql.NVarChar, unit_coin_unfit_025)
-      .input("total_by_branch", sql.Float, tbGrandTotalAmount)
-      .input("row_type", sql.NVarChar, row_type)
-      .input("input_type", sql.NVarChar, input_type)
-      .input("roleid", sql.Int, roleid)
-      .input("createby", sql.NVarChar, user_id)
-      .execute("add_manual_order");
-    return add_manual_order.recordsets;
-  } catch (err) {
-    console.log(err);
-  }
-  //return add_manual_order.recordsets
-}
 async function set_update_urgentcase_vrf_det(obj_json) {
   try {
     console.log('set_update_urgentcase_vrf_det obj_json: ', obj_json)
@@ -2427,7 +1658,8 @@ async function set_update_urgentcase_vrf_det(obj_json) {
     }
     return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function set_update_urgentcase_vrf(obj_json) {
@@ -2569,7 +1801,8 @@ async function set_manual_update_vrf_det_trans(obj_json) {
     }
     return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function add_approveProc(data) {
@@ -2625,7 +1858,8 @@ async function add_approveProc(data) {
     }
     return output_;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
   //return add_manual_order.recordsets
 }
@@ -2675,7 +1909,8 @@ async function set_manual_update_vrf_det(obj_json) {
     //retu
     return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function set_update_userinfo_vrf(obj_json) {
@@ -2698,7 +1933,8 @@ async function set_update_userinfo_vrf(obj_json) {
       .execute("sp_set_update_userinfo_vrf");
     return sp_set_update_userinfo_vrf.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 
 }
@@ -2725,7 +1961,8 @@ async function set_manual_update_vrf_trans(obj_json) {
       .execute("sp_set_manual_update_vrf_trans");
     return sp_set_manual_update_vrf_trans.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 
 }
@@ -2750,7 +1987,8 @@ async function set_manual_update_vrf(obj_json) {
       .execute("sp_set_manual_update_vrf");
     return sp_set_manual_update_vrf.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function update_order(gfccp_order) {
@@ -3528,7 +2766,8 @@ async function update_order(gfccp_order) {
       .execute("update_order");
     return update_order.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
   //return add_manual_order.recordsets
 }
@@ -3594,7 +2833,8 @@ async function update_approveproc(data) {
     }
     return output_;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function delete_app_proc_det(Id, user_id) {
@@ -3607,7 +2847,8 @@ async function delete_app_proc_det(Id, user_id) {
       .execute("delete_app_proc_det");
     return delete_app_proc_det.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function update_vrfstatus(Id, Type_, user_id) {
@@ -3621,7 +2862,8 @@ async function update_vrfstatus(Id, Type_, user_id) {
       .execute("spUpdate_vrfstatus");
     return update_vrfstatus.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function update_user_vrf_status(Id
@@ -3638,7 +2880,8 @@ async function update_user_vrf_status(Id
       .execute("spUpdate_user_vrf_status");
     return spUpdate_user_vrf_status.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function update_vrf_requester_trans_status_all(Id
@@ -3676,7 +2919,8 @@ async function update_vrf_requester_trans_status_all(Id
 
     return update_vrf_requester_trans_status_all.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function set_update_vrf_det_cancelcheckinout(Id,
@@ -3701,7 +2945,8 @@ async function set_update_vrf_det_cancelcheckinout(Id,
       .execute("sp_update_vrf_det_cancelcheckinout");
     return sp_update_vrf_det_cancelcheckinout.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
  }
 async function set_sp_update_vrf_det_checkinout(Id,
@@ -3721,7 +2966,8 @@ async function set_sp_update_vrf_det_checkinout(Id,
       .execute("sp_update_vrf_det_checkinout");
     return sp_update_vrf_det_checkinout.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 // async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
@@ -3755,7 +3001,8 @@ async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
       .execute("sp_update_vrf_checkinount");
     return sp_update_vrf_checkinount.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function update_vrf_approve_status_from_mail(user_id, vrf_id
@@ -3795,7 +3042,8 @@ async function update_vrf_approve_status_from_mail(user_id, vrf_id
 
     return sp_update_vrf_approve_from_mail.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function update_vrf_trans_status(Id
@@ -3806,6 +3054,7 @@ async function update_vrf_trans_status(Id
   , department_id
   , branch_id
   , division_id
+  ,lastrow
   , io
 ) {
   try {
@@ -3825,17 +3074,22 @@ async function update_vrf_trans_status(Id
       .execute("spUpdate_vrf_trans_status");
     let approveStatus = update_vrf_trans_status.recordsets[0][0].approve_status;
     console.log('approveStatus: ', approveStatus)
-    io.emit(type_new_vrf_send_approve, {
-      message: type_new_vrf_send_approve,
-      Id: Id,
-      user_id: user_id,
-      role_id: role_id,
-      approve_status: approveStatus
-    });
+    if(lastrow===true)
+    { 
+      io.emit(type_new_vrf_send_approve, {
+        message: type_new_vrf_send_approve,
+        Id: Id,
+        user_id: user_id,
+        role_id: role_id,
+        approve_status: approveStatus
+      });
+    }
+
 
     return update_vrf_trans_status.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function update_vrf_trans_approve_status(Id, Type_
@@ -3875,7 +3129,8 @@ async function update_vrf_trans_approve_status(Id, Type_
     });
     return sp_update_vrf_trans_approve_status.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 async function get_upload_filename(Id, Type_, user_id) {
@@ -3887,7 +3142,8 @@ async function get_upload_filename(Id, Type_, user_id) {
       .execute("spGet_upload_filename");
     return spGet_upload_filename.recordsets;
   } catch (err) {
-    console.log(err);
+    console.log({ error: err });
+    return ({ error: err })
   }
 }
 module.exports = { 
@@ -3964,7 +3220,6 @@ module.exports = {
   getActitySelectd: getActitySelectd,
   getuserEdit: getuserEdit,
   delete_app_proc_det: delete_app_proc_det,
-  add_manual_order: add_manual_order,
   getuserinfo: getuserinfo,
   getCashOrder: getCashOrder,
   update_vrfstatus: update_vrfstatus,
