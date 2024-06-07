@@ -229,6 +229,7 @@ app.post('/downloadExcel', bodyParser.json(), async (req, res) => {
     try {
         const data = req.body;
         let workbook = new ExcelJS.Workbook();
+        //----------------------------------------------------VRF by Status
         let worksheet = workbook.addWorksheet('Sheet 1');
         worksheet.columns = [
             { header: 'No', key: 'no', width: 10 },
@@ -293,6 +294,272 @@ app.post('/downloadExcel', bodyParser.json(), async (req, res) => {
         res.status(500).send(error);
     }
 });
+
+app.get('/get_vrf_reports', async (req, res) => {
+    console.log('/get_vrf_reports req.query[tbDateF]: ', req.query['tbDateF'], 'req.query[tbDateT]: ', req.query['tbDateT']);
+    try {
+        // ดึงข้อมูลจากฐานข้อมูล
+        const [by_approve
+            , by_department
+            , by_meeting_area
+            ,by_count_all
+            ,by_checkinout_is_not_null
+            ,by_checkinout_is_null] = await Promise.all([
+            dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_approve'),
+            dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_department'),
+            dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_meeting_area'),
+            dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_count_all'),
+            dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_checkinout_is_not_null'),
+            dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_checkinout_is_null')
+        ]);
+
+        //console.log('Data from db:', { by_approve, by_department, by_meeting_area });
+
+        let workbook = new ExcelJS.Workbook();
+        const sheet1 = workbook.addWorksheet('Sheet1');
+        const sheet2 = workbook.addWorksheet('Sheet2');
+        const sheet3 = workbook.addWorksheet('Sheet3');
+        let dateF;
+        let dateT;
+        dateF = new Date(req.query['tbDateF'])
+        dateT = new Date(req.query['tbDateT'])
+        // เติมข้อมูลใน Sheet1
+        sheet1.addRow([`รายละเอียด VRF ช่วงวันที่ ${String(dateF.getUTCDate()).padStart(2, '0')}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${dateF.getUTCFullYear()} - ${String(dateT.getUTCDate()).padStart(2, '0')}-${String(dateT.getUTCMonth() + 1).padStart(2, '0')}-${dateT.getUTCFullYear()}`]);
+        sheet1.addRow([]);
+        sheet1.addRow(['สรุปจำนวน VRF ทั้งหมดคือ ' + by_count_all[0].allvrf + ' รายการ']);
+        sheet1.addRow([]);
+        sheet1.addRow(['สรุปจำนวน VRF by สถานะ']);
+        sheet1.addRow([]);
+        sheet1.addRow(['no', 'จำนวน', 'สถานะ']);
+        by_approve.forEach((item) => {
+            sheet1.addRow([item.no, item.amount, item.approve_status]);
+        });
+        sheet1.addRow([]);
+        sheet1.addRow(['สรุปจำนวน VRF by แผนก']);
+        sheet1.addRow([]);
+        sheet1.addRow(['no', 'จำนวน', 'แผนก']);
+        by_department.forEach((item) => {
+            sheet1.addRow([item.no, item.amount, item.department]);
+        });
+        sheet1.addRow([]);
+        sheet1.addRow(['สรุปจำนวน VRF by พื้นที่']);
+        sheet1.addRow([]);
+        sheet1.addRow(['no', 'จำนวน', 'พื้นที่']);
+        by_meeting_area.forEach((item) => {
+            sheet1.addRow([item.no, item.amount, item.meeting_area]);
+        });
+
+        sheet2.addRow([]);
+        sheet2.addRow(['รายชื่อคนที่ไม่เข้าพื้นที่']);
+        sheet2.addRow([]);
+        sheet2.addRow(['no'
+            , 'ชื่อ-นามสกุล'
+            , 'Check In'
+            , 'Check Out'
+            , 'จากวันที่'
+            , 'ถึงวันที่'
+            , 'เหตุผลในการเข้าพื้นที่'
+            , 'Contactor'
+            , 'Requestor'
+            , 'Position'
+            , 'Department'
+            , 'Phone'
+            , 'Navigator'
+            , 'พื้นที่เข้าพบ'
+            , 'ประเภทพื้นที่เข้าพบ'
+            , 'ผู้สร้าง VRF'
+            , 'สถานะการอนุมัติ'
+            ,'อนุมัติโดย'
+        ]);
+        by_checkinout_is_null.forEach((item) => {
+            sheet2.addRow([item.no
+                , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
+        });
+
+        sheet3.addRow([]);
+        sheet3.addRow(['รายชื่อคนที่เข้าพื้นที่']);
+        sheet3.addRow([]);
+        sheet3.addRow(['no'
+            , 'ชื่อ-นามสกุล'
+            , 'Check In'
+            , 'Check Out'
+            , 'จากวันที่'
+            , 'ถึงวันที่'
+            , 'เหตุผลในการเข้าพื้นที่'
+            , 'Contactor'
+            , 'Requestor'
+            , 'Position'
+            , 'Department'
+            , 'Phone'
+            , 'Navigator'
+            , 'พื้นที่เข้าพบ'
+            , 'ประเภทพื้นที่เข้าพบ'
+            , 'ผู้สร้าง VRF'
+            , 'สถานะการอนุมัติ'
+            ,'อนุมัติโดย'
+        ]);
+        by_checkinout_is_not_null.forEach((item) => {
+            sheet3.addRow([item.no
+                , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
+        });        
+
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', 'attachment; filename=report.xlsx');
+
+        // เขียนข้อมูลลงใน response และจบการทำงาน
+        await workbook.xlsx.write(res);
+        res.end();
+    } catch (error) {
+        console.error('error: ', error);
+        res.status(500).send('Error generating Excel file');
+    }
+});
+
+// app.get('/get_vrf_reports', urlencodedParser, async (req, res) => {
+//     console.log('/get_vrf_reports req.query[tbDateF]: ', req.query['tbDateF']
+//         , 'req.query[tbDateT]: ', req.query['tbDateT']        
+//     )
+//     try {
+//         // สร้างตัวแปรและรอผลลัพธ์จากฟังก์ชัน get_search_vrf_trans โดยใช้ Promise.all
+//         const [by_approve, by_department, by_meeting_area] = await Promise.all([
+//             dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_approve'),
+//             dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_department'),
+//             dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_meeting_area')
+//         ]);
+//         let workbook = new ExcelJS.Workbook();
+//         // สร้าง sheet ใหม่และตั้งชื่อ
+//         const sheet1 = workbook.addWorksheet('Sheet1');
+//         const sheet2 = workbook.addWorksheet('Sheet2');
+//         const sheet3 = workbook.addWorksheet('Sheet3');
+//         const sheet4 = workbook.addWorksheet('Sheet4');
+
+//         // กำหนดข้อมูลใน Sheet1
+//         sheet1.addRow(['สรุปจำนวน VRF ทั้งหมดคือ 449 รายการ']);
+//         sheet1.addRow([]);
+//         sheet1.addRow(['สรุปจำนวน VRF by Status']);
+//         sheet1.addRow([]);
+//         sheet1.addRow(['จำนวน', 'สถานะ']);
+//         sheet1.addRow(['สรุปจำนวน VRF by แผนก']);
+//         sheet1.addRow(['จำนวน', 'แผนก']);
+
+//         // กำหนดข้อมูลใน Sheet2
+//         sheet2.addRow(['VRF Phase 2']);
+//         sheet2.addRow([]);
+//         sheet2.addRow(['1.คำนำหน้าชื่อ']);
+//         sheet2.addRow(['2.เลือกเข้าพื้นที่ได้หลายพื้นที่']);
+
+//         // กำหนดข้อมูลใน Sheet3
+//         sheet3.addRow(['id', 'fullname', 'checkin_date', 'checkin_by', 'checkout_date', 'checkout_by', 'reason', 'contactor', 'requestor']);
+//         sheet3.addRow([210, 'อรุณี คงสาลี', null, null, null, null, 'เข้าปฏิบัติงานในพื้นที่', 'บริษัท วิศวกรรม ซอฟต์แวร์', 'ผู้ร้องขอ']);
+
+//         // กำหนดข้อมูลใน Sheet4
+//         sheet4.addRow(['id', 'us_name', 'req_reason', 'access_area', 'time_in', 'time_out', 'approver', 'approval_date']);
+//         sheet4.addRow([1, 'John Doe', 'Maintenance', 'Area 1', '2023-06-01 08:00:00', '2023-06-01 17:00:00', 'Jane Smith', '2023-05-31 10:00:00']);
+
+//         // เขียน workbook ลงในไฟล์
+
+//         res.setHeader(
+//             'Content-Type',
+//             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+//         );
+//         res.setHeader(
+//             'Content-Disposition',
+//             'attachment; filename=' + 'report.xlsx',
+//         );
+
+//         await workbook.xlsx.write(res).then(() => {
+//             console.log('File created successfully!');
+//             }).catch((error) => {
+//                 console.error('Error writing the file:', error);
+//             });
+//         res.end(); 
+        
+//         // // ส่งค่าผลลัพธ์กลับไปยัง client
+//         // console.log('by_approve: ', by_approve);
+//         // console.log('by_department: ', by_department);
+//         // console.log('by_meeting_area: ', by_meeting_area);
+
+//         // res.json({
+//         //     by_approve: by_approve,
+//         //     by_department: by_department,
+//         //     by_meeting_area: by_meeting_area,
+//         //     // เพิ่มค่าอื่นๆ ที่ต้องการส่งกลับ
+//         // });
+//         // ส่งค่าผลลัพธ์กลับไปยัง client
+//         //res.json(by_approve);
+//     } catch (error) {
+//         console.error('error: ', error);
+//         res.json({ error: error });
+//     }
+// })
+// app.post('/downloadExcel', bodyParser.json(), async (req, res) => {
+//     try {
+//         const data = req.body;
+//         let workbook = new ExcelJS.Workbook();
+//         let worksheet = workbook.addWorksheet('Sheet 1');
+//         worksheet.columns = [
+//             { header: 'No', key: 'no', width: 10 },
+//             { header: 'ชื่อผู้มาติดต่อ', key: 'contactor', width: 20 },
+//             { header: 'วันที่เริ่มเข้า', key: 'date_from', width: 20 },
+//             { header: 'วันที่สุดท้ายที่เข้า', key: 'date_to', width: 20 },
+//             { header: 'พื้นที่ที่เข้าพบ', key: 'meeting_area', width: 20 },
+//             { header: 'เหตุผลที่เข้าพบ', key: 'reason', width: 20 },
+//             { header: 'ผู้นำพา', key: 'navigator', width: 20 },
+//             { header: 'สถานะการขอเข้าพื้นที่', key: 'approve_status', width: 20 },
+//         ];
+
+//         // กำหนด style ให้กับ header
+//         worksheet.getRow(1).eachCell((cell) => {
+//             cell.fill = {
+//                 type: 'pattern',
+//                 pattern: 'solid',
+//                 fgColor: { argb: 'FFFFFF00' },
+//             };
+//             cell.border = {
+//                 top: { style: 'thin' },
+//                 left: { style: 'thin' },
+//                 bottom: { style: 'thin' },
+//                 right: { style: 'thin' },
+//             };
+//         });
+//         let dateF;
+//         let dateT;
+
+//         // สร้าง row จากข้อมูลและกำหนด style
+//         data.forEach(item => {
+//             dateF = new Date(item.date_from)
+//             dateT = new Date(item.date_to)
+//             item.date_from = `${String(dateF.getUTCDate()).padStart(2, '0')}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${dateF.getUTCFullYear()}`;//format(new Date(item.date_from), 'dd-MM-yyyy');
+//             item.date_to = `${String(dateT.getUTCDate()).padStart(2, '0')}-${String(dateT.getUTCMonth() + 1).padStart(2, '0')}-${dateT.getUTCFullYear()}`;//format(new Date(item.date_to), 'dd-MM-yyyy');
+//             const newRow = worksheet.addRow(item);
+
+//             newRow.eachCell((cell) => {
+//                 cell.border = {
+//                     top: { style: 'thin' },
+//                     left: { style: 'thin' },
+//                     bottom: { style: 'thin' },
+//                     right: { style: 'thin' },
+//                 };
+//             });
+//         });
+
+//         res.setHeader(
+//             'Content-Type',
+//             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+//         );
+//         res.setHeader(
+//             'Content-Disposition',
+//             'attachment; filename=' + 'report.xlsx',
+//         );
+
+//         await workbook.xlsx.write(res);
+//         res.end();
+
+//     } catch (error) {
+//         console.log('error: ', error);
+//         res.status(500).send(error);
+//     }
+// });
 app.get('/get_complete_word', urlencodedParser, async (req, res) => {
     try {
         const search = req.query['search'];
@@ -488,7 +755,6 @@ const handleLDAPAuthentication = (config, jobid, password, res) => {
         return res.status(500).json({ error: 'handleLDAPAuthentication have error' });
     }
 };
-
 app.post('/authenticate', urlencodedParser, (req, res) => {
     const { username, password } = req.body;
     let data_ = req.body;
@@ -794,9 +1060,27 @@ app.get('/get_user_list_by_dept', urlencodedParser, (req, res) => {
         res.json({ error: error })
     }
 })
-app.get('/get_all_vrf_list', urlencodedParser, (req, res) => {
+app.get('/get_all_vrf_info', urlencodedParser, (req, res) => {
     // console.log('/get_vrf_list department_id: ', req.query['department_id']
     //     , 'branch_id: ', req.query['branch_id'])
+    try {
+        dboperations.get_all_vrf_info(
+            req.query['department_id']
+            , req.query['branch_id']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
+app.get('/get_all_vrf_list', urlencodedParser, (req, res) => {
+    console.log('/get_all_vrf_list department_id: ', req.query['department_id']
+        , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_all_vrf_list(
             req.query['department_id']
@@ -1003,41 +1287,6 @@ app.get('/get_search_vrf_approve_trans', urlencodedParser, (req, res) => {
     )
     try {
         dboperations.get_search_vrf_approve_trans(
-            req.query['tbDateF']
-            , req.query['tbDateT']
-            , req.query['requestor_id']
-            , req.query['area_id']
-            , req.query['requestor_dept_id']
-            , req.query['department_id']
-            , req.query['branch_id']
-            , req.query['checkin_status']
-            , req.query['role_id']
-            , req.query['approve_status']
-        ).then((result) => {
-            res.json(result)
-        }).catch((err) => {
-            console.log('error: ', err)
-            res.json({ error: err })
-        })
-    } catch (error) {
-        console.error('error: ', error);
-        res.json({ error: error })
-    }
-
-})
-app.get('/get_search_vrf_trans', urlencodedParser, (req, res) => {
-    console.log('/get_search_vrf_trans req.query[tbDateF]: ', req.query['tbDateF']
-        , 'req.query[tbDateT]: ', req.query['tbDateT']
-        , 'req.query[requestor_id]: ', req.query['requestor_id']
-        , 'req.query[area_id]: ', req.query['area_id']
-        , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']
-        , 'req.query[department_id]: ', req.query['department_id']
-        , 'req.query[branch_id]: ', req.query['branch_id']
-        , 'req.query[checkin_status]: ', req.query['checkin_status']
-        , 'req.query[approve_status]: ', req.query['approve_status']
-    )
-    try {
-        dboperations.get_search_vrf_trans(
             req.query['tbDateF']
             , req.query['tbDateT']
             , req.query['requestor_id']
@@ -1382,8 +1631,24 @@ app.post('/set_reject_vrf', bodyParser.json(), (req, res) => {
         console.error('error: ', error);
         res.json({ error: error })
     }
+});
+app.post('/set_su_cancel_vrf', bodyParser.json(), (req, res) => {
+    console.log('req.body: ', req.body);
+    console.log('req.body[reject_reason]: ', req.body.cancel_reason);
+    try {
+        dboperations.set_su_cancel_vrf(req.body.vrf_id_for_reject
+            , req.body.cancel_reason
+            , req.body.CancelBy).then((result) => {
+                res.json({ message: 'success' })
+            }).catch((err) => {
+                console.log('error: ', err)
+                res.json({ error: err })
+            })
 
-
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
 });
 app.post('/set_manual_add_vrf_trans_det', urlencodedParser, (req, res) => {
     try {
@@ -2456,6 +2721,7 @@ app.get('/set_sp_update_vrf_det_checkinout', urlencodedParser, (req, res) => {
         dboperations.set_sp_update_vrf_det_checkinout(req.query['Id']
             , req.query['Type_']
             , req.query['user_id']
+            , req.query['card_no']
             // , req.query['comment']
         ).then((result) => {
             res.json(result[0])

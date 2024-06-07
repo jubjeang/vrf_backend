@@ -2,6 +2,21 @@ var config = require("../server/dbconfig");
 const sql = require("mssql");
 const moment = require('moment-timezone');
 
+async function set_su_cancel_vrf(vrf_id_for_reject, cancel_reason, CancelBy) {
+  try {
+    let pool = await sql.connect(config);
+    let spSet_su_cancel_vrf = await pool
+      .request()
+      .input("vrf_id_for_reject", sql.Int, vrf_id_for_reject)
+      .input("cancel_reason", sql.NVarChar, cancel_reason)
+      .input("CancelBy", sql.NVarChar, CancelBy)
+      .execute("spSet_su_cancel_vrf");
+    return spSet_su_cancel_vrf.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function set_reject_vrf(vrf_id_for_reject, reject_reason, RejectBy) {
   try {
     let pool = await sql.connect(config);
@@ -555,23 +570,15 @@ async function get_search_vrf(
     return [{ error: error }];
   }
 }
-async function get_search_vrf_trans(
+async function get_vrf_reports(
   tbDateF,
   tbDateT,
-  requestor_id,
-  area_id,
-  requestor_dept_id,
-  department_id,
-  branch_id,
-  checkin_status,
-  role_id,
-  approve_status
+  type
 ) {
   let tbDateF_;
   let formattedtbDateF;
   let tbDateT_;
   let formattedtbDateT;
-
   let dateF
   let dateT
   let formattedDateF
@@ -599,61 +606,76 @@ async function get_search_vrf_trans(
     formattedtbDateT = '';
     dateT = '';
     formattedDateT = null;
-  }
-  let checkin_status_ =
-    checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
-      ? parseInt(checkin_status)
-      : null;
-  let approve_status_ =
-    approve_status !== undefined && approve_status !== '' && approve_status !== null && !isNaN(approve_status)
-      ? approve_status
-      : null;
-  let requestor_id_ =
-    requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
-      ? parseInt(requestor_id)
-      : null;
-  let area_id_ =
-    area_id !== undefined && area_id !== '' && area_id !== null && !isNaN(area_id)
-      ? parseInt(area_id)
-      : null;
-  let requestor_dept_id_ =
-    requestor_dept_id !== undefined &&
-      requestor_dept_id !== '' &&
-      requestor_dept_id !== null &&
-      !isNaN(requestor_dept_id)
-      ? parseInt(requestor_dept_id)
-      : null;
-
+  } 
   try {
     let pool = await sql.connect(config);
-
-    console.log('get_search_vrf_trans checkin_status_: ', checkin_status_, 'requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
-      , 'requestor_dept_id_: ', requestor_dept_id_
-      , 'formattedDateF: ', formattedDateF
+    console.log('get_vrf_reports  formattedDateF:', formattedDateF
       , 'formattedDateT: ', formattedDateT
-      , 'approve_status: ', approve_status
-      , 'role_id: ', role_id);
+      , 'type: ', type);
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
     request.input('formattedDateT', sql.Date, formattedDateT);
-    request.input('requestor_dept_id', sql.Int, requestor_dept_id_);
-    request.input('branch_id', sql.Int, branch_id);
-    request.input('requestor_id', sql.Int, requestor_id_);
-    request.input('area_id', sql.Int, area_id_);
-    request.input('checkin_status', sql.Int, checkin_status_);
-    request.input('approve_status', sql.NVarChar, approve_status_);
-    request.input('role_id', sql.Int, role_id);
-
+    request.input('type', sql.NVarChar, type);
     // เรียกใช้ stored procedure
-    let result = await request.execute('spGet_search_approve_vrf');
-
+    let result = await request.execute('spGet_vrf_report_by');
     return result.recordset;
   } catch (error) {
     console.log('error: ', error);
     return [{ error: error }];
   }
+}
+async function get_search_vrf_trans(
+  tbDateF,
+  tbDateT 
+) {
+  let tbDateF_;
+  let formattedtbDateF;
+  let tbDateT_;
+  let formattedtbDateT;
+  let dateF
+  let dateT
+  let formattedDateF
+  let formattedDateT
 
+  if ((tbDateF !== undefined && tbDateF !== '' && tbDateF !== null)) {
+    tbDateF_ = moment.tz(tbDateF, 'Asia/Bangkok');
+    formattedtbDateF = tbDateF_.format('YYYY-MM-DD');
+    dateF = new Date(formattedtbDateF);
+    formattedDateF = `${dateF.getUTCFullYear()}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${String(dateF.getUTCDate()).padStart(2, '0')}`;
+  } else {
+    tbDateF_ = '';
+    formattedtbDateF = '';
+    dateF = '';
+    formattedDateF = null;
+  }
+  //--------------------------------------
+  if ((tbDateT !== undefined && tbDateT !== '' && tbDateT !== null)) {
+    tbDateT_ = moment.tz(tbDateT, 'Asia/Bangkok');
+    formattedtbDateT = tbDateT_.format('YYYY-MM-DD');
+    dateT = new Date(formattedtbDateT);
+    formattedDateT = `${dateT.getUTCFullYear()}-${String(dateT.getUTCMonth() + 1).padStart(2, '0')}-${String(dateT.getUTCDate()).padStart(2, '0')}`;
+  } else {
+    tbDateT_ = '';
+    formattedtbDateT = '';
+    dateT = '';
+    formattedDateT = null;
+  } 
+  try {
+    let pool = await sql.connect(config);
+    console.log('get_search_vrf_trans  formattedDateF:', formattedDateF
+      , 'formattedDateT: ', formattedDateT);
+    // สร้าง request และเพิ่ม input parameters
+    let request = pool.request();
+    request.input('formattedDateF', sql.Date, formattedDateF);
+    request.input('formattedDateT', sql.Date, formattedDateT);
+    // เรียกใช้ stored procedure
+    let result = await request.execute('spGet_vrf_report_by_Status');
+    return result.recordset;
+  } catch (error) {
+    console.log('error: ', error);
+    return [{ error: error }];
+  }
 }
 async function get_search_vrf_approve_trans(
   tbDateF,
@@ -1200,8 +1222,8 @@ async function get_user_list_by_dept(
 async function get_user_list(
   // department_id,
   // branch_id
-) {
-
+)
+{
   try {
     let pool = await sql.connect(config);
     let sp_UserLst = await pool
@@ -1210,6 +1232,24 @@ async function get_user_list(
       // .input("branch_id", sql.Int, branch_id)
       .execute("sp_UserLst");
     return sp_UserLst.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_all_vrf_info(
+  department_id,
+  branch_id
+) {
+  try {
+    let pool = await sql.connect(config);
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let spGet_all_vrf_list = await pool
+      .request()
+      // .input("department_id", sql.Int, department_id)
+      // .input("branch_id", sql.Int, branch_id)
+      .execute("spGet_all_vrf_info");
+    return spGet_all_vrf_list.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -2951,17 +2991,27 @@ async function set_update_vrf_det_cancelcheckinout(Id,
  }
 async function set_sp_update_vrf_det_checkinout(Id,
   Type_,
-  user_id
+  user_id,
+  card_no
 ) {
-  console.log('set_sp_update_vrf_det_checkinout Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id
-  )
-  try {
+
+  try { 
+    const cardNo = card_no && card_no.trim() !== '' ? card_no : '';
+    console.log('set_sp_update_vrf_det_checkinout Id: ', Id
+    , 'Type: '
+    , Type_
+    , 'user_id: '
+    , user_id
+    , 'card_no: '
+    , cardNo
+    )    
     let pool = await sql.connect(config);
     let sp_update_vrf_det_checkinout = await pool
       .request()
       .input("Id_", sql.Int, Id)
       .input("Type_", sql.NVarChar, Type_)
       .input("user_id", sql.Int, user_id)
+      .input("card_no", sql.NVarChar, cardNo)
       //  .input("comment", sql.NVarChar, comment)
       .execute("sp_update_vrf_det_checkinout");
     return sp_update_vrf_det_checkinout.recordsets;
@@ -3147,6 +3197,9 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_vrf_reports: get_vrf_reports,
+  set_su_cancel_vrf: set_su_cancel_vrf,
+  get_all_vrf_info: get_all_vrf_info,
   get_all_vrf_list:get_all_vrf_list, 
   get_currentDateTime:get_currentDateTime,
   set_update_vrf_det_cancelcheckinout: set_update_vrf_det_cancelcheckinout,
