@@ -212,6 +212,18 @@ async function get_user(department_id) {
     return [{ error: error }];
   }
 }
+async function get_prefix() {
+  try {
+    let pool = await sql.connect(config);
+    let spGet_vehicle_color = await pool
+      .request()
+      .execute("spGet_vehicle_color");
+    return spGet_vehicle_color.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_vehicle_color() {
   try {
     let pool = await sql.connect(config);
@@ -3197,6 +3209,7 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_prefix: get_prefix,
   get_vrf_reports: get_vrf_reports,
   set_su_cancel_vrf: set_su_cancel_vrf,
   get_all_vrf_info: get_all_vrf_info,

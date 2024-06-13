@@ -296,7 +296,7 @@ app.post('/downloadExcel', bodyParser.json(), async (req, res) => {
 });
 
 app.get('/get_vrf_reports', async (req, res) => {
-    console.log('/get_vrf_reports req.query[tbDateF]: ', req.query['tbDateF'], 'req.query[tbDateT]: ', req.query['tbDateT']);
+    //console.log('/get_vrf_reports req.query[tbDateF]: ', req.query['tbDateF'], 'req.query[tbDateT]: ', req.query['tbDateT']);
     try {
         // ดึงข้อมูลจากฐานข้อมูล
         const [by_approve
@@ -324,35 +324,91 @@ app.get('/get_vrf_reports', async (req, res) => {
         dateF = new Date(req.query['tbDateF'])
         dateT = new Date(req.query['tbDateT'])
         // เติมข้อมูลใน Sheet1
-        sheet1.addRow([`รายละเอียด VRF ช่วงวันที่ ${String(dateF.getUTCDate()).padStart(2, '0')}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${dateF.getUTCFullYear()} - ${String(dateT.getUTCDate()).padStart(2, '0')}-${String(dateT.getUTCMonth() + 1).padStart(2, '0')}-${dateT.getUTCFullYear()}`]);
+        //sheet1.addRow([`รายละเอียด VRF ช่วงวันที่ ${String(dateF.getUTCDate()).padStart(2, '0')}-${String(dateF.getUTCMonth() + 1).padStart(2, '0')}-${dateF.getUTCFullYear()} - ${String(dateT.getUTCDate()).padStart(2, '0')}-${String(dateT.getUTCMonth() + 1).padStart(2, '0')}-${dateT.getUTCFullYear()}`]);
+        sheet1.addRow([`รายละเอียด VRF ช่วงวันที่ ${String(dateF.getDate()).padStart(2, '0')}-${String(dateF.getMonth() + 1).padStart(2, '0')}-${dateF.getFullYear()} - ${String(dateT.getDate()).padStart(2, '0')}-${String(dateT.getMonth() + 1).padStart(2, '0')}-${dateT.getFullYear()}`]);        
         sheet1.addRow([]);
         sheet1.addRow(['สรุปจำนวน VRF ทั้งหมดคือ ' + by_count_all[0].allvrf + ' รายการ']);
         sheet1.addRow([]);
         sheet1.addRow(['สรุปจำนวน VRF by สถานะ']);
         sheet1.addRow([]);
-        sheet1.addRow(['no', 'จำนวน', 'สถานะ']);
+        const headerRow0 = sheet1.addRow(['no', 'จำนวน', 'แผนก']);
+        headerRow0.eachCell({ includeEmpty: true }, (cell) => {
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
+        //sheet1.addRow(['no', 'จำนวน', 'สถานะ']);
         by_approve.forEach((item) => {
-            sheet1.addRow([item.no, item.amount, item.approve_status]);
+            //sheet1.addRow([item.no, item.amount, item.approve_status]);
+            const row = sheet1.addRow([item.no, item.amount, item.approve_status]);
+            row.eachCell({ includeEmpty: true }, (cell) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+            
         });
         sheet1.addRow([]);
         sheet1.addRow(['สรุปจำนวน VRF by แผนก']);
         sheet1.addRow([]);
-        sheet1.addRow(['no', 'จำนวน', 'แผนก']);
+        const headerRow1 = sheet1.addRow(['no', 'จำนวน', 'แผนก']);
+        headerRow1.eachCell({ includeEmpty: true }, (cell) => {
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
+        //sheet1.addRow(['no', 'จำนวน', 'แผนก']);
         by_department.forEach((item) => {
-            sheet1.addRow([item.no, item.amount, item.department]);
+            //sheet1.addRow([item.no, item.amount, item.department]);
+            const row = sheet1.addRow([item.no, item.amount, item.department]);
+            row.eachCell({ includeEmpty: true }, (cell) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
         });
         sheet1.addRow([]);
         sheet1.addRow(['สรุปจำนวน VRF by พื้นที่']);
         sheet1.addRow([]);
-        sheet1.addRow(['no', 'จำนวน', 'พื้นที่']);
+        const headerRow2 = sheet1.addRow(['no', 'จำนวน', 'พื้นที่']);
+        headerRow2.eachCell({ includeEmpty: true }, (cell) => {
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
+        //sheet1.addRow(['no', 'จำนวน', 'พื้นที่']);
         by_meeting_area.forEach((item) => {
-            sheet1.addRow([item.no, item.amount, item.meeting_area]);
+            //sheet1.addRow([item.no, item.amount, item.meeting_area]);
+            const row = sheet1.addRow([item.no, item.amount, item.meeting_area]);
+            row.eachCell({ includeEmpty: true }, (cell) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
         });
 
         sheet2.addRow([]);
         sheet2.addRow(['รายชื่อคนที่ไม่เข้าพื้นที่']);
         sheet2.addRow([]);
-        sheet2.addRow(['no'
+        const headerRow3 = sheet2.addRow(['no'
             , 'ชื่อ-นามสกุล'
             , 'Check In'
             , 'Check Out'
@@ -371,15 +427,52 @@ app.get('/get_vrf_reports', async (req, res) => {
             , 'สถานะการอนุมัติ'
             ,'อนุมัติโดย'
         ]);
+        headerRow3.eachCell({ includeEmpty: true }, (cell) => {
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
+        // sheet2.addRow(['no'
+        //     , 'ชื่อ-นามสกุล'
+        //     , 'Check In'
+        //     , 'Check Out'
+        //     , 'จากวันที่'
+        //     , 'ถึงวันที่'
+        //     , 'เหตุผลในการเข้าพื้นที่'
+        //     , 'Contactor'
+        //     , 'Requestor'
+        //     , 'Position'
+        //     , 'Department'
+        //     , 'Phone'
+        //     , 'Navigator'
+        //     , 'พื้นที่เข้าพบ'
+        //     , 'ประเภทพื้นที่เข้าพบ'
+        //     , 'ผู้สร้าง VRF'
+        //     , 'สถานะการอนุมัติ'
+        //     ,'อนุมัติโดย'
+        // ]);
         by_checkinout_is_null.forEach((item) => {
-            sheet2.addRow([item.no
-                , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
+            //sheet2.addRow([item.no
+              //  , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
+              const row = sheet2.addRow([item.no
+                  , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
+              row.eachCell({ includeEmpty: true }, (cell) => {
+                  cell.border = {
+                      top: { style: 'thin' },
+                      left: { style: 'thin' },
+                      bottom: { style: 'thin' },
+                      right: { style: 'thin' }
+                  };
+              });              
         });
 
         sheet3.addRow([]);
         sheet3.addRow(['รายชื่อคนที่เข้าพื้นที่']);
         sheet3.addRow([]);
-        sheet3.addRow(['no'
+        const headerRow4 = sheet3.addRow(['no'
             , 'ชื่อ-นามสกุล'
             , 'Check In'
             , 'Check Out'
@@ -398,9 +491,46 @@ app.get('/get_vrf_reports', async (req, res) => {
             , 'สถานะการอนุมัติ'
             ,'อนุมัติโดย'
         ]);
+        headerRow4.eachCell({ includeEmpty: true }, (cell) => {
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
+        // sheet3.addRow(['no'
+        //     , 'ชื่อ-นามสกุล'
+        //     , 'Check In'
+        //     , 'Check Out'
+        //     , 'จากวันที่'
+        //     , 'ถึงวันที่'
+        //     , 'เหตุผลในการเข้าพื้นที่'
+        //     , 'Contactor'
+        //     , 'Requestor'
+        //     , 'Position'
+        //     , 'Department'
+        //     , 'Phone'
+        //     , 'Navigator'
+        //     , 'พื้นที่เข้าพบ'
+        //     , 'ประเภทพื้นที่เข้าพบ'
+        //     , 'ผู้สร้าง VRF'
+        //     , 'สถานะการอนุมัติ'
+        //     ,'อนุมัติโดย'
+        // ]);
         by_checkinout_is_not_null.forEach((item) => {
-            sheet3.addRow([item.no
-                , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
+            //sheet3.addRow([item.no
+              //  , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
+              const row = sheet3.addRow([item.no
+                  , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
+            row.eachCell({ includeEmpty: true }, (cell) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
         });        
 
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -724,6 +854,13 @@ app.get('/get_vehicle_color', urlencodedParser, (req, res) => {
     handleDatabaseOperation(
         res,
         dboperations.get_vehicle_color,
+        'get_vehicle_color'
+    );
+});
+app.get('/get_prefix', urlencodedParser, (req, res) => {
+    handleDatabaseOperation(
+        res,
+        dboperations.get_prefix,
         'get_vehicle_color'
     );
 });
