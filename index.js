@@ -861,7 +861,7 @@ app.get('/get_prefix', urlencodedParser, (req, res) => {
     handleDatabaseOperation(
         res,
         dboperations.get_prefix,
-        'get_vehicle_color'
+        'get_prefix'
     );
 });
 app.get('/get_vehicle_brand', urlencodedParser, (req, res) => {
@@ -1356,6 +1356,43 @@ app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
         , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_templete_vrf_list(
+            req.query['department_id']
+            , req.query['branch_id']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+})
+app.get('/get_categoryAreas', urlencodedParser, (req, res) => {
+    console.log('/get_categoryAreas department_id: ', req.query['department_id']
+        , 'branch_id: ', req.query['branch_id'])
+    try {
+        dboperations.get_categoryAreas(
+            req.query['department_id']
+            , req.query['branch_id']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
+app.get('/get_Group_MeetingAreas', urlencodedParser, (req, res) => {
+    console.log('/get_Group_MeetingAreas department_id: ', req.query['department_id']
+        , 'branch_id: ', req.query['branch_id'])
+    try {
+        dboperations.get_group_categoryAreas(
             req.query['department_id']
             , req.query['branch_id']
         ).then((result) => {

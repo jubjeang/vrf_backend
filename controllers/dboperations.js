@@ -215,10 +215,10 @@ async function get_user(department_id) {
 async function get_prefix() {
   try {
     let pool = await sql.connect(config);
-    let spGet_vehicle_color = await pool
+    let spGet_prefix = await pool
       .request()
-      .execute("spGet_vehicle_color");
-    return spGet_vehicle_color.recordsets;
+      .execute("spGet_prefix");
+    return spGet_prefix.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -1098,6 +1098,44 @@ async function get_templete_vrf_list(
       .input("branch_id", sql.Int, branch_id)
       .execute("spTemplete_vrf_list");
     return spTemplete_vrf_list.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_categoryAreas(
+  department_id,
+  branch_id
+) {
+
+  try {
+    let pool = await sql.connect(config);
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let spGet_categoryAreas = await pool
+      .request()
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)
+      .execute("spGet_categoryAreas");
+    return spGet_categoryAreas.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_group_categoryAreas(
+  department_id,
+  branch_id
+) {
+
+  try {
+    let pool = await sql.connect(config);
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let spGet_categoryAreas = await pool
+      .request()
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)
+      .execute("spGet_group_categoryAreas");
+    return spGet_categoryAreas.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -3209,6 +3247,8 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_group_categoryAreas: get_group_categoryAreas,
+  get_categoryAreas: get_categoryAreas,
   get_prefix: get_prefix,
   get_vrf_reports: get_vrf_reports,
   set_su_cancel_vrf: set_su_cancel_vrf,
