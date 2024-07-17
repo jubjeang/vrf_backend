@@ -1122,6 +1122,25 @@ async function get_categoryAreas(
     return [{ error: error }];
   }
 }
+async function get_categoryControlAreas(
+  department_id,
+  branch_id
+) {
+
+  try {
+    let pool = await sql.connect(config);
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let spGet_categoryControlAreas = await pool
+      .request()
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)
+      .execute("spGet_categoryControlAreas");
+    return spGet_categoryControlAreas.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_group_categoryAreas(
   department_id,
   branch_id
@@ -1136,6 +1155,25 @@ async function get_group_categoryAreas(
       .input("branch_id", sql.Int, branch_id)
       .execute("spGet_group_categoryAreas");
     return spGet_categoryAreas.recordsets;
+  } catch (error) {
+    console.log("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_Group_MeetingControlAreas(
+  department_id,
+  branch_id
+) {
+
+  try {
+    let pool = await sql.connect(config);
+    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
+    let get_Group_MeetingControlAreas = await pool
+      .request()
+      .input("department_id", sql.Int, department_id)
+      .input("branch_id", sql.Int, branch_id)
+      .execute("spGet_group_categoryControlAreas");
+    return get_Group_MeetingControlAreas.recordsets;
   } catch (error) {
     console.log("error: ", error);
     return [{ error: error }];
@@ -1611,7 +1649,7 @@ async function set_manual_add_vrf_trans(obj_json,io) {
     return ({ error: err })
   }
 }
-async function set_manual_add_vrf(obj_json) {
+async function set_manual_add_vrf_template(obj_json) {
   let output_ = null;
   let output = null;
   try {
@@ -1675,7 +1713,7 @@ async function set_manual_add_vrf_trans_det(obj_json) {
   }
   //return({state:1})	 
 }
-async function set_manual_add_vrf_det(obj_json) {
+async function set_manual_add_vrf_template_det(obj_json) {
   // let obj_json = JSON.parse(obj);
   console.log("obj_json.newid: ", obj_json.newid);
   // let length = Object.keys(obj_json).length;
@@ -3247,6 +3285,8 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_categoryControlAreas: get_categoryControlAreas,
+  get_Group_MeetingControlAreas: get_Group_MeetingControlAreas,
   get_group_categoryAreas: get_group_categoryAreas,
   get_categoryAreas: get_categoryAreas,
   get_prefix: get_prefix,
@@ -3312,8 +3352,8 @@ module.exports = {
   get_templete_vrf_det: get_templete_vrf_det,
   get_templete_vrf: get_templete_vrf,
   get_templete_vrf_list: get_templete_vrf_list,
-  set_manual_add_vrf_det: set_manual_add_vrf_det,
-  set_manual_add_vrf: set_manual_add_vrf,
+  set_manual_add_vrf_template_det: set_manual_add_vrf_template_det,
+  set_manual_add_vrf_template: set_manual_add_vrf_template,
   get_meeting_area: get_meeting_area,
   get_navigator: get_navigator,
   get_dept: get_dept,

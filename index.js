@@ -1369,6 +1369,25 @@ app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
         res.json({ error: error })
     }
 })
+app.get('/get_categoryControlAreas', urlencodedParser, (req, res) => {
+    console.log('/get_categoryControlAreas: ', req.query['department_id']
+        , 'branch_id: ', req.query['branch_id'])
+    try {
+        dboperations.get_categoryControlAreas(
+            req.query['department_id']
+            , req.query['branch_id']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
 app.get('/get_categoryAreas', urlencodedParser, (req, res) => {
     console.log('/get_categoryAreas department_id: ', req.query['department_id']
         , 'branch_id: ', req.query['branch_id'])
@@ -1393,6 +1412,25 @@ app.get('/get_Group_MeetingAreas', urlencodedParser, (req, res) => {
         , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_group_categoryAreas(
+            req.query['department_id']
+            , req.query['branch_id']
+        ).then((result) => {
+            res.json(result[0])
+        }).catch((err) => {
+            console.log('error: ', err)
+            res.json({ error: err })
+        })
+    } catch (error) {
+        console.error('error: ', error);
+        res.json({ error: error })
+    }
+
+})
+app.get('/get_Group_MeetingControlAreas', urlencodedParser, (req, res) => {
+    console.log('/get_Group_MeetingControlAreas department_id: ', req.query['department_id']
+        , 'branch_id: ', req.query['branch_id'])
+    try {
+        dboperations.get_Group_MeetingControlAreas(
             req.query['department_id']
             , req.query['branch_id']
         ).then((result) => {
@@ -1765,22 +1803,43 @@ app.post('/add_approveProc', urlencodedParser, (req, res) => {
     }
 
 })
-app.post('/set_manual_add_vrf', urlencodedParser, (req, res) => {
+app.post('/set_manual_add_vrf_template', urlencodedParser, (req, res) => {
     try {
         let data_ = req.body
         let obj = null
         for (let x in data_) {
             obj = x
         }
-        console.log('set_manual_add_vrf obj: ', obj)
         let obj_json = JSON.parse(obj)
-        console.log('obj_json: ', obj_json)
-        dboperations.set_manual_add_vrf(obj_json).then((result) => {
-            res.json(result)
-        }).catch((err) => {
-            console.log('error: ', err)
-            res.json({ error: err })
-        })
+        console.log('set_manual_add_vrf_template obj_json: ', obj_json)
+        // Check if area and controlarea have data before parsing
+        let area = [];
+        let controlarea = [];
+
+        if (obj_json.area && obj_json.area !== '[]') {
+            area = JSON.parse(obj_json.area);
+            console.log('Parsed area: ', area);
+        } else {
+            console.log('No area data provided.');
+        }
+
+        if (obj_json.controlarea && obj_json.controlarea !== '[]') {
+            controlarea = JSON.parse(obj_json.controlarea);
+            if (controlarea.length === 0) {
+                console.log('No controlarea data provided.');
+            } else {
+                console.log('Parsed controlarea: ', controlarea);
+            }
+        } else {
+            console.log('No controlarea data provided.');
+        }
+        res.json({ success: "success" })
+        // dboperations.set_manual_add_vrf_template(obj_json).then((result) => {
+        //     res.json(result)
+        // }).catch((err) => {
+        //     console.log('error: ', err)
+        //     res.json({ error: err })
+        // })
 
     } catch (error) {
         console.error('error: ', error);
@@ -1870,7 +1929,7 @@ app.post('/set_manual_add_vrf_trans_det', urlencodedParser, (req, res) => {
         res.json({ error: error })
     }
 })
-app.post('/set_manual_add_vrf_det', urlencodedParser, (req, res) => {
+app.post('/set_manual_add_vrf_template_det', urlencodedParser, (req, res) => {
     try {
         let data_ = req.body
         let obj = null
@@ -1878,13 +1937,14 @@ app.post('/set_manual_add_vrf_det', urlencodedParser, (req, res) => {
             obj = x
         }
         let obj_json = JSON.parse(obj)
-        // console.log('obj_json: ', obj_json)
-        dboperations.set_manual_add_vrf_det(obj_json).then((result) => {
-            res.json(result)
-        }).catch((err) => {
-            console.log('error: ', err)
-            res.json({ error: err })
-        })
+        console.log('set_manual_add_vrf_template_det obj_json: ', obj_json)
+        res.json({ success: "success" })
+        // dboperations.set_manual_add_vrf_template_det(obj_json).then((result) => {
+        //     res.json(result)
+        // }).catch((err) => {
+        //     console.log('error: ', err)
+        //     res.json({ error: err })
+        // })
     } catch (error) {
         console.error('error: ', error);
         res.json({ error: error })
