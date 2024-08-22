@@ -13,7 +13,7 @@ async function set_su_cancel_vrf(vrf_id_for_reject, cancel_reason, CancelBy) {
       .execute("spSet_su_cancel_vrf");
     return spSet_su_cancel_vrf.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("set_su_cancel_vrf error: ", error);
     return [{ error: error }];
   }
 }
@@ -28,7 +28,7 @@ async function set_reject_vrf(vrf_id_for_reject, reject_reason, RejectBy) {
       .execute("spSet_reject_vrf");
     return spSet_reject_vrf.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("set_reject_vrf error: ", error);
     return [{ error: error }];
   }
 }
@@ -42,7 +42,7 @@ async function get_complete_word(search, type) {
       .execute("spGet_complete_word");
     return spGet_complete_word.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("get_complete_word error: ", error);
     return [{ error: error }];
   }
 }
@@ -55,7 +55,7 @@ async function get_meeting_area(user_id) {
       .execute("spGet_meeting_area");
     return spGet_meeting_area.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -68,7 +68,7 @@ async function get_navigator(user_id) {
       .execute("spGetNavigator");
     return spGetNavigator.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -82,7 +82,7 @@ async function get_dept_by_branch(division_id, branch_id) {
       .execute("spGetDept_By_Branch");
     return spGetDept_By_Branch.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -96,7 +96,7 @@ async function get_dept_all() {
       .execute("spGetDept_all");
     return spGetDept_all.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -110,7 +110,7 @@ async function get_division_all() {
       .execute("spGetDivision_all");
     return spGetDivision_all.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -124,7 +124,7 @@ async function get_branch_all() {
       .execute("spGetBranch_all");
     return spGetBranch_all.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -138,7 +138,7 @@ async function get_role_by_dept() {
       .execute("spGetRole_by_dept");
     return spGetRole_by_dept.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -152,7 +152,7 @@ async function get_role_all() {
       .execute("spGetRole_all");
     return spGetRole_all.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -166,7 +166,7 @@ async function get_dept(division_id, branch_id) {
       .execute("spGetDept");
     return spGetDept.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -180,13 +180,13 @@ async function get_position() {
       .execute("spGetPosition");
     return spGetPosition.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
 async function get_user_by_branch(branch_id) {
   try {
-    console.log("get_user_by_branch branch_id", branch_id);
+    //////console.log("get_user_by_branch branch_id", branch_id);
     let pool = await sql.connect(config);
     let spGetUser_by_branch = await pool
       .request()
@@ -194,7 +194,7 @@ async function get_user_by_branch(branch_id) {
       .execute("spGetUser_by_branch");
     return spGetUser_by_branch.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -208,7 +208,7 @@ async function get_user(department_id) {
       .execute("spGetUser");
     return spGetUser.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -220,7 +220,7 @@ async function get_prefix() {
       .execute("spGet_prefix");
     return spGet_prefix.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -232,7 +232,7 @@ async function get_vehicle_color() {
       .execute("spGet_vehicle_color");
     return spGet_vehicle_color.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -245,7 +245,7 @@ async function get_templete_det(templete_id) {
       .execute("spGet_templete_det");
     return spGet_templete_det.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -259,7 +259,7 @@ async function get_templete(branch_id, department_id) {
       .execute("spGet_templete");
     return spGet_templete.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -271,7 +271,7 @@ async function get_vehicle_brand() {
       .execute("spGet_vehicle_brand");
     return spGet_vehicle_brand.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -286,7 +286,7 @@ async function get_permission_access(user_id, user_role_id, user_role) {
       .execute("spGet_permission_access");
     return spGet_permission_access.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -299,7 +299,7 @@ async function getactivity_authen(userID) {
       .execute("spGetRole");
     return spGetRole.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -312,7 +312,7 @@ async function getRole(userID) {
       .execute("spGetRole");
     return spGetRole.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
   }
 }
 async function getUser(userID, customerID) {
@@ -325,7 +325,7 @@ async function getUser(userID, customerID) {
       .execute("spGetUser");
     return spGetUser.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
   }
 }
 async function getuserEdit(userID, customerID) {
@@ -338,7 +338,7 @@ async function getuserEdit(userID, customerID) {
       .execute("spGetUser_Edit");
     return spGetUser_Edit.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -351,15 +351,15 @@ async function getDownloadLink(userID) {
       .execute("spDownloadLink");
     return spDownloadLink.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
 async function getactivity_authen(approve_setting_id, approve_setting_version) {
   try {
     let output = null;
-    console.log("approve_setting_id: ", approve_setting_id);
-    console.log("approve_setting_version: ", approve_setting_version);
+    //////console.log("approve_setting_id: ", approve_setting_id);
+    //////console.log("approve_setting_version: ", approve_setting_version);
     let pool = await sql.connect(config);
     let sp_getactivity_authen = await pool
       .request()
@@ -369,18 +369,18 @@ async function getactivity_authen(approve_setting_id, approve_setting_version) {
     output = sp_getactivity_authen.recordsets;
     output = output[0];
     output = output[0];
-    console.log("output: ", output);
+    //////console.log("output: ", output);
     return output;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
 async function getActitySelectd(user_id, CustomerID) {
   try {
     let output = null;
-    console.log("user_id: ", user_id);
-    console.log("CustomerID: ", CustomerID);
+    //////console.log("user_id: ", user_id);
+    //////console.log("CustomerID: ", CustomerID);
     let pool = await sql.connect(config);
     let spGetActity = await pool
       .request()
@@ -390,10 +390,10 @@ async function getActitySelectd(user_id, CustomerID) {
     output = spGetActity.recordsets;
     output = output[0];
     //output = output[0]
-    console.log("output: ", output);
+    //////console.log("output: ", output);
     return output;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -441,7 +441,7 @@ async function get_search_vrf_templete(
   }
 
   approve_status
-  console.log('approve_status: ', approve_status);
+  //////console.log('approve_status: ', approve_status);
   let approve_status_ =
     approve_status !== undefined && approve_status !== '' && approve_status !== null ? approve_status : null;
   let requestor_id_ =
@@ -463,13 +463,13 @@ async function get_search_vrf_templete(
   try {
     let pool = await sql.connect(config);
 
-    console.log('get_search_vrf_templete requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
-      , 'requestor_dept_id_: ', requestor_dept_id_
-      , 'formattedDateF: ', formattedDateF
-      , 'formattedDateT: ', formattedDateT
-      , 'approve_status: ', approve_status_
-      , 'branch_id: ', branch_id
-    );
+    //////console.log('get_search_vrf_templete requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
+    //   , 'requestor_dept_id_: ', requestor_dept_id_
+    //   , 'formattedDateF: ', formattedDateF
+    //   , 'formattedDateT: ', formattedDateT
+    //   , 'approve_status: ', approve_status_
+    //   , 'branch_id: ', branch_id
+    // );
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -481,11 +481,11 @@ async function get_search_vrf_templete(
 
     // เรียกใช้ stored procedure
     let result = await request.execute('spGet_search_templete_vrf_list');
-    console.log('result.recordset: ', result.recordset); // Output the result
+    //////console.log('result.recordset: ', result.recordset); // Output the result
 
     return result.recordset;
   } catch (error) {
-    console.log('error: ', error);
+    //////console.log('error: ', error);
     return [{ error: error }];
   }
 }
@@ -502,7 +502,6 @@ async function get_search_vrf(
   let formattedtbDateF;
   let tbDateT_;
   let formattedtbDateT;
-
   let dateF
   let dateT
   let formattedDateF
@@ -531,9 +530,7 @@ async function get_search_vrf(
     dateT = '';
     formattedDateT = null;
   }
-
-  approve_status
-  console.log('approve_status: ', approve_status);
+  //////console.log('approve_status: ', approve_status);
   let approve_status_ =
     approve_status !== undefined && approve_status !== '' && approve_status !== null ? approve_status : null;
   let requestor_id_ =
@@ -555,13 +552,13 @@ async function get_search_vrf(
   try {
     let pool = await sql.connect(config);
 
-    console.log('get_search_vrf_list requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
-      , 'requestor_dept_id_: ', requestor_dept_id_
-      , 'formattedDateF: ', formattedDateF
-      , 'formattedDateT: ', formattedDateT
-      , 'approve_status: ', approve_status_
-      , 'branch_id: ', branch_id
-    );
+    //////console.log('get_search_vrf_list requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
+    //   , 'requestor_dept_id_: ', requestor_dept_id_
+    //   , 'formattedDateF: ', formattedDateF
+    //   , 'formattedDateT: ', formattedDateT
+    //   , 'approve_status: ', approve_status_
+    //   , 'branch_id: ', branch_id
+    // );
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -574,11 +571,11 @@ async function get_search_vrf(
 
     // เรียกใช้ stored procedure
     let result = await request.execute('spGet_search_vrf_list');
-    console.log('result.recordset: ', result.recordset); // Output the result
+    //////console.log('result.recordset: ', result.recordset); // Output the result
 
     return result.recordset;
   } catch (error) {
-    console.log('error: ', error);
+    //////console.log('error: ', error);
     return [{ error: error }];
   }
 }
@@ -621,9 +618,9 @@ async function get_vrf_reports(
   } 
   try {
     let pool = await sql.connect(config);
-    console.log('get_vrf_reports  formattedDateF:', formattedDateF
-      , 'formattedDateT: ', formattedDateT
-      , 'type: ', type);
+    //////console.log('get_vrf_reports  formattedDateF:', formattedDateF
+      // , 'formattedDateT: ', formattedDateT
+      // , 'type: ', type);
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -633,7 +630,7 @@ async function get_vrf_reports(
     let result = await request.execute('spGet_vrf_report_by');
     return result.recordset;
   } catch (error) {
-    console.log('error: ', error);
+    //////console.log('error: ', error);
     return [{ error: error }];
   }
 }
@@ -675,8 +672,8 @@ async function get_search_vrf_trans(
   } 
   try {
     let pool = await sql.connect(config);
-    console.log('get_search_vrf_trans  formattedDateF:', formattedDateF
-      , 'formattedDateT: ', formattedDateT);
+    //////console.log('get_search_vrf_trans  formattedDateF:', formattedDateF
+      // , 'formattedDateT: ', formattedDateT);
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -685,7 +682,7 @@ async function get_search_vrf_trans(
     let result = await request.execute('spGet_vrf_report_by_Status');
     return result.recordset;
   } catch (error) {
-    console.log('error: ', error);
+    //////console.log('error: ', error);
     return [{ error: error }];
   }
 }
@@ -761,12 +758,12 @@ async function get_search_vrf_approve_trans(
   try {
     let pool = await sql.connect(config);
 
-    console.log('get_search_vrf_approve_trans checkin_status_: ', checkin_status_, 'requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
-      , 'requestor_dept_id_: ', requestor_dept_id_
-      , 'formattedDateF: ', formattedDateF
-      , 'formattedDateT: ', formattedDateT
-      , 'approve_status: ', approve_status
-      , 'role_id: ', role_id);
+    //////console.log('get_search_vrf_approve_trans checkin_status_: ', checkin_status_, 'requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
+      // , 'requestor_dept_id_: ', requestor_dept_id_
+      // , 'formattedDateF: ', formattedDateF
+      // , 'formattedDateT: ', formattedDateT
+      // , 'approve_status: ', approve_status
+      // , 'role_id: ', role_id);
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -784,7 +781,7 @@ async function get_search_vrf_approve_trans(
 
     return result.recordset;
   } catch (error) {
-    console.log('error: ', error);
+    //////console.log('error: ', error);
     return [{ error: error }];
   }
 
@@ -879,18 +876,18 @@ async function get_search_vrf_for_guard(
   try {
     let pool = await sql.connect(config);
 
-    console.log('get_search_vrf_for_guard checkin_status_: ', checkin_status_, 'requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
-      , 'requestor_dept_id_: ', requestor_dept_id_
-      , 'formattedDateF: ', formattedDateF
-      , 'formattedDateT: ', formattedDateT
-      , 'approve_status: ', approve_status
-      , 'role_id: ', role_id
-      , 'contactor: ', contactor_
-      , 'contactor: ', contactor
-      , 'branch_id: ', branch_id
-      , 'requestor_: ', requestor_
-      , 'card_no_: ', card_no_
-    );
+    //////console.log('get_search_vrf_for_guard checkin_status_: ', checkin_status_, 'requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
+    //   , 'requestor_dept_id_: ', requestor_dept_id_
+    //   , 'formattedDateF: ', formattedDateF
+    //   , 'formattedDateT: ', formattedDateT
+    //   , 'approve_status: ', approve_status
+    //   , 'role_id: ', role_id
+    //   , 'contactor: ', contactor_
+    //   , 'contactor: ', contactor
+    //   , 'branch_id: ', branch_id
+    //   , 'requestor_: ', requestor_
+    //   , 'card_no_: ', card_no_
+    // );
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -911,7 +908,7 @@ async function get_search_vrf_for_guard(
 
     return result.recordset;
   } catch (error) {
-    console.log('error: ', error);
+    //////console.log('error: ', error);
     return [{ error: error }];
   }
 
@@ -959,7 +956,7 @@ async function get_search_vrf_list(
     dateT = '';
     formattedDateT = null;
   }
-  console.log('approve_status: ', approve_status);
+  //////console.log('approve_status: ', approve_status);
   let approve_status_ =
     approve_status !== undefined && approve_status !== '' && approve_status !== null ? approve_status : null;
     let contactor_ =
@@ -983,13 +980,13 @@ async function get_search_vrf_list(
   try {
     let pool = await sql.connect(config);
 
-    console.log('get_search_vrf_list requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
-      , 'requestor_dept_id_: ', requestor_dept_id_
-      , 'formattedDateF: ', formattedDateF
-      , 'formattedDateT: ', formattedDateT
-      , 'approve_status: ', approve_status_
-      , 'branch_id: ', branch_id
-    );
+    //////console.log('get_search_vrf_list requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
+    //   , 'requestor_dept_id_: ', requestor_dept_id_
+    //   , 'formattedDateF: ', formattedDateF
+    //   , 'formattedDateT: ', formattedDateT
+    //   , 'approve_status: ', approve_status_
+    //   , 'branch_id: ', branch_id
+    // );
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -1003,11 +1000,11 @@ async function get_search_vrf_list(
 
     // เรียกใช้ stored procedure
     let result = await request.execute('spGet_search_vrf_list');
-    console.log('result.recordset: ', result.recordset); // Output the result
+    //////console.log('result.recordset: ', result.recordset); // Output the result
 
     return result.recordset;
   } catch (error) {
-    console.log('error: ', error);
+    //////console.log('error: ', error);
     return [{ error: error }];
   }
 
@@ -1040,11 +1037,11 @@ async function get_search_user_vrf_by_dept(
     role_id ? (queryString += ` and uvf.role_id = ${role_id} `) : (queryString += ``);
     queryString += ` and uvf.division_id = ${division_id}  `;
     queryString += ` order by uvf.[USER_ID] desc `;
-    console.log('queryString: ', queryString);
+    //////console.log('queryString: ', queryString);
     let result = await pool.request().query(queryString);
     return result.recordset;
   } catch (error) {
-    console.log('error: ', error);
+    //////console.log('error: ', error);
     return [{ error: error }];
   }
 }
@@ -1076,11 +1073,11 @@ async function get_search_user_vrf(
     role_id ? (queryString += ` and uvf.role_id = ${role_id} `) : (queryString += ``);
     division_id ? (queryString += ` and uvf.division_id = ${division_id}  `) : (queryString += ``);
     queryString += ` order by uvf.[USER_ID] desc `;
-    console.log('queryString: ', queryString);
+    //////console.log('queryString: ', queryString);
     let result = await pool.request().query(queryString);
     return result.recordset;
   } catch (error) {
-    console.log('error: ', error);
+    //////console.log('error: ', error);
     return [{ error: error }];
   }
 }
@@ -1099,7 +1096,7 @@ async function get_templete_vrf_list(
       .execute("spTemplete_vrf_list");
     return spTemplete_vrf_list.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1118,7 +1115,7 @@ async function get_categoryAreas(
       .execute("spGet_categoryAreas");
     return spGet_categoryAreas.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1137,7 +1134,7 @@ async function get_categoryControlAreas(
       .execute("spGet_categoryControlAreas");
     return spGet_categoryControlAreas.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1156,7 +1153,7 @@ async function get_group_categoryAreas(
       .execute("spGet_group_categoryAreas");
     return spGet_categoryAreas.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1175,7 +1172,7 @@ async function get_Group_MeetingControlAreas(
       .execute("spGet_group_categoryControlAreas");
     return get_Group_MeetingControlAreas.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1188,10 +1185,10 @@ async function get_vrf_lst_for_security(
   try {
     let pool = await sql.connect(config);
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
-    console.log('get_vrf_lst_for_security department_id: '
-    , department_id , 'branch_id: '
-    , branch_id , 'role_id: '
-    , role_id , 'division_id: ', division_id)       
+    //////console.log('get_vrf_lst_for_security department_id: '
+    // , department_id , 'branch_id: '
+    // , branch_id , 'role_id: '
+    // , role_id , 'division_id: ', division_id)       
     let spGet_vrf_lst_for_security = await pool
       .request()
       .input("department_id", sql.Int, department_id)
@@ -1201,7 +1198,7 @@ async function get_vrf_lst_for_security(
       .execute("spGet_vrf_lst_for_security");
     return spGet_vrf_lst_for_security.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1225,7 +1222,7 @@ async function get_vrf_approve_list(
       .execute("spGet_vrf_approve_list");
     return spGet_vrf_approve_list.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1239,11 +1236,11 @@ async function get_data_approve_list_for_security(
   try {
     let pool = await sql.connect(config);
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
-    console.log('get_data_approve_list_for_security department_id: ', department_id
-      , 'branch_id: ', branch_id
-      , 'role_id: ', role_id
-      , 'division_id: ', division_id
-      , 'Id: ', Id)
+    //////console.log('get_data_approve_list_for_security department_id: ', department_id
+      // , 'branch_id: ', branch_id
+      // , 'role_id: ', role_id
+      // , 'division_id: ', division_id
+      // , 'Id: ', Id)
     let spGet_data_approve_list = await pool
       .request()
       .input("department_id", sql.Int, department_id)
@@ -1254,7 +1251,7 @@ async function get_data_approve_list_for_security(
       .execute("spGet_data_approve_list_for_security");
     return spGet_data_approve_list.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1268,11 +1265,11 @@ async function get_data_approve_list(
   try {
     let pool = await sql.connect(config);
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
-    console.log('get_data_approve_list department_id: ', department_id
-      , 'branch_id: ', branch_id
-      , 'role_id: ', role_id
-      , 'division_id: ', division_id
-      , 'Id: ', Id)
+    //////console.log('get_data_approve_list department_id: ', department_id
+      // , 'branch_id: ', branch_id
+      // , 'role_id: ', role_id
+      // , 'division_id: ', division_id
+      // , 'Id: ', Id)
     let spGet_data_approve_list = await pool
       .request()
       .input("department_id", sql.Int, department_id)
@@ -1283,7 +1280,7 @@ async function get_data_approve_list(
       .execute("spGet_data_approve_list");
     return spGet_data_approve_list.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1303,7 +1300,7 @@ async function get_user_list_by_dept(
       .execute("sp_UserLst_by_dept");
     return sp_UserLst_by_dept.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1321,7 +1318,7 @@ async function get_user_list(
       .execute("sp_UserLst");
     return sp_UserLst.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1339,7 +1336,7 @@ async function get_all_vrf_info(
       .execute("spGet_all_vrf_info");
     return spGet_all_vrf_list.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1357,7 +1354,7 @@ async function get_all_vrf_list(
       .execute("spGet_all_vrf_list");
     return spGet_all_vrf_list.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1378,7 +1375,7 @@ async function get_vrf_list(
       .execute("spGet_vrf_list");
     return spGet_vrf_list.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1391,12 +1388,12 @@ async function get_vrf_det(Id) {
       .execute("sp_Get_vrf_det_by_selected");
     return sp_Get_vrf_det_by_selected.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
 async function get_vrf_security_det(Id) {
-  console.log('get_vrf_security_det Id: ', Id)
+  //////console.log('get_vrf_security_det Id: ', Id)
   try {
     let pool = await sql.connect(config);
     let sp_Get_vrf_security_det_by_selected = await pool
@@ -1405,12 +1402,12 @@ async function get_vrf_security_det(Id) {
       .execute("sp_Get_vrf_security_det_by_selected");
     return sp_Get_vrf_security_det_by_selected.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
 async function get_currentDateTime(Id) {
-  console.log('get_vrf_security_det Id: ', Id)
+  //////console.log('get_vrf_security_det Id: ', Id)
   try {
     let pool = await sql.connect(config);
     let sp_Get_CheckInCurrenTime = await pool
@@ -1419,7 +1416,7 @@ async function get_currentDateTime(Id) {
       .execute("sp_Get_CheckInCurrenTime");
     return sp_Get_CheckInCurrenTime.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1432,7 +1429,7 @@ async function get_templete_vrf_det(Id) {
       .execute("sp_Get_templete_vrf_det");
     return sp_Get_templete_vrf_det.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1445,7 +1442,7 @@ async function get_vrf(Id) {
       .execute("sp_Get_vrf_by_selected");
     return sp_Get_vrf_by_selected.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1459,7 +1456,7 @@ async function get_vrf_apprve_page(Id, user_id) {
       .execute("sp_Get_vrf_apprve_page");
     return sp_Get_vrf_apprve_page.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1472,7 +1469,7 @@ async function get_uservrf_info(user_id) {
       .execute("sp_Get_Uservrf_selected");
     return sp_Get_Uservrf_selected.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1485,7 +1482,7 @@ async function get_mail_info_next_approve(Id) {
       .execute("spGet_mail_info_next_approve");
     return spGet_mail_info_next_approve.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1498,7 +1495,7 @@ async function get_mail_info_final_approve(Id) {
       .execute("spGet_mail_info_final_approve");
     return spGet_mail_info_final_approve.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1517,7 +1514,7 @@ async function get_mail_vrf_info(Id
       .execute("spGet_mail_vrf_info");
     return spGet_mail_vrf_info.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1530,7 +1527,20 @@ async function getEmail_recipient(Id) {
       .execute("spGetEmail_recipient");
     return spGetEmail_recipient.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function get_MeetingAreas_selectedItems(Id) {
+  try {
+    let pool = await sql.connect(config);
+    let sp_Get_MeetingAreas_selectedItems = await pool
+      .request()
+      .input("vrf_id", sql.Int, Id)
+      .execute("sp_Get_MeetingAreas_selectedItems");
+    return sp_Get_MeetingAreas_selectedItems.recordsets;
+  } catch (error) {
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1543,7 +1553,7 @@ async function get_templete_vrf(Id) {
       .execute("sp_Get_templete_vrf");
     return sp_Get_templete_vrf.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
@@ -1557,14 +1567,14 @@ async function getCashOrder(Id) {
       .execute("spGetCashOrder");
     return spGetCashOrder.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
 async function getuserinfo(data_all) {
   let jobid = data_all["jobid"];
   let password = data_all["password"];
-  console.log("jobid: ", jobid);
+  //////console.log("jobid: ", jobid);
   try {
     let pool = await sql.connect(config);
     let spCheckUser = await pool
@@ -1574,15 +1584,15 @@ async function getuserinfo(data_all) {
       .execute("spCheckUser");
     return spCheckUser.recordsets;
   } catch (error) {
-    console.log("error: ", error);
+    console.error("error: ", error);
     return [{ error: error }];
   }
 }
 async function set_add_user_vrf(obj_json) {
   let output_ = null;
   let output = null;
-  console.log("set_add_user_vrf obj_json: ", obj_json);
-  console.log("set_add_user_vrf obj_json.reason: ", obj_json.reason);
+  //////console.log("set_add_user_vrf obj_json: ", obj_json);
+  //////console.log("set_add_user_vrf obj_json.reason: ", obj_json.reason);
   try {
     let pool = await sql.connect(config);
     let spAdd_user_vrf = await pool
@@ -1604,15 +1614,15 @@ async function set_add_user_vrf(obj_json) {
     output = output_[0];
     return output[''];
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
 async function set_manual_add_vrf_trans(obj_json,io) {
   let output_ = null;
   let output = null;
-  console.log("set_manual_add_vrf_trans obj_json: ", obj_json);
-  console.log("set_manual_add_vrf_trans obj_json.reason: ", obj_json.reason);
+  //////console.log("set_manual_add_vrf_trans obj_json: ", obj_json);
+  //////console.log("set_manual_add_vrf_trans obj_json.reason: ", obj_json.reason);
   try {
     let pool = await sql.connect(config);
     let spAdd_vrf = await pool
@@ -1645,10 +1655,93 @@ async function set_manual_add_vrf_trans(obj_json,io) {
 
     return output[''];
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
+async function set_vrf_area(area, controlarea,vrf_id,user_id,type) {
+  let output_ = null;
+  let output = null;
+  try {
+    let pool = await sql.connect(config);
+    if (area && area.length > 0) {
+      for (let areaItem of area) { 
+        if (!areaItem.id) {
+          //////console.log('Invalid area_id:', areaItem.id);
+          continue; // ข้ามการประมวลผลหาก area_id ไม่ถูกต้อง
+        }
+        else{
+          //////console.log('valid areaItem.id:', areaItem.id);
+          //////console.log('valid areaItem.name:', areaItem.name);
+          //////console.log('valid vrf_id:', vrf_id,'valid user_id:', user_id);
+        }
+        let spAdd_vrf_area = await pool
+          .request()
+          .input("vrf_id", sql.Int, vrf_id)
+          .input("area_id", sql.NVarChar, String(areaItem.id))
+          .input("area_name", sql.NVarChar, areaItem.name)
+          .input("area_type", sql.NVarChar, 'พื้นที่ทั่วไป')                    
+          .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of areaItem
+          .input("stype", sql.NVarChar, type) 
+          .execute("spAdd_vrf_area");
+        output_ = spAdd_vrf_area.recordsets;
+        output_ = output_[0];
+        output = output_[0];
+        //////console.log(output);
+      }
+    }
+    if (controlarea && controlarea.length > 0) {
+      for (let controlAreaItem of controlarea) { 
+        if (!controlAreaItem.id) {
+          //////console.log('Invalid controlAreaItem.id:', controlAreaItem.id);
+          continue; // ข้ามการประมวลผลหาก area_id ไม่ถูกต้อง
+        }
+        else{
+          //////console.log('valid controlAreaItem.id:', controlAreaItem.id);
+          //////console.log('valid controlAreaItem.name:', controlAreaItem.name);
+          //////console.log('valid vrf_id:', vrf_id,'valid user_id:', user_id);
+        }
+          let spAdd_vrf_area = await pool
+            .request()
+            .input("vrf_id", sql.Int, vrf_id)
+            .input("area_id", sql.NVarChar, String(controlAreaItem.id))
+            .input("area_name", sql.NVarChar, controlAreaItem.name)
+            .input("area_type", sql.NVarChar, 'พื้นที่ความมั่นคง')
+            .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of controlAreaItem
+            .input("stype", sql.NVarChar, type) 
+            .execute("spAdd_vrf_area");
+          output_ = spAdd_vrf_area.recordsets;
+          output_ = output_[0];
+          output = output_[0];
+          //////console.log(output);
+      }
+    }
+  } catch (err) {
+    //////console.log({ error: err });
+    return { error: err };
+  }
+  return output;
+}
+// async function set_vrf_area(area, controlarea) {
+//   let output_ = null;
+//   let output = null;
+//   try {
+//     let pool = await sql.connect(config);
+//     let spAdd_vrf_area = await pool
+//       .request()
+//       .input("id", sql.NVarChar, obj_json.id)
+//       .input("name", sql.NVarChar, obj_json.name)     
+//       .input("createby", sql.NVarChar, obj_json.user_id)
+//       .execute("spAdd_vrf_area");
+//     output_ = spAdd_vrf_area.recordsets;
+//     output_ = output_[0];
+//     output = output_[0];
+//     return output[''];
+//   } catch (err) {
+//     //////console.log({ error: err });
+//     return ({ error: err })
+//   }
+// }
 async function set_manual_add_vrf_template(obj_json) {
   let output_ = null;
   let output = null;
@@ -1664,30 +1757,34 @@ async function set_manual_add_vrf_template(obj_json) {
       .input("requestor_dept", sql.Int, obj_json.requestor_dept)
       .input("requestor_phone", sql.NVarChar, obj_json.requestor_phone)
       .input("navigator", sql.Int, obj_json.navigator)
-      .input("area", sql.Int, obj_json.area)
+      // .input("area", sql.Int, obj_json.area)
       .input("date_from", sql.DateTime, obj_json.date_from)
       .input("date_to", sql.DateTime, obj_json.date_to)
       //.input("createby", sql.NVarChar, obj_json.createby)
       .input("createby", sql.NVarChar, obj_json.user_id)
       .execute("spAdd_vrf_template");
-    output_ = spAdd_vrf_template.recordsets;
-    output_ = output_[0];
-    output = output_[0];
-    return output[''];
+    // output_ = spAdd_vrf_template.recordsets;
+    // output_ = output_[0];
+    // output = output_[0];
+    // return output[''];
+        output = spAdd_vrf_template.recordset;  // SCOPE_IDENTITY() should be in recordset
+        //////console.log("set_manual_add_vrf_template output: ", output);
+        //////console.log("set_manual_add_vrf_template output[0].InsertedID ", output[0].InsertedID);
+        return output[0].InsertedID;  // Return the InsertedID    
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
 async function set_manual_add_vrf_trans_det(obj_json) {
-  console.log("set_manual_add_vrf_trans_det: obj_json", obj_json);
+  //////console.log("set_manual_add_vrf_trans_det: obj_json", obj_json);
   let output
   let newid = obj_json.newid;
   try {
     for (let key in obj_json) {
       if (key !== 'newid') {
-        // console.log("key: ", key, "value: ", obj_json[key]);
-        // console.log("obj_json[key].tbDateF ", obj_json[key].tbDateF);
+        // //////console.log("key: ", key, "value: ", obj_json[key]);
+        // //////console.log("obj_json[key].tbDateF ", obj_json[key].tbDateF);
         if(obj_json[key].tbFullName)
         {
             let pool = await sql.connect(config);
@@ -1706,24 +1803,27 @@ async function set_manual_add_vrf_trans_det(obj_json) {
       }
     }
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   } finally {
     return ({ state: 1 })
   }
   //return({state:1})	 
 }
-async function set_manual_add_vrf_template_det(obj_json) {
+async function set_manual_add_vrf_template_det(obj_json) 
+{
   // let obj_json = JSON.parse(obj);
-  console.log("obj_json.newid: ", obj_json.newid);
+  //////console.log("obj_json.newid: ", obj_json.newid);
+  //////console.log("set_manual_add_vrf_template_det obj_json: ", obj_json);
   // let length = Object.keys(obj_json).length;
   let output
   let newid = obj_json.newid;
+  let user_id = obj_json.user_id;
   try {
     for (let key in obj_json) {
-      if (key !== 'newid') {
-        // console.log("key: ", key, "value: ", obj_json[key]);
-        // console.log("obj_json[key].tbDateF ", obj_json[key].tbDateF);
+      if ( (key !== 'newid') && (key !== 'user_id') ) {
+         //////console.log("key: ", key, "value: ", obj_json[key]);
+        // //////console.log("obj_json[key].tbDateF ", obj_json[key].tbDateF);
         let pool = await sql.connect(config);
         let spAdd_vrf_template_det = await pool
           .request()
@@ -1731,15 +1831,16 @@ async function set_manual_add_vrf_template_det(obj_json) {
           .input("fullname", sql.NVarChar, obj_json[key].tbFullName)
           .input("vehicle_registration", sql.NVarChar, obj_json[key].tbVehicle_Registration)
           .input("vehicle_brand", sql.Int, obj_json[key].ddlvehicle_brand)
+          .input("prefix", sql.Int, obj_json[key].ddlprefix)
           .input("vehicle_color", sql.Int, obj_json[key].ddlvehicle_color)
           .input("card_no", sql.NVarChar, obj_json[key].tbCardNo)
-          .input("createby", sql.NVarChar, obj_json[key].user_id)
+          .input("createby", sql.NVarChar, user_id)
           .execute("spAdd_vrf_template_det");
         output = spAdd_vrf_template_det.recordsets;
       }
     }
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   } finally {
     return ({ state: 1 })
@@ -1748,7 +1849,7 @@ async function set_manual_add_vrf_template_det(obj_json) {
 
 async function set_update_urgentcase_vrf_det(obj_json) {
   try {
-    console.log('set_update_urgentcase_vrf_det obj_json: ', obj_json)
+    //////console.log('set_update_urgentcase_vrf_det obj_json: ', obj_json)
     for (let index in obj_json) {
       if ((obj_json.length > 0) && (index === '0')) {
         let pool = await sql.connect(config);
@@ -1786,13 +1887,13 @@ async function set_update_urgentcase_vrf_det(obj_json) {
     }
     return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
 async function set_update_urgentcase_vrf(obj_json) {
   try {
-    console.log('set_update_urgentcase_vrf obj_json: ', obj_json)
+    //////console.log('set_update_urgentcase_vrf obj_json: ', obj_json)
     for (let index in obj_json) {
       if (obj_json[index].id && obj_json[index].urgentcase_type === 'Additional') {
         let pool = await sql.connect(config);
@@ -1896,14 +1997,14 @@ async function set_update_urgentcase_vrf(obj_json) {
 
     return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
 async function set_manual_update_vrf_det_trans(obj_json) {
   try {
-    console.log('obj_json: ', obj_json)
-    console.log('obj_json.length: ', Object.keys(obj_json).length)
+    //////console.log('obj_json: ', obj_json)
+    //////console.log('obj_json.length: ', Object.keys(obj_json).length)
     let pool = await sql.connect(config);
     let sp_set_deactive_vrf_trans_det = await pool
       .request()
@@ -1913,7 +2014,7 @@ async function set_manual_update_vrf_det_trans(obj_json) {
     let output_ = sp_set_deactive_vrf_trans_det.recordsets;
 
     for (let index in obj_json) {
-      console.log('set_manual_update_vrf_det_trans obj_json[index].vrf_id: ', obj_json[index].vrf_id)
+      //////console.log('set_manual_update_vrf_det_trans obj_json[index].vrf_id: ', obj_json[index].vrf_id)
       let pool = await sql.connect(config);
       let spAdd_vrf_det = await pool
         .request()
@@ -1929,7 +2030,7 @@ async function set_manual_update_vrf_det_trans(obj_json) {
     }
     return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
@@ -1963,14 +2064,14 @@ async function add_approveProc(data) {
       .input("createby", sql.NVarChar, user_id)
       .execute("add_approveProc");
     output_ = add_approveProc.recordsets;
-    console.log("output: ", output_);
+    //////console.log("output: ", output_);
     output_ = output_[0];
     output = output_[0];
     approveProcId = output.id;
     let data_ = approveProcId.split(":");
     // output = output
     //output_ = json(output)
-    console.log("output: ", output.id);
+    //////console.log("output: ", output.id);
     for (var index = 1; index <= AllRowsDet; index++) {
       let add_approveProc_det = await pool
         .request()
@@ -1986,60 +2087,10 @@ async function add_approveProc(data) {
     }
     return output_;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
   //return add_manual_order.recordsets
-}
-async function set_manual_update_vrf_det(obj_json) {
-  try {
-    console.log('obj_json: ', obj_json)
-    console.log('obj_json.length: ', Object.keys(obj_json).length)
-    let pool = await sql.connect(config);
-    let sp_set_deactive_vrf_det = await pool
-      .request()
-      .input("vrf_id", sql.Int, obj_json[0].vrf_id)
-      .input("ModifyBy", sql.Int, obj_json[0].user_id)
-      .execute("sp_set_deactive_vrf_det");
-    let output_ = sp_set_deactive_vrf_det.recordsets;
-
-    for (let index in obj_json) {
-      console.log('set_manual_update_vrf_det obj_json[index].vrf_id: ', obj_json[index].vrf_id)
-      let pool = await sql.connect(config);
-      let spAdd_vrf_template_det = await pool
-        .request()
-        .input("vrf_id", sql.Int, obj_json[index].vrf_id)
-        // .input("date_from", sql.DateTime, obj_json[index].date_from)
-        // .input("date_to", sql.DateTime, obj_json[index].date_to)
-        .input("fullname", sql.NVarChar, obj_json[index].fullname)
-        .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
-        .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
-        .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
-        .input("card_no", sql.NVarChar, obj_json[index].card_no)
-        .input("createby", sql.NVarChar, obj_json[index].user_id)
-        .execute("spAdd_vrf_template_det");
-      let output = spAdd_vrf_template_det.recordsets;
-      // let pool = await sql.connect(config);
-      // let sp_set_manual_update_vrf_det = await pool
-      //   .request()
-      //   .input("id", sql.Int, obj_json[index].id)
-      //   .input("date_from", sql.DateTime, obj_json[index].date_from)
-      //   .input("date_to", sql.DateTime, obj_json[index].date_to)
-      //   .input("fullname", sql.NVarChar, obj_json[index].fullname)
-      //   .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
-      //   .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
-      //   .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
-      //   .input("card_no", sql.NVarChar, obj_json[index].card_no)
-      //   .input("ModifyBy", sql.Int, obj_json[index].user_id)
-      //   .execute("sp_set_manual_update_vrf_det");
-      // let output_ = sp_set_manual_update_vrf_det.recordsets;
-    }
-    //retu
-    return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
-  } catch (err) {
-    console.log({ error: err });
-    return ({ error: err })
-  }
 }
 async function set_update_userinfo_vrf(obj_json) {
   try {
@@ -2061,13 +2112,13 @@ async function set_update_userinfo_vrf(obj_json) {
       .execute("sp_set_update_userinfo_vrf");
     return sp_set_update_userinfo_vrf.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 
 }
 async function set_manual_update_vrf_trans(obj_json) {
-  console.log('set_manual_update_vrf_trans obj_json.attach_file: ', obj_json.attach_file)
+  //////console.log('set_manual_update_vrf_trans obj_json.attach_file: ', obj_json.attach_file)
   try {
     let pool = await sql.connect(config);
     let sp_set_manual_update_vrf_trans = await pool
@@ -2089,15 +2140,15 @@ async function set_manual_update_vrf_trans(obj_json) {
       .execute("sp_set_manual_update_vrf_trans");
     return sp_set_manual_update_vrf_trans.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 
 }
-async function set_manual_update_vrf(obj_json) {
+async function set_update_vrf_template(obj_json) {
   try {
     let pool = await sql.connect(config);
-    let sp_set_manual_update_vrf = await pool
+    let sp_set_update_vrf_template = await pool
       .request()
       .input("id", sql.Int, obj_json["id"])
       .input("template_name", sql.NVarChar, obj_json["template_name"])
@@ -2108,17 +2159,127 @@ async function set_manual_update_vrf(obj_json) {
       .input("requestor_dept", sql.Int, obj_json["requestor_dept"])
       .input("requestor_phone", sql.NVarChar, obj_json["requestor_phone"])
       .input("navigator", sql.Int, obj_json["navigator"])
-      .input("area", sql.Int, obj_json["area"])
+      // .input("area", sql.Int, obj_json["area"])
       .input("date_from", sql.DateTime, obj_json["date_from"])
       .input("date_to", sql.DateTime, obj_json["date_to"])
       .input("ModifyBy", sql.Int, obj_json["user_id"])
-      .execute("sp_set_manual_update_vrf");
-    return sp_set_manual_update_vrf.recordsets;
+      .execute("sp_set_update_vrf_template");
+    return sp_set_update_vrf_template.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
+async function set_update_vrf_template_det(obj_json) {
+  try {
+    console.log('set_update_vrf_template_det obj_json: ', obj_json)
+    //////console.log('obj_json.length: ', Object.keys(obj_json).length)
+    let pool = await sql.connect(config);
+    let sp_set_deactive_vrf_template_det = await pool
+      .request()
+      .input("vrf_id", sql.Int, obj_json[0].vrf_id)
+      .input("ModifyBy", sql.Int, obj_json[0].user_id)
+      .execute("sp_set_deactive_vrf_template_det");
+    let output_ = sp_set_deactive_vrf_template_det.recordsets;
+
+    for (let index in obj_json) {
+      //////console.log('set_update_vrf_template_det obj_json[index].vrf_id: ', obj_json[index].vrf_id)
+      let pool = await sql.connect(config);
+      let spAdd_vrf_template_det = await pool
+        .request()
+        .input("vrf_id", sql.Int, obj_json[index].vrf_id)
+        // .input("date_from", sql.DateTime, obj_json[index].date_from)
+        // .input("date_to", sql.DateTime, obj_json[index].date_to)
+        .input("fullname", sql.NVarChar, obj_json[index].fullname)
+        .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
+        .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
+        .input("prefix", sql.Int, obj_json[index].prefix)
+        .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
+        .input("card_no", sql.NVarChar, obj_json[index].card_no)
+        .input("createby", sql.NVarChar, obj_json[index].user_id)
+        .execute("spAdd_vrf_template_det");
+      let output = spAdd_vrf_template_det.recordsets;
+    }
+    //retu
+    return ({ status: 'success' })//sp_set_manual_update_vrf_det.recordsets;
+  } catch (err) {
+    //////console.log({ error: err });
+    return ({ error: err })
+  }
+}
+async function set_update_vrf_area(area, controlarea,vrf_id,user_id,type) {
+  let output_ = null;
+  let output = null;
+
+  let pool = await sql.connect(config);
+  let sp_set_deactive_vrf_area = await pool
+    .request()
+    .input("vrf_id", sql.Int, vrf_id)
+    .input("ModifyBy", sql.Int, user_id)
+    .execute("sp_set_deactive_vrf_area");
+   output_ = sp_set_deactive_vrf_area.recordsets;
+
+  try {
+    let pool = await sql.connect(config);
+    if (area && area.length > 0) {
+      for (let areaItem of area) { 
+        if (!areaItem.id) {
+          console.log('Invalid area_id:', areaItem.id);
+          continue; // ข้ามการประมวลผลหาก area_id ไม่ถูกต้อง
+        }
+        else{
+          console.log('valid areaItem.id:', areaItem.id);
+          console.log('valid areaItem.name:', areaItem.name);
+          console.log('valid vrf_id:', vrf_id,'valid user_id:', user_id);
+        }
+        let sp_set_update_vrf_area = await pool
+          .request()
+          .input("vrf_id", sql.Int, vrf_id)
+          .input("area_id", sql.NVarChar, String(areaItem.id))
+          .input("area_name", sql.NVarChar, areaItem.name)
+          .input("area_type", sql.NVarChar, 'พื้นที่ทั่วไป')                    
+          .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of areaItem
+          .input("stype", sql.NVarChar, type) 
+          .execute("sp_set_update_vrf_area");
+        output_ = sp_set_update_vrf_area.recordsets;
+        output_ = output_[0];
+        output = output_[0];
+        //////console.log(output);
+      }
+    }
+    if (controlarea && controlarea.length > 0) {
+      for (let controlAreaItem of controlarea) { 
+        if (!controlAreaItem.id) {
+          //////console.log('Invalid controlAreaItem.id:', controlAreaItem.id);
+          continue; // ข้ามการประมวลผลหาก area_id ไม่ถูกต้อง
+        }
+        else{
+          //////console.log('valid controlAreaItem.id:', controlAreaItem.id);
+          //////console.log('valid controlAreaItem.name:', controlAreaItem.name);
+          //////console.log('valid vrf_id:', vrf_id,'valid user_id:', user_id);
+        }
+          let sp_set_update_vrf_area = await pool
+            .request()
+            .input("vrf_id", sql.Int, vrf_id)
+            .input("area_id", sql.NVarChar, String(controlAreaItem.id))
+            .input("area_name", sql.NVarChar, controlAreaItem.name)
+            .input("area_type", sql.NVarChar, 'พื้นที่ความมั่นคง')
+            .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of controlAreaItem
+            .input("stype", sql.NVarChar, type) 
+            .execute("sp_set_update_vrf_area");
+          output_ = sp_set_update_vrf_area.recordsets;
+          output_ = output_[0];
+          output = output_[0];
+          //////console.log(output);
+      }
+    }
+  } catch (err) {
+    //////console.log({ error: err });
+    return { error: err };
+  }
+  return output;
+}
+
 async function update_order(gfccp_order) {
   let NULL_ = null;
   let FLOAT_NULL_ = 0;
@@ -2722,8 +2883,8 @@ async function update_order(gfccp_order) {
   // let input_type = 'manual_add'
   let user_id = gfccp_order["user_id"];
   let tbGrandTotalAmount = gfccp_order["tbGrandTotalAmount"];
-  // console.log(unit_note_new_1000)
-  // console.log(note_new_1000)
+  // //////console.log(unit_note_new_1000)
+  // //////console.log(note_new_1000)
   try {
     let pool = await sql.connect(config);
     let update_order = await pool
@@ -2894,7 +3055,7 @@ async function update_order(gfccp_order) {
       .execute("update_order");
     return update_order.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
   //return add_manual_order.recordsets
@@ -2908,7 +3069,7 @@ async function update_approveproc(data) {
   let cashtobot = data["cashtobot"];
   let AllRowsDet = parseInt(data["AllRowsDet"]);
   let output_ = null;
-  console.log("Id: ", data["Id"]);
+  //////console.log("Id: ", data["Id"]);
 
   try {
     let pool = await sql.connect(config);
@@ -2927,26 +3088,26 @@ async function update_approveproc(data) {
       .execute("update_approveproc");
     output_ = update_approveproc.recordsets[0];
     output_ = parseInt(output_[0].newid_);
-    console.log("output_: ", output_);
+    //////console.log("output_: ", output_);
     for (var index = 1; index <= AllRowsDet; index++) {
-      console.log("output_: ", output_);
-      console.log(
+      //////console.log("output_: ", output_);
+      //////console.log(
         'data["ddlRoleEditId_' + index + '"]: ',
         data["ddlRoleEditId_" + index]
-      );
-      console.log(
+      // );
+      //////console.log(
         'data["ddlRoleEditName_' + index + '"]: ',
         data["ddlRoleEditName_" + index]
-      );
-      console.log(
+      // );
+      //////console.log(
         'data["ddlUserEditId_' + index + '"]: ',
         data["ddlUserEditId_" + index]
-      );
-      console.log(
+      // );
+      //////console.log(
         'data["ddlUserEditName_' + index + '"]: ',
         data["ddlUserEditName_" + index]
-      );
-      console.log('data["user_id"]: ', data["user_id"]);
+      // );
+      //////console.log('data["user_id"]: ', data["user_id"]);
       let update_approveproc_det = await pool
         .request()
         .input("id_approve_setting", sql.Int, output_)
@@ -2961,7 +3122,7 @@ async function update_approveproc(data) {
     }
     return output_;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
@@ -2975,7 +3136,7 @@ async function delete_app_proc_det(Id, user_id) {
       .execute("delete_app_proc_det");
     return delete_app_proc_det.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
@@ -2990,7 +3151,7 @@ async function update_vrfstatus(Id, Type_, user_id) {
       .execute("spUpdate_vrfstatus");
     return update_vrfstatus.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
@@ -3008,7 +3169,7 @@ async function update_user_vrf_status(Id
       .execute("spUpdate_user_vrf_status");
     return spUpdate_user_vrf_status.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
@@ -3020,7 +3181,7 @@ async function update_vrf_requester_trans_status_all(Id
   , io
 ) {
   try {
-    console.log('update_vrf_requester_trans_status_all Id: ', Id, 'Type_: ', Type_, 'user_id: ', user_id, 'role_id: ', role_id, 'work_flow_id: ', work_flow_id)
+    //////console.log('update_vrf_requester_trans_status_all Id: ', Id, 'Type_: ', Type_, 'user_id: ', user_id, 'role_id: ', role_id, 'work_flow_id: ', work_flow_id)
     let pool = await sql.connect(config);
     let update_vrf_requester_trans_status_all = await pool
       .request()
@@ -3033,7 +3194,7 @@ async function update_vrf_requester_trans_status_all(Id
     if (update_vrf_requester_trans_status_all.recordsets.length > 0 &&
       update_vrf_requester_trans_status_all.recordsets[0].length > 0) {
       let approveStatus = update_vrf_requester_trans_status_all.recordsets[0][0].approve_status;
-      console.log('approveStatus: ', approveStatus);
+      //////console.log('approveStatus: ', approveStatus);
       io.emit('new_vrf_send_approve', {
         message: 'new_vrf_send_approve!',
         Id: Id,
@@ -3042,12 +3203,12 @@ async function update_vrf_requester_trans_status_all(Id
         approve_status: approveStatus
       });
     } else {
-      console.log('No data found');
+      //////console.log('No data found');
     }
 
     return update_vrf_requester_trans_status_all.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
@@ -3056,11 +3217,11 @@ async function set_update_vrf_det_cancelcheckinout(Id,
   user_id,
   checkincheckout_det_id
 ) {
-  console.log('set_update_vrf_det_cancelcheckinout Id: '
-  , Id, 'Type: ', Type_
-  , 'user_id: ', user_id
-  , 'checkincheckout_det_id: ', checkincheckout_det_id
-  )
+  //////console.log('set_update_vrf_det_cancelcheckinout Id: '
+  // , Id, 'Type: ', Type_
+  // , 'user_id: ', user_id
+  // , 'checkincheckout_det_id: ', checkincheckout_det_id
+  // )
   try {
     let pool = await sql.connect(config);
     let sp_update_vrf_det_cancelcheckinout = await pool
@@ -3073,7 +3234,7 @@ async function set_update_vrf_det_cancelcheckinout(Id,
       .execute("sp_update_vrf_det_cancelcheckinout");
     return sp_update_vrf_det_cancelcheckinout.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
  }
@@ -3085,14 +3246,14 @@ async function set_sp_update_vrf_det_checkinout(Id,
 
   try { 
     const cardNo = card_no && card_no.trim() !== '' ? card_no : '';
-    console.log('set_sp_update_vrf_det_checkinout Id: ', Id
-    , 'Type: '
-    , Type_
-    , 'user_id: '
-    , user_id
-    , 'card_no: '
-    , cardNo
-    )    
+    //////console.log('set_sp_update_vrf_det_checkinout Id: ', Id
+    // , 'Type: '
+    // , Type_
+    // , 'user_id: '
+    // , user_id
+    // , 'card_no: '
+    // , cardNo
+    // )    
     let pool = await sql.connect(config);
     let sp_update_vrf_det_checkinout = await pool
       .request()
@@ -3104,12 +3265,12 @@ async function set_sp_update_vrf_det_checkinout(Id,
       .execute("sp_update_vrf_det_checkinout");
     return sp_update_vrf_det_checkinout.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
 // async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
-//   console.log('Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'comment: '
+//   //////console.log('Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'comment: '
 //     , comment)
 //   try {
 //     let pool = await sql.connect(config);
@@ -3122,12 +3283,12 @@ async function set_sp_update_vrf_det_checkinout(Id,
 //       .execute("sp_update_vrf_checkinount");
 //     return sp_update_vrf_checkinount.recordsets;
 //   } catch (err) {
-//     console.log(err);
+//     //////console.log(err);
 //   }
 // }
 async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
-  console.log('Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'comment: '
-    , comment)
+  //////console.log('Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'comment: '
+    // , comment)
   try {
     let pool = await sql.connect(config);
     let sp_update_vrf_checkinount = await pool
@@ -3139,17 +3300,17 @@ async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
       .execute("sp_update_vrf_checkinount");
     return sp_update_vrf_checkinount.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
 async function update_vrf_approve_status_from_mail(user_id, vrf_id
   , type, io
 ) {
-  console.log('update_vrf_approve_status_from_mail userId: ', user_id
-    , 'vrf_id: ', vrf_id
-    , 'type: ', type
-  )
+  //////console.log('update_vrf_approve_status_from_mail userId: ', user_id
+  //   , 'vrf_id: ', vrf_id
+  //   , 'type: ', type
+  // )
   try {
 
     let pool = await sql.connect(config);
@@ -3161,11 +3322,11 @@ async function update_vrf_approve_status_from_mail(user_id, vrf_id
       .input("user_id", sql.Int, user_id)
       .execute("sp_update_vrf_approve_from_mail");
     let approveStatus = sp_update_vrf_approve_from_mail.recordsets[0][0].approve_status;
-    console.log('update_vrf_approve_status_from_mail approveStatus: '
-      , approveStatus
-      , 'role_id_approver: '
-      , sp_update_vrf_approve_from_mail.recordsets[0][0].role_id_approver
-    )
+    //////console.log('update_vrf_approve_status_from_mail approveStatus: '
+    //   , approveStatus
+    //   , 'role_id_approver: '
+    //   , sp_update_vrf_approve_from_mail.recordsets[0][0].role_id_approver
+    // )
     if (sp_update_vrf_approve_from_mail.recordsets[0][0].Id) {
       let Id = sp_update_vrf_approve_from_mail.recordsets[0][0].Id;
       let type_new_vrf_send_approve = parseInt(sp_update_vrf_approve_from_mail.recordsets[0][0].role_id_approver) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
@@ -3180,7 +3341,7 @@ async function update_vrf_approve_status_from_mail(user_id, vrf_id
 
     return sp_update_vrf_approve_from_mail.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
@@ -3197,7 +3358,7 @@ async function update_vrf_trans_status(Id
 ) {
   try {
     let type_new_vrf_send_approve = parseInt(role_id) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
-    console.log('type_new_vrf_send_approve: ', type_new_vrf_send_approve)
+    //////console.log('type_new_vrf_send_approve: ', type_new_vrf_send_approve)
     let pool = await sql.connect(config);
     let update_vrf_trans_status = await pool
       .request()
@@ -3211,7 +3372,7 @@ async function update_vrf_trans_status(Id
       .input("division_id", sql.Int, division_id)
       .execute("spUpdate_vrf_trans_status");
     let approveStatus = update_vrf_trans_status.recordsets[0][0].approve_status;
-    console.log('approveStatus: ', approveStatus)
+    //////console.log('approveStatus: ', approveStatus)
     if(lastrow===true)
     { 
       io.emit(type_new_vrf_send_approve, {
@@ -3226,7 +3387,7 @@ async function update_vrf_trans_status(Id
 
     return update_vrf_trans_status.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
@@ -3239,8 +3400,8 @@ async function update_vrf_trans_approve_status(Id, Type_
   , division_id
   , io
 ) {
-  console.log('update_vrf_trans_approve_status Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'role_id: '
-    , role_id, 'work_flow_id', work_flow_id)
+  //////console.log('update_vrf_trans_approve_status Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'role_id: '
+    // , role_id, 'work_flow_id', work_flow_id)
   try {
 
     let pool = await sql.connect(config);
@@ -3257,7 +3418,7 @@ async function update_vrf_trans_approve_status(Id, Type_
       .input("division_id", sql.Int, division_id)
       .execute("sp_update_vrf_trans_approve_status");
     let approveStatus = sp_update_vrf_trans_approve_status.recordsets[0][0].approve_status;
-    console.log('approveStatus: ', approveStatus)
+    //////console.log('approveStatus: ', approveStatus)
     io.emit(type_new_vrf_send_approve, {
       message: type_new_vrf_send_approve,
       Id: Id,
@@ -3267,7 +3428,7 @@ async function update_vrf_trans_approve_status(Id, Type_
     });
     return sp_update_vrf_trans_approve_status.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
@@ -3280,11 +3441,14 @@ async function get_upload_filename(Id, Type_, user_id) {
       .execute("spGet_upload_filename");
     return spGet_upload_filename.recordsets;
   } catch (err) {
-    console.log({ error: err });
+    //////console.log({ error: err });
     return ({ error: err })
   }
 }
 module.exports = { 
+  set_update_vrf_area: set_update_vrf_area,
+  get_MeetingAreas_selectedItems: get_MeetingAreas_selectedItems,
+  set_vrf_area: set_vrf_area,
   get_categoryControlAreas: get_categoryControlAreas,
   get_Group_MeetingControlAreas: get_Group_MeetingControlAreas,
   get_group_categoryAreas: get_group_categoryAreas,
@@ -3347,8 +3511,8 @@ module.exports = {
   set_manual_add_vrf_trans: set_manual_add_vrf_trans,
   get_vrf_list: get_vrf_list,
   get_search_vrf: get_search_vrf,
-  set_manual_update_vrf_det: set_manual_update_vrf_det,
-  set_manual_update_vrf: set_manual_update_vrf,
+  set_update_vrf_template_det: set_update_vrf_template_det,
+  set_update_vrf_template: set_update_vrf_template,
   get_templete_vrf_det: get_templete_vrf_det,
   get_templete_vrf: get_templete_vrf,
   get_templete_vrf_list: get_templete_vrf_list,
