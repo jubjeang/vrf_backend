@@ -1659,23 +1659,34 @@ async function set_manual_add_vrf_trans(obj_json,io) {
     return ({ error: err })
   }
 }
-async function set_vrf_area(area, controlarea,vrf_id,user_id,type) {
+async function set_update_vrf_area(area, controlarea,vrf_id,user_id,type) {
   let output_ = null;
   let output = null;
+
+  let pool = await sql.connect(config);
+  let sp_set_deactive_vrf_area = await pool
+    .request()
+    .input("vrf_id", sql.Int, vrf_id)
+    .input("ModifyBy", sql.Int, user_id)
+    .execute("sp_set_deactive_vrf_area");
+   output_ = sp_set_deactive_vrf_area.recordsets;
+
   try {
     let pool = await sql.connect(config);
     if (area && area.length > 0) {
       for (let areaItem of area) { 
-        if (!areaItem.id) {
-          //////console.log('Invalid area_id:', areaItem.id);
-          continue; // ข้ามการประมวลผลหาก area_id ไม่ถูกต้อง
+        let areaItem_id;
+        let is_area_group;
+        
+        // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
+        if (!('id' in areaItem) || areaItem.id === null || areaItem.id === undefined) {    
+          areaItem_id = removeWord(areaItem.name, " ทั้งหมด");
+          is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
+        } else { 
+          areaItem_id = areaItem.id;
+          is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
         }
-        else{
-          //////console.log('valid areaItem.id:', areaItem.id);
-          //////console.log('valid areaItem.name:', areaItem.name);
-          //////console.log('valid vrf_id:', vrf_id,'valid user_id:', user_id);
-        }
-        let spAdd_vrf_area = await pool
+        let sp_set_update_vrf_area = await pool
           .request()
           .input("vrf_id", sql.Int, vrf_id)
           .input("area_id", sql.NVarChar, String(areaItem.id))
@@ -1683,41 +1694,149 @@ async function set_vrf_area(area, controlarea,vrf_id,user_id,type) {
           .input("area_type", sql.NVarChar, 'พื้นที่ทั่วไป')                    
           .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of areaItem
           .input("stype", sql.NVarChar, type) 
-          .execute("spAdd_vrf_area");
-        output_ = spAdd_vrf_area.recordsets;
+          .input("is_area_group_", sql.Bit, is_area_group) 
+          .execute("sp_set_update_vrf_area");
+        output_ = sp_set_update_vrf_area.recordsets;
         output_ = output_[0];
         output = output_[0];
         //////console.log(output);
       }
     }
+    //console.log('set_update_vrf_area controlarea: ', controlarea);
     if (controlarea && controlarea.length > 0) {
       for (let controlAreaItem of controlarea) { 
-        if (!controlAreaItem.id) {
-          //////console.log('Invalid controlAreaItem.id:', controlAreaItem.id);
-          continue; // ข้ามการประมวลผลหาก area_id ไม่ถูกต้อง
+        let controlAreaItem_id;
+        let is_area_group;
+        
+        // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
+        if (!('id' in controlAreaItem) || controlAreaItem.id === null || controlAreaItem.id === undefined) {    
+          controlAreaItem_id = removeWord(controlAreaItem.name, " ทั้งหมด");
+          is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
+        } else { 
+          controlAreaItem_id = controlAreaItem.id;
+          is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
         }
-        else{
-          //////console.log('valid controlAreaItem.id:', controlAreaItem.id);
-          //////console.log('valid controlAreaItem.name:', controlAreaItem.name);
-          //////console.log('valid vrf_id:', vrf_id,'valid user_id:', user_id);
+    
+        // ตรวจสอบว่า controlAreaItem_id เป็นสตริงที่ถูกต้อง
+        if (typeof controlAreaItem_id !== 'string' || controlAreaItem_id.trim() === '') {
+          console.error('Invalid area_id:', controlAreaItem_id);
+          controlAreaItem_id=String(controlAreaItem_id);
+          //continue; // ข้ามการประมวลผลหากค่าไม่ถูกต้อง
+        }        
+        //console.log('vrf_id:', vrf_id, 'area_id:', controlAreaItem_id, 'area_name:', controlAreaItem.name, 'area_type:', 'พื้นที่ความมั่นคง', 'createby:', user_id, 'stype:', type, 'is_area_group_:', is_area_group);
+        try {
+          let sp_set_update_vrf_area = await pool
+            .request()
+            .input("vrf_id", sql.Int, vrf_id)
+            .input("area_id", sql.NVarChar, controlAreaItem_id) // ใช้ NVarChar เพราะใน Stored Procedure รับเป็น nvarchar
+            .input("area_name", sql.NVarChar, controlAreaItem.name)
+            .input("area_type", sql.NVarChar, 'พื้นที่ความมั่นคง')
+            .input("createby", sql.NVarChar, user_id)
+            .input("stype", sql.NVarChar, type)
+            .input("is_area_group_", sql.Bit, is_area_group)
+            .execute("sp_set_update_vrf_area");    
+          output_ = sp_set_update_vrf_area.recordsets;
+          output_ = output_[0];
+          output = output_[0];
+          //console.log('output:', output);
+        } catch (err) {
+          console.error(' error:', err);
         }
+      }
+    }    
+  } catch (err) {
+    console.log('error: ',err );
+    return { error: err };
+  }
+  return output;
+}
+async function set_vrf_area(area, controlarea,vrf_id,user_id,type) {
+  let output_ = null;
+  let output = null;
+  try { 
+    console.log('area: ', area);
+    let pool = await sql.connect(config);
+    if (area && area.length > 0) {
+      for (let areaItem of area) { 
+        let areaItem_id;
+        let is_area_group;        
+        // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
+        if (!('id' in areaItem) || areaItem.id === null || areaItem.id === undefined) {    
+          areaItem_id = removeWord(areaItem.name, " ทั้งหมด");
+          is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
+        } else { 
+          areaItem_id = areaItem.id;
+          areaItem_id = String(areaItem_id);
+          is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
+        }
+        console.log("set_vrf_area vrf_id area: ", vrf_id
+          , "areaItem.id: ", areaItem_id
+          , "areaItem.name: ", areaItem.name
+          ,"type: ", type
+        , "user_id: ", user_id
+      );
+        let spAdd_vrf_area = await pool
+          .request()
+          .input("vrf_id", sql.Int, vrf_id)
+          .input("area_id", sql.NVarChar, areaItem_id)
+          .input("area_name", sql.NVarChar, areaItem.name)
+          .input("area_type", sql.NVarChar, 'พื้นที่ทั่วไป')                    
+          .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of areaItem
+          .input("stype", sql.NVarChar, type)
+          .input("is_area_group_", sql.Bit, is_area_group) 
+          .execute("spAdd_vrf_area");
+        output_ = spAdd_vrf_area.recordsets;
+        output_ = output_[0];
+        output = output_[0];
+        console.log("set_vrf_area area output: ", output);
+      }
+    }
+    if (controlarea && controlarea.length > 0) {
+      for (let controlAreaItem of controlarea) { 
+        let controlAreaItem_id;
+        let is_area_group;
+        
+        // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
+        if (!('id' in controlAreaItem) || controlAreaItem.id === null || controlAreaItem.id === undefined) {    
+          controlAreaItem_id = removeWord(controlAreaItem.name, " ทั้งหมด");
+          is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
+        } else { 
+          controlAreaItem_id = controlAreaItem.id;
+          is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
+        }
+    
+        // ตรวจสอบว่า controlAreaItem_id เป็นสตริงที่ถูกต้อง
+        if (typeof controlAreaItem_id !== 'string' || controlAreaItem_id.trim() === '') {
+          console.error('Invalid area_id:', controlAreaItem_id);
+          controlAreaItem_id=String(controlAreaItem_id);
+          //continue; // ข้ามการประมวลผลหากค่าไม่ถูกต้อง
+        }
+        console.log("set_vrf_area vrf_id controlarea: ", vrf_id
+          , "controlAreaItem_id: ", controlAreaItem_id
+          , "controlAreaItem.name: ", controlAreaItem.name
+          ,"type: ", type
+          , "user_id: ", user_id
+      );
+
           let spAdd_vrf_area = await pool
             .request()
             .input("vrf_id", sql.Int, vrf_id)
-            .input("area_id", sql.NVarChar, String(controlAreaItem.id))
+            .input("area_id", sql.NVarChar, controlAreaItem_id)
             .input("area_name", sql.NVarChar, controlAreaItem.name)
             .input("area_type", sql.NVarChar, 'พื้นที่ความมั่นคง')
             .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of controlAreaItem
-            .input("stype", sql.NVarChar, type) 
+            .input("stype", sql.NVarChar, type)
+            .input("is_area_group_", sql.Bit, is_area_group)
             .execute("spAdd_vrf_area");
           output_ = spAdd_vrf_area.recordsets;
           output_ = output_[0];
           output = output_[0];
-          //////console.log(output);
+          console.log('set_vrf_area controlarea output: ',output);
       }
     }
   } catch (err) {
     //////console.log({ error: err });
+    console.error('error: ', err);
     return { error: err };
   }
   return output;
@@ -2207,99 +2326,7 @@ async function set_update_vrf_template_det(obj_json) {
     return ({ error: err })
   }
 }
-async function set_update_vrf_area(area, controlarea,vrf_id,user_id,type) {
-  let output_ = null;
-  let output = null;
 
-  let pool = await sql.connect(config);
-  let sp_set_deactive_vrf_area = await pool
-    .request()
-    .input("vrf_id", sql.Int, vrf_id)
-    .input("ModifyBy", sql.Int, user_id)
-    .execute("sp_set_deactive_vrf_area");
-   output_ = sp_set_deactive_vrf_area.recordsets;
-
-  try {
-    let pool = await sql.connect(config);
-    if (area && area.length > 0) {
-      for (let areaItem of area) { 
-        if (!areaItem.id) {
-          //console.log('Invalid area_id:', areaItem.id);
-          continue; // ข้ามการประมวลผลหาก area_id ไม่ถูกต้อง
-        }
-        else{
-          // console.log('valid areaItem.id:', areaItem.id);
-          // console.log('valid areaItem.name:', areaItem.name);
-          // console.log('valid vrf_id:', vrf_id,'valid user_id:', user_id);
-        }
-        let sp_set_update_vrf_area = await pool
-          .request()
-          .input("vrf_id", sql.Int, vrf_id)
-          .input("area_id", sql.NVarChar, String(areaItem.id))
-          .input("area_name", sql.NVarChar, areaItem.name)
-          .input("area_type", sql.NVarChar, 'พื้นที่ทั่วไป')                    
-          .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of areaItem
-          .input("stype", sql.NVarChar, type) 
-          .input("is_area_group_", sql.Bit, 0) 
-          .execute("sp_set_update_vrf_area");
-        output_ = sp_set_update_vrf_area.recordsets;
-        output_ = output_[0];
-        output = output_[0];
-        //////console.log(output);
-      }
-    }
-    console.log('set_update_vrf_area controlarea: ', controlarea);
-    if (controlarea && controlarea.length > 0) {
-      for (let controlAreaItem of controlarea) { 
-        let controlAreaItem_id;
-        let is_area_group;
-        
-        // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
-        if (!('id' in controlAreaItem) || controlAreaItem.id === null || controlAreaItem.id === undefined) {    
-          controlAreaItem_id = removeWord(controlAreaItem.name, " ทั้งหมด");
-          is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
-        } else { 
-          controlAreaItem_id = controlAreaItem.id;
-          is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
-        }
-    
-        // ตรวจสอบว่า controlAreaItem_id เป็นสตริงที่ถูกต้อง
-        if (typeof controlAreaItem_id !== 'string' || controlAreaItem_id.trim() === '') {
-          console.error('Invalid area_id:', controlAreaItem_id);
-          controlAreaItem_id=String(controlAreaItem_id);
-          //continue; // ข้ามการประมวลผลหากค่าไม่ถูกต้อง
-        }
-        
-        console.log('vrf_id:', vrf_id, 'area_id:', controlAreaItem_id, 'area_name:', controlAreaItem.name, 'area_type:', 'พื้นที่ความมั่นคง', 'createby:', user_id, 'stype:', type, 'is_area_group_:', is_area_group);
-        
-        try {
-          let sp_set_update_vrf_area = await pool
-            .request()
-            .input("vrf_id", sql.Int, vrf_id)
-            .input("area_id", sql.NVarChar, controlAreaItem_id) // ใช้ NVarChar เพราะใน Stored Procedure รับเป็น nvarchar
-            .input("area_name", sql.NVarChar, controlAreaItem.name)
-            .input("area_type", sql.NVarChar, 'พื้นที่ความมั่นคง')
-            .input("createby", sql.NVarChar, user_id)
-            .input("stype", sql.NVarChar, type)
-            .input("is_area_group_", sql.Bit, is_area_group)
-            .execute("sp_set_update_vrf_area");
-    
-          output_ = sp_set_update_vrf_area.recordsets;
-          output_ = output_[0];
-          output = output_[0];
-          console.log('output:', output);
-        } catch (err) {
-          console.error('SQL error:', err);
-        }
-      }
-    }
-    
-  } catch (err) {
-    //////console.log({ error: err });
-    return { error: err };
-  }
-  return output;
-}
 const removeWord = (str, wordToRemove) => {
   const regex = new RegExp(`\\s*${wordToRemove}\\s*`, 'g');
   return str.replace(regex, '');

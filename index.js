@@ -2019,8 +2019,6 @@ app.post('/set_manual_add_vrf_template', urlencodedParser, (req, res) => {
             obj = x
         }
         let obj_json = JSON.parse(obj)
-        //console.log('set_manual_add_vrf_template obj_json: ', obj_json)
-        //console.log('set_manual_add_vrf_template obj_json.user_id: ', obj_json.user_id)
         // Check if area and controlarea have data before parsing
         let area = [];
         let controlarea = [];
@@ -2044,11 +2042,12 @@ app.post('/set_manual_add_vrf_template', urlencodedParser, (req, res) => {
         //add vrf_template and vrf_area
         dboperations.set_manual_add_vrf_template(obj_json).then((result) => { 
             Id=result
-            //console.log('set_manual_add_vrf_template Id: ', Id)
+            console.log('set_manual_add_vrf_template Id: ', Id)
             dboperations.set_vrf_area(area, controlarea,Id,obj_json.user_id,'template').then((result) => {                 
                 //console.log('set_vrf_area result: ', result)
             }).catch((err) => {
                 //console.log('error: ', err)
+                console.error('set_manual_add_vrf_template Id error: ', err);
                 res.json({ error: err })
             })
             res.json(Id)
