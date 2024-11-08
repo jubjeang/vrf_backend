@@ -615,12 +615,12 @@ async function get_vrf_reports(
     formattedtbDateT = '';
     dateT = '';
     formattedDateT = null;
-  } 
+  }
   try {
     let pool = await sql.connect(config);
     //////console.log('get_vrf_reports  formattedDateF:', formattedDateF
-      // , 'formattedDateT: ', formattedDateT
-      // , 'type: ', type);
+    // , 'formattedDateT: ', formattedDateT
+    // , 'type: ', type);
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -636,7 +636,7 @@ async function get_vrf_reports(
 }
 async function get_search_vrf_trans(
   tbDateF,
-  tbDateT 
+  tbDateT
 ) {
   let tbDateF_;
   let formattedtbDateF;
@@ -669,11 +669,11 @@ async function get_search_vrf_trans(
     formattedtbDateT = '';
     dateT = '';
     formattedDateT = null;
-  } 
+  }
   try {
     let pool = await sql.connect(config);
     //////console.log('get_search_vrf_trans  formattedDateF:', formattedDateF
-      // , 'formattedDateT: ', formattedDateT);
+    // , 'formattedDateT: ', formattedDateT);
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -759,11 +759,11 @@ async function get_search_vrf_approve_trans(
     let pool = await sql.connect(config);
 
     //////console.log('get_search_vrf_approve_trans checkin_status_: ', checkin_status_, 'requestor_id_: ', requestor_id_, 'area_id_: ', area_id_
-      // , 'requestor_dept_id_: ', requestor_dept_id_
-      // , 'formattedDateF: ', formattedDateF
-      // , 'formattedDateT: ', formattedDateT
-      // , 'approve_status: ', approve_status
-      // , 'role_id: ', role_id);
+    // , 'requestor_dept_id_: ', requestor_dept_id_
+    // , 'formattedDateF: ', formattedDateF
+    // , 'formattedDateT: ', formattedDateT
+    // , 'approve_status: ', approve_status
+    // , 'role_id: ', role_id);
     // สร้าง request และเพิ่ม input parameters
     let request = pool.request();
     request.input('formattedDateF', sql.Date, formattedDateF);
@@ -834,13 +834,13 @@ async function get_search_vrf_for_guard(
     dateT = '';
     formattedDateT = null;
   }
-  let checkin_status_ = checkin_status ? parseInt(checkin_status) : null;    
+  let checkin_status_ = checkin_status ? parseInt(checkin_status) : null;
   // let checkin_status_ =
   //     checkin_status !== undefined && checkin_status !== '' && checkin_status !== null && !isNaN(checkin_status)
   //       ? parseInt(checkin_status)
   //       : null;
   let approve_status_ = approve_status ? approve_status : null;
-    
+
   // let approve_status_ =
   //   approve_status !== undefined && approve_status !== '' && approve_status !== null && !isNaN(approve_status)
   //     ? approve_status
@@ -863,15 +863,15 @@ async function get_search_vrf_for_guard(
   //       : null;    
   let requestor_dept_id_ =
     requestor_dept_id ? parseInt(requestor_dept_id) : null;
-      // let requestor_dept_id_ =
-      // requestor_dept_id !== undefined &&
-      //   requestor_dept_id !== '' &&
-      //   requestor_dept_id !== null &&
-      //   !isNaN(requestor_dept_id)
-      //   ? parseInt(requestor_dept_id)
-      //   : null; 
+  // let requestor_dept_id_ =
+  // requestor_dept_id !== undefined &&
+  //   requestor_dept_id !== '' &&
+  //   requestor_dept_id !== null &&
+  //   !isNaN(requestor_dept_id)
+  //   ? parseInt(requestor_dept_id)
+  //   : null; 
   let requestor_ = requestor ? requestor : null;
-  let card_no_ = card_no ? card_no : null;    
+  let card_no_ = card_no ? card_no : null;
 
   try {
     let pool = await sql.connect(config);
@@ -959,7 +959,7 @@ async function get_search_vrf_list(
   //////console.log('approve_status: ', approve_status);
   let approve_status_ =
     approve_status !== undefined && approve_status !== '' && approve_status !== null ? approve_status : null;
-    let contactor_ =
+  let contactor_ =
     contactor !== undefined && contactor !== '' && contactor !== null ? contactor : null;
   let requestor_id_ =
     requestor_id !== undefined && requestor_id !== '' && requestor_id !== null && !isNaN(requestor_id)
@@ -1237,10 +1237,10 @@ async function get_data_approve_list_for_security(
     let pool = await sql.connect(config);
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
     //////console.log('get_data_approve_list_for_security department_id: ', department_id
-      // , 'branch_id: ', branch_id
-      // , 'role_id: ', role_id
-      // , 'division_id: ', division_id
-      // , 'Id: ', Id)
+    // , 'branch_id: ', branch_id
+    // , 'role_id: ', role_id
+    // , 'division_id: ', division_id
+    // , 'Id: ', Id)
     let spGet_data_approve_list = await pool
       .request()
       .input("department_id", sql.Int, department_id)
@@ -1266,10 +1266,10 @@ async function get_data_approve_list(
     let pool = await sql.connect(config);
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
     //////console.log('get_data_approve_list department_id: ', department_id
-      // , 'branch_id: ', branch_id
-      // , 'role_id: ', role_id
-      // , 'division_id: ', division_id
-      // , 'Id: ', Id)
+    // , 'branch_id: ', branch_id
+    // , 'role_id: ', role_id
+    // , 'division_id: ', division_id
+    // , 'Id: ', Id)
     let spGet_data_approve_list = await pool
       .request()
       .input("department_id", sql.Int, department_id)
@@ -1307,8 +1307,7 @@ async function get_user_list_by_dept(
 async function get_user_list(
   // department_id,
   // branch_id
-)
-{
+) {
   try {
     let pool = await sql.connect(config);
     let sp_UserLst = await pool
@@ -1363,7 +1362,6 @@ async function get_vrf_list(
   branch_id,
   user_id
 ) {
-
   try {
     let pool = await sql.connect(config);
     // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
@@ -1518,19 +1516,54 @@ async function get_mail_vrf_info(Id
     return [{ error: error }];
   }
 }
-async function getEmail_recipient(Id) {
+async function getEmail_Manager(Id) {
+  try {
+    let pool = await sql.connect(config);
+    let spGetEmail_Manager = await pool
+      .request()
+      .input("id", sql.Int, Id)
+      .execute("spGetEmail_Manager");
+    return spGetEmail_Manager.recordsets;
+  } catch (error) {
+    console.error("error: ", error);
+    return [{ error: error }];
+  }
+}
+async function getEmail_recipient(area_id, area_type, is_area_group, vrf_id, name) {
   try {
     let pool = await sql.connect(config);
     let spGetEmail_recipient = await pool
       .request()
-      .input("id", sql.Int, Id)
+      .input("area_id", sql.Int, area_id)
+      .input("area_type", sql.NVarChar, area_type)
+      .input("is_area_group", sql.Bit, is_area_group)
+      .input("vrf_id", sql.Int, vrf_id)
+      .input("name", sql.NVarChar, name)
       .execute("spGetEmail_recipient");
+    // console.log("getEmail_recipient with parameters: ", {
+    //   area_id, area_type, is_area_group, vrf_id, name
+    // });
+    // console.log("getEmail_recipient result: ", spGetEmail_recipient.recordsets);
     return spGetEmail_recipient.recordsets;
   } catch (error) {
     console.error("error: ", error);
     return [{ error: error }];
   }
 }
+//--------20240917
+// async function getEmail_recipient(Id) {
+//   try {
+//     let pool = await sql.connect(config);
+//     let spGetEmail_recipient = await pool
+//       .request()
+//       .input("id", sql.Int, Id)
+//       .execute("spGetEmail_recipient");
+//     return spGetEmail_recipient.recordsets;
+//   } catch (error) {
+//     console.error("error: ", error);
+//     return [{ error: error }];
+//   }
+// }
 async function get_MeetingAreas_selectedItems(Id) {
   try {
     let pool = await sql.connect(config);
@@ -1618,7 +1651,7 @@ async function set_add_user_vrf(obj_json) {
     return ({ error: err })
   }
 }
-async function set_manual_add_vrf_trans(obj_json,io) {
+async function set_manual_add_vrf_trans(obj_json, io) {
   let output_ = null;
   let output = null;
   //////console.log("set_manual_add_vrf_trans obj_json: ", obj_json);
@@ -1634,7 +1667,7 @@ async function set_manual_add_vrf_trans(obj_json,io) {
       .input("requestor_dept", sql.Int, obj_json.requestor_dept)
       .input("requestor_phone", sql.NVarChar, obj_json.requestor_phone)
       .input("navigator", sql.Int, obj_json.navigator)
-      .input("area", sql.Int, obj_json.area)
+      // .input("area", sql.Int, obj_json.area)
       .input("attach_file", sql.NVarChar, obj_json.file_name)
       .input("attach_file_origin", sql.NVarChar, obj_json.file_originalname)
       .input("templete_id", sql.NVarChar, obj_json.templete_id)
@@ -1659,7 +1692,7 @@ async function set_manual_add_vrf_trans(obj_json,io) {
     return ({ error: err })
   }
 }
-async function set_update_vrf_area(area, controlarea,vrf_id,user_id,type) {
+async function set_update_vrf_area(area, controlarea, vrf_id, user_id, type) {
   let output_ = null;
   let output = null;
 
@@ -1669,20 +1702,20 @@ async function set_update_vrf_area(area, controlarea,vrf_id,user_id,type) {
     .input("vrf_id", sql.Int, vrf_id)
     .input("ModifyBy", sql.Int, user_id)
     .execute("sp_set_deactive_vrf_area");
-   output_ = sp_set_deactive_vrf_area.recordsets;
+  output_ = sp_set_deactive_vrf_area.recordsets;
 
   try {
     let pool = await sql.connect(config);
     if (area && area.length > 0) {
-      for (let areaItem of area) { 
+      for (let areaItem of area) {
         let areaItem_id;
         let is_area_group;
-        
+
         // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
-        if (!('id' in areaItem) || areaItem.id === null || areaItem.id === undefined) {    
+        if (!('id' in areaItem) || areaItem.id === null || areaItem.id === undefined) {
           areaItem_id = removeWord(areaItem.name, " ทั้งหมด");
           is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
-        } else { 
+        } else {
           areaItem_id = areaItem.id;
           is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
         }
@@ -1691,10 +1724,10 @@ async function set_update_vrf_area(area, controlarea,vrf_id,user_id,type) {
           .input("vrf_id", sql.Int, vrf_id)
           .input("area_id", sql.NVarChar, String(areaItem.id))
           .input("area_name", sql.NVarChar, areaItem.name)
-          .input("area_type", sql.NVarChar, 'พื้นที่ทั่วไป')                    
+          .input("area_type", sql.NVarChar, 'พื้นที่ทั่วไป')
           .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of areaItem
-          .input("stype", sql.NVarChar, type) 
-          .input("is_area_group_", sql.Bit, is_area_group) 
+          .input("stype", sql.NVarChar, type)
+          .input("is_area_group_", sql.Bit, is_area_group)
           .execute("sp_set_update_vrf_area");
         output_ = sp_set_update_vrf_area.recordsets;
         output_ = output_[0];
@@ -1704,25 +1737,25 @@ async function set_update_vrf_area(area, controlarea,vrf_id,user_id,type) {
     }
     //console.log('set_update_vrf_area controlarea: ', controlarea);
     if (controlarea && controlarea.length > 0) {
-      for (let controlAreaItem of controlarea) { 
+      for (let controlAreaItem of controlarea) {
         let controlAreaItem_id;
         let is_area_group;
-        
+
         // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
-        if (!('id' in controlAreaItem) || controlAreaItem.id === null || controlAreaItem.id === undefined) {    
+        if (!('id' in controlAreaItem) || controlAreaItem.id === null || controlAreaItem.id === undefined) {
           controlAreaItem_id = removeWord(controlAreaItem.name, " ทั้งหมด");
           is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
-        } else { 
+        } else {
           controlAreaItem_id = controlAreaItem.id;
           is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
         }
-    
+
         // ตรวจสอบว่า controlAreaItem_id เป็นสตริงที่ถูกต้อง
         if (typeof controlAreaItem_id !== 'string' || controlAreaItem_id.trim() === '') {
           console.error('Invalid area_id:', controlAreaItem_id);
-          controlAreaItem_id=String(controlAreaItem_id);
+          controlAreaItem_id = String(controlAreaItem_id);
           //continue; // ข้ามการประมวลผลหากค่าไม่ถูกต้อง
-        }        
+        }
         //console.log('vrf_id:', vrf_id, 'area_id:', controlAreaItem_id, 'area_name:', controlAreaItem.name, 'area_type:', 'พื้นที่ความมั่นคง', 'createby:', user_id, 'stype:', type, 'is_area_group_:', is_area_group);
         try {
           let sp_set_update_vrf_area = await pool
@@ -1734,7 +1767,7 @@ async function set_update_vrf_area(area, controlarea,vrf_id,user_id,type) {
             .input("createby", sql.NVarChar, user_id)
             .input("stype", sql.NVarChar, type)
             .input("is_area_group_", sql.Bit, is_area_group)
-            .execute("sp_set_update_vrf_area");    
+            .execute("sp_set_update_vrf_area");
           output_ = sp_set_update_vrf_area.recordsets;
           output_ = output_[0];
           output = output_[0];
@@ -1743,95 +1776,98 @@ async function set_update_vrf_area(area, controlarea,vrf_id,user_id,type) {
           console.error(' error:', err);
         }
       }
-    }    
+    }
   } catch (err) {
-    console.log('error: ',err );
+    console.log('error: ', err);
     return { error: err };
   }
   return output;
 }
-async function set_vrf_area(area, controlarea,vrf_id,user_id,type) {
+async function set_vrf_area(area, controlarea, vrf_id, user_id, type) {
   let output_ = null;
   let output = null;
-  try { 
-    console.log('area: ', area);
+  try {
+    // console.log('set_vrf_area area: ', area);
     let pool = await sql.connect(config);
     if (area && area.length > 0) {
-      for (let areaItem of area) { 
+      for (let areaItem of area) {
         let areaItem_id;
-        let is_area_group;        
-        // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
-        if (!('id' in areaItem) || areaItem.id === null || areaItem.id === undefined) {    
-          areaItem_id = removeWord(areaItem.name, " ทั้งหมด");
-          is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
-        } else { 
-          areaItem_id = areaItem.id;
-          areaItem_id = String(areaItem_id);
-          is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
-        }
-        console.log("set_vrf_area vrf_id area: ", vrf_id
-          , "areaItem.id: ", areaItem_id
+        let is_area_group;
+        areaItem_id = (!('id' in areaItem) || areaItem.id === null || areaItem.id === undefined) ? areaItem.area_id : areaItem.id
+        areaItem.area_id && areaItem.id && (areaItem_id = areaItem.area_id);
+        areaItem_id = String(areaItem_id);
+        is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
+        console.log("set_vrf_area vrf_id controlarea: ", vrf_id
+          , "areaItem.area_id", areaItem.area_id
+          , "areaItem.id", areaItem.id
+          , "areaItem_id: ", areaItem_id
+          , "areaItem: ", areaItem
           , "areaItem.name: ", areaItem.name
-          ,"type: ", type
-        , "user_id: ", user_id
-      );
+          , "is_area_group: ", is_area_group
+          , "type: ", type
+          , "user_id: ", user_id
+        );
         let spAdd_vrf_area = await pool
           .request()
           .input("vrf_id", sql.Int, vrf_id)
           .input("area_id", sql.NVarChar, areaItem_id)
           .input("area_name", sql.NVarChar, areaItem.name)
-          .input("area_type", sql.NVarChar, 'พื้นที่ทั่วไป')                    
+          .input("area_type", sql.NVarChar, 'พื้นที่ทั่วไป')
           .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of areaItem
           .input("stype", sql.NVarChar, type)
-          .input("is_area_group_", sql.Bit, is_area_group) 
+          .input("is_area_group_", sql.Bit, is_area_group)
           .execute("spAdd_vrf_area");
         output_ = spAdd_vrf_area.recordsets;
         output_ = output_[0];
         output = output_[0];
-        console.log("set_vrf_area area output: ", output);
+        //console.log("set_vrf_area area output: ", output);
       }
     }
+    //---------control area---------
     if (controlarea && controlarea.length > 0) {
-      for (let controlAreaItem of controlarea) { 
+      for (let controlAreaItem of controlarea) {
         let controlAreaItem_id;
         let is_area_group;
-        
         // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
-        if (!('id' in controlAreaItem) || controlAreaItem.id === null || controlAreaItem.id === undefined) {    
-          controlAreaItem_id = removeWord(controlAreaItem.name, " ทั้งหมด");
+        if (!('id' in controlAreaItem) || controlAreaItem.id === null || controlAreaItem.id === undefined) {    // ไม่มี id
+          controlAreaItem_id = controlAreaItem.name.includes("ทั้งหมด") ? removeWord(controlAreaItem.name, " ทั้งหมด") : controlAreaItem.area_id;
           is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
-        } else { 
-          controlAreaItem_id = controlAreaItem.id;
-          is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
+        } else {
+          if (type === 'template') {
+            controlAreaItem_id = controlAreaItem.id
+          }
+          else {
+            controlAreaItem_id = (!('area_id' in controlAreaItem) || controlAreaItem.area_id === null || controlAreaItem.area_id === undefined) ? controlAreaItem.id : controlAreaItem.area_id
+          }
+          is_area_group = controlAreaItem.name.includes("ทั้งหมด") ? 1 : 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
         }
-    
         // ตรวจสอบว่า controlAreaItem_id เป็นสตริงที่ถูกต้อง
         if (typeof controlAreaItem_id !== 'string' || controlAreaItem_id.trim() === '') {
-          console.error('Invalid area_id:', controlAreaItem_id);
-          controlAreaItem_id=String(controlAreaItem_id);
+          controlAreaItem_id = String(controlAreaItem_id);
           //continue; // ข้ามการประมวลผลหากค่าไม่ถูกต้อง
         }
-        console.log("set_vrf_area vrf_id controlarea: ", vrf_id
-          , "controlAreaItem_id: ", controlAreaItem_id
-          , "controlAreaItem.name: ", controlAreaItem.name
-          ,"type: ", type
-          , "user_id: ", user_id
-      );
-
-          let spAdd_vrf_area = await pool
-            .request()
-            .input("vrf_id", sql.Int, vrf_id)
-            .input("area_id", sql.NVarChar, controlAreaItem_id)
-            .input("area_name", sql.NVarChar, controlAreaItem.name)
-            .input("area_type", sql.NVarChar, 'พื้นที่ความมั่นคง')
-            .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of controlAreaItem
-            .input("stype", sql.NVarChar, type)
-            .input("is_area_group_", sql.Bit, is_area_group)
-            .execute("spAdd_vrf_area");
-          output_ = spAdd_vrf_area.recordsets;
-          output_ = output_[0];
-          output = output_[0];
-          console.log('set_vrf_area controlarea output: ',output);
+        // console.log("set_vrf_area vrf_id controlarea: ", vrf_id
+        //   , "controlAreaItem.area_id",controlAreaItem.area_id
+        //   , "controlAreaItem.id",controlAreaItem.id
+        //   , "controlAreaItem_id: ", controlAreaItem_id
+        //   , "controlAreaItem.name: ", controlAreaItem.name
+        //   ,"is_area_group: ", is_area_group
+        //   ,"type: ", type
+        //   , "user_id: ", user_id
+        // );
+        let spAdd_vrf_area = await pool
+          .request()
+          .input("vrf_id", sql.Int, vrf_id)
+          .input("area_id", sql.NVarChar, controlAreaItem_id)
+          .input("area_name", sql.NVarChar, controlAreaItem.name)
+          .input("area_type", sql.NVarChar, 'พื้นที่ความมั่นคง')
+          .input("createby", sql.NVarChar, user_id) // Assuming user_id is part of controlAreaItem
+          .input("stype", sql.NVarChar, type)
+          .input("is_area_group_", sql.Bit, is_area_group)
+          .execute("spAdd_vrf_area");
+        output_ = spAdd_vrf_area.recordsets;
+        output_ = output_[0];
+        output = output_[0];
       }
     }
   } catch (err) {
@@ -1886,10 +1922,10 @@ async function set_manual_add_vrf_template(obj_json) {
     // output_ = output_[0];
     // output = output_[0];
     // return output[''];
-        output = spAdd_vrf_template.recordset;  // SCOPE_IDENTITY() should be in recordset
-        //////console.log("set_manual_add_vrf_template output: ", output);
-        //////console.log("set_manual_add_vrf_template output[0].InsertedID ", output[0].InsertedID);
-        return output[0].InsertedID;  // Return the InsertedID    
+    output = spAdd_vrf_template.recordset;  // SCOPE_IDENTITY() should be in recordset
+    //////console.log("set_manual_add_vrf_template output: ", output);
+    //////console.log("set_manual_add_vrf_template output[0].InsertedID ", output[0].InsertedID);
+    return output[0].InsertedID;  // Return the InsertedID    
   } catch (err) {
     //////console.log({ error: err });
     return ({ error: err })
@@ -1904,12 +1940,12 @@ async function set_manual_add_vrf_trans_det(obj_json) {
       if (key !== 'newid') {
         // //////console.log("key: ", key, "value: ", obj_json[key]);
         // //////console.log("obj_json[key].tbDateF ", obj_json[key].tbDateF);
-        if(obj_json[key].tbFullName)
-        {
-            let pool = await sql.connect(config);
-            let spAdd_vrf_det = await pool
+        if (obj_json[key].tbFullName) {
+          let pool = await sql.connect(config);
+          let spAdd_vrf_det = await pool
             .request()
             .input("vrf_id", sql.Int, newid)
+            .input("prefix", sql.Int, obj_json[key].ddlprefix)
             .input("fullname", sql.NVarChar, obj_json[key].tbFullName)
             .input("vehicle_registration", sql.NVarChar, obj_json[key].tbVehicle_Registration)
             .input("vehicle_brand", sql.Int, obj_json[key].ddlvehicle_brand)
@@ -1917,8 +1953,8 @@ async function set_manual_add_vrf_trans_det(obj_json) {
             .input("card_no", sql.NVarChar, obj_json[key].tbCardNo)
             .input("createby", sql.NVarChar, obj_json[key].user_id)
             .execute("spAdd_vrf_det");
-            output = spAdd_vrf_det.recordsets;
-        }        
+          output = spAdd_vrf_det.recordsets;
+        }
       }
     }
   } catch (err) {
@@ -1929,8 +1965,7 @@ async function set_manual_add_vrf_trans_det(obj_json) {
   }
   //return({state:1})	 
 }
-async function set_manual_add_vrf_template_det(obj_json) 
-{
+async function set_manual_add_vrf_template_det(obj_json) {
   // let obj_json = JSON.parse(obj);
   //////console.log("obj_json.newid: ", obj_json.newid);
   //////console.log("set_manual_add_vrf_template_det obj_json: ", obj_json);
@@ -1940,8 +1975,8 @@ async function set_manual_add_vrf_template_det(obj_json)
   let user_id = obj_json.user_id;
   try {
     for (let key in obj_json) {
-      if ( (key !== 'newid') && (key !== 'user_id') ) {
-         //////console.log("key: ", key, "value: ", obj_json[key]);
+      if ((key !== 'newid') && (key !== 'user_id')) {
+        //////console.log("key: ", key, "value: ", obj_json[key]);
         // //////console.log("obj_json[key].tbDateF ", obj_json[key].tbDateF);
         let pool = await sql.connect(config);
         let spAdd_vrf_template_det = await pool
@@ -1965,7 +2000,6 @@ async function set_manual_add_vrf_template_det(obj_json)
     return ({ state: 1 })
   }
 }
-
 async function set_update_urgentcase_vrf_det(obj_json) {
   try {
     //////console.log('set_update_urgentcase_vrf_det obj_json: ', obj_json)
@@ -2030,12 +2064,10 @@ async function set_update_urgentcase_vrf(obj_json) {
         && (obj_json[index].urgentcase_type === 'Absent'
           || obj_json[index].urgentcase_type === null
         )
-      ) 
-      { //existing vrf_det
-        if(obj_json[index].remark_urgentcase !== null 
-          && obj_json[index].remark_urgentcase !== '' 
-          && obj_json[index].urgentcase_type === null )
-        { 
+      ) { //existing vrf_det
+        if (obj_json[index].remark_urgentcase !== null
+          && obj_json[index].remark_urgentcase !== ''
+          && obj_json[index].urgentcase_type === null) {
           let pool = await sql.connect(config);
           let sp_update_urgentcase_vrf = await pool
             .request()
@@ -2047,10 +2079,9 @@ async function set_update_urgentcase_vrf(obj_json) {
             .execute("sp_update_urgentcase_vrf");
           let output_ = sp_update_urgentcase_vrf.recordsets;
         }
-        else if( (obj_json[index].remark_urgentcase === null 
-          || obj_json[index].remark_urgentcase === '' ) 
-          && obj_json[index].urgentcase_type !== null )
-        { 
+        else if ((obj_json[index].remark_urgentcase === null
+          || obj_json[index].remark_urgentcase === '')
+          && obj_json[index].urgentcase_type !== null) {
           let pool = await sql.connect(config);
           let sp_update_urgentcase_vrf = await pool
             .request()
@@ -2062,11 +2093,10 @@ async function set_update_urgentcase_vrf(obj_json) {
             .execute("sp_update_urgentcase_vrf");
           let output_ = sp_update_urgentcase_vrf.recordsets;
 
-        } 
-        else if( (obj_json[index].remark_urgentcase !== null 
-          || obj_json[index].remark_urgentcase !== '' ) 
-          && obj_json[index].urgentcase_type !== null )
-        { 
+        }
+        else if ((obj_json[index].remark_urgentcase !== null
+          || obj_json[index].remark_urgentcase !== '')
+          && obj_json[index].urgentcase_type !== null) {
           let pool = await sql.connect(config);
           let sp_update_urgentcase_vrf = await pool
             .request()
@@ -2080,35 +2110,33 @@ async function set_update_urgentcase_vrf(obj_json) {
 
         }
       }
-      else if (!obj_json[index].id)
-      {
+      else if (!obj_json[index].id) {
         let sp_add_urgentcase_person_vrf = await pool
-        .request()
-        .input("vrf_id", sql.Int, obj_json[index].vrf_id)
-        .input("fullname", sql.NVarChar, obj_json[index].fullname)
-        .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
-        .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
-        .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
-        .input("card_no", sql.NVarChar, obj_json[index].card_no)
-        .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
-        .input("user_id", sql.Int, obj_json[index].user_id)
-        .execute("sp_add_urgentcase_person_vrf");
+          .request()
+          .input("vrf_id", sql.Int, obj_json[index].vrf_id)
+          .input("fullname", sql.NVarChar, obj_json[index].fullname)
+          .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
+          .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
+          .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
+          .input("card_no", sql.NVarChar, obj_json[index].card_no)
+          .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
+          .input("user_id", sql.Int, obj_json[index].user_id)
+          .execute("sp_add_urgentcase_person_vrf");
         let output_ = sp_add_urgentcase_person_vrf.recordsets;
       }
-      else if (obj_json[index].id && obj_json[index].urgentcase_type === 'Additional')
-      {
+      else if (obj_json[index].id && obj_json[index].urgentcase_type === 'Additional') {
         let pool = await sql.connect(config);
         let sp_add_urgentcase_person_vrf = await pool
-        .request()
-        .input("vrf_id", sql.Int, obj_json[index].vrf_id)
-        .input("fullname", sql.NVarChar, obj_json[index].fullname)
-        .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
-        .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
-        .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
-        .input("card_no", sql.NVarChar, obj_json[index].card_no)
-        .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
-        .input("user_id", sql.Int, obj_json[index].user_id)
-        .execute("sp_add_urgentcase_person_vrf");
+          .request()
+          .input("vrf_id", sql.Int, obj_json[index].vrf_id)
+          .input("fullname", sql.NVarChar, obj_json[index].fullname)
+          .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
+          .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
+          .input("vehicle_registration", sql.NVarChar, obj_json[index].vehicle_registration)
+          .input("card_no", sql.NVarChar, obj_json[index].card_no)
+          .input("remark_urgentcase", sql.NVarChar, obj_json[index].remark_urgentcase)
+          .input("user_id", sql.Int, obj_json[index].user_id)
+          .execute("sp_add_urgentcase_person_vrf");
         let output_ = sp_add_urgentcase_person_vrf.recordsets;
 
       }
@@ -3144,19 +3172,19 @@ async function update_approveproc(data) {
     for (var index = 1; index <= AllRowsDet; index++) {
       //////console.log("output_: ", output_);
       //////console.log(
-        'data["ddlRoleEditId_' + index + '"]: ',
+      'data["ddlRoleEditId_' + index + '"]: ',
         data["ddlRoleEditId_" + index]
       // );
       //////console.log(
-        'data["ddlRoleEditName_' + index + '"]: ',
+      'data["ddlRoleEditName_' + index + '"]: ',
         data["ddlRoleEditName_" + index]
       // );
       //////console.log(
-        'data["ddlUserEditId_' + index + '"]: ',
+      'data["ddlUserEditId_' + index + '"]: ',
         data["ddlUserEditId_" + index]
       // );
       //////console.log(
-        'data["ddlUserEditName_' + index + '"]: ',
+      'data["ddlUserEditName_' + index + '"]: ',
         data["ddlUserEditName_" + index]
       // );
       //////console.log('data["user_id"]: ', data["user_id"]);
@@ -3289,14 +3317,14 @@ async function set_update_vrf_det_cancelcheckinout(Id,
     //////console.log({ error: err });
     return ({ error: err })
   }
- }
+}
 async function set_sp_update_vrf_det_checkinout(Id,
   Type_,
   user_id,
   card_no
 ) {
 
-  try { 
+  try {
     const cardNo = card_no && card_no.trim() !== '' ? card_no : '';
     //////console.log('set_sp_update_vrf_det_checkinout Id: ', Id
     // , 'Type: '
@@ -3340,7 +3368,7 @@ async function set_sp_update_vrf_det_checkinout(Id,
 // }
 async function set_sp_update_vrf_checkinount(Id, Type_, user_id, comment) {
   //////console.log('Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'comment: '
-    // , comment)
+  // , comment)
   try {
     let pool = await sql.connect(config);
     let sp_update_vrf_checkinount = await pool
@@ -3405,7 +3433,7 @@ async function update_vrf_trans_status(Id
   , department_id
   , branch_id
   , division_id
-  ,lastrow
+  , lastrow
   , io
 ) {
   try {
@@ -3425,8 +3453,7 @@ async function update_vrf_trans_status(Id
       .execute("spUpdate_vrf_trans_status");
     let approveStatus = update_vrf_trans_status.recordsets[0][0].approve_status;
     //////console.log('approveStatus: ', approveStatus)
-    if(lastrow===true)
-    { 
+    if (lastrow === true) {
       io.emit(type_new_vrf_send_approve, {
         message: type_new_vrf_send_approve,
         Id: Id,
@@ -3452,8 +3479,8 @@ async function update_vrf_trans_approve_status(Id, Type_
   , division_id
   , io
 ) {
-  //////console.log('update_vrf_trans_approve_status Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'role_id: '
-    // , role_id, 'work_flow_id', work_flow_id)
+  console.log('update_vrf_trans_approve_status Id: ', Id, 'Type: ', Type_, 'user_id: ', user_id, 'role_id: '
+    , role_id, 'work_flow_id', work_flow_id)
   try {
 
     let pool = await sql.connect(config);
@@ -3497,7 +3524,8 @@ async function get_upload_filename(Id, Type_, user_id) {
     return ({ error: err })
   }
 }
-module.exports = { 
+module.exports = {
+  getEmail_Manager: getEmail_Manager,
   removeWord: removeWord,
   set_update_vrf_area: set_update_vrf_area,
   get_MeetingAreas_selectedItems: get_MeetingAreas_selectedItems,
@@ -3510,8 +3538,8 @@ module.exports = {
   get_vrf_reports: get_vrf_reports,
   set_su_cancel_vrf: set_su_cancel_vrf,
   get_all_vrf_info: get_all_vrf_info,
-  get_all_vrf_list:get_all_vrf_list, 
-  get_currentDateTime:get_currentDateTime,
+  get_all_vrf_list: get_all_vrf_list,
+  get_currentDateTime: get_currentDateTime,
   set_update_vrf_det_cancelcheckinout: set_update_vrf_det_cancelcheckinout,
   get_vrf_security_det: get_vrf_security_det,
   set_update_urgentcase_vrf: set_update_urgentcase_vrf,
