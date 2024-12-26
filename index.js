@@ -38,9 +38,7 @@ const io = new Server(server, {
         credentials: true
     }
 });
-
 io.on('connection', (socket) => {
-    //   //console.log('New client connected');
 
     socket.on('disconnect', () => {
         ////console.log('Client disconnected');
@@ -60,16 +58,7 @@ const storage = multer.diskStorage({
         cb(null, './uploads')
     }
 })
-// const storage = multer.diskStorage({
-//     filename: function (req, file, cb) {
-//         // //console.log( req.file.filename ) 
-//         fileName = Date.now() + ".xls"
-//         cb(null, fileName)
-//     },
-//     destination: function (req, file, cb) {
-//         cb(null, './uploads')
-//     }
-// })
+
 const upload = multer({
 
     // dest: './uploads'
@@ -82,8 +71,7 @@ const adjustDate = (inputDate) => {
 };
 app.post('/set_add_user_vrf', upload.single('file'), async (req, res) => {
     try {
-        // //console.log('set_add_user_vrf req.body: ', req.body);
-        // //console.log('req.body.first_name: ', req.body.first_name);
+
         let data = {
             user_id: req.body.user_id,
             first_name: req.body.first_name,
@@ -97,7 +85,6 @@ app.post('/set_add_user_vrf', upload.single('file'), async (req, res) => {
             email: req.body.email,
             employee_id: req.body.employee_id
         };
-
         // Since dboperations.set_add_user_vrf() is an async function, 
         // using await to capture result and error
         try {
@@ -110,7 +97,7 @@ app.post('/set_add_user_vrf', upload.single('file'), async (req, res) => {
         }
 
     } catch (error) {
-        //console.log('/set_add_user_vrf error: ', error);
+     
         res.json({ error: 'set_add_user_vrf error' });
     }
 });
@@ -119,13 +106,11 @@ app.post('/set_manual_add_vrf_trans', upload.single('file'), async (req, res) =>
         //----area 20240906
         let data_ = req.body
         // Check if area and controlarea have data before parsing
-        //console.log('/set_manual_add_vrf_template data_: ', data_.controlarea)
         let area = [];
         let controlarea = [];
         let Id
         if (data_.area && data_.area !== '[]') {
             area = JSON.parse(data_.area);
-            //console.log('/set_manual_add_vrf_template Parsed area: ', area);
         }
         if (data_.controlarea && data_.controlarea !== '[]') {
             controlarea = JSON.parse(data_.controlarea);
@@ -150,16 +135,13 @@ app.post('/set_manual_add_vrf_trans', upload.single('file'), async (req, res) =>
             date_from: adjustDate(req.body.date_from),
             date_to: adjustDate(req.body.date_to),
         };
-        // console.log('/set_manual_add_vrf_trans area: ', area);
-        // console.log('/set_manual_add_vrf_trans controlarea: ', controlarea);
         try {
             const result = await dboperations.set_manual_add_vrf_trans(data, io);
-            //console.log('set_manual_add_vrf_trans result: ', result) 
             Id = result
             dboperations.set_vrf_area(area, controlarea, Id, req.body.user_id, 'vrf').then((result) => {
-                //console.log('set_vrf_area result: ', result)
+                //console.log('/set_manual_add_vrf_trans: ', result)
             }).catch((err) => {
-                //console.log('error: ', err)
+                
                 console.error('set_manual_add_vrf_template Id error: ', err);
                 res.json({ error: err })
             })
@@ -226,15 +208,13 @@ app.post('/set_manual_update_vrf_trans', upload.single('file'), async (req, res)
             date_from: adjustDate(req.body.date_from),
             date_to: adjustDate(req.body.date_to),
         };
-        // //console.log('/set_manual_update_vrf_trans data: ', data);
-
+        
         try {
             const result = await dboperations.set_manual_update_vrf_trans(data);
             if (old_file !== '') {
                 try {
                     await fs.stat('./uploads/' + old_file);
-                    await fs.unlink('./uploads/' + old_file);
-                    //console.log(old_file + ' ถูกลบแล้ว');
+                    await fs.unlink('./uploads/' + old_file);                
                 } catch (err) {
                     console.error(`ไม่พบไฟล์: ${old_file}`);
                 }
@@ -251,6 +231,7 @@ app.post('/set_manual_update_vrf_trans', upload.single('file'), async (req, res)
 });
 // create application/x-www-form-urlencoded parser
 var bodyParser = require('body-parser');
+const e = require('express');
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 app.post('/downloadExcel', bodyParser.json(), async (req, res) => {
     try {
@@ -317,13 +298,13 @@ app.post('/downloadExcel', bodyParser.json(), async (req, res) => {
         res.end();
 
     } catch (error) {
-        //console.log('error: ', error);
+        
         res.status(500).send(error);
     }
 });
 
 app.get('/get_vrf_reports', async (req, res) => {
-    ////console.log('/get_vrf_reports req.query[tbDateF]: ', req.query['tbDateF'], 'req.query[tbDateT]: ', req.query['tbDateT']);
+   
     try {
         // ดึงข้อมูลจากฐานข้อมูล
         const [by_approve
@@ -339,9 +320,6 @@ app.get('/get_vrf_reports', async (req, res) => {
                 dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_checkinout_is_not_null'),
                 dboperations.get_vrf_reports(req.query['tbDateF'], req.query['tbDateT'], 'by_checkinout_is_null')
             ]);
-
-        ////console.log('Data from db:', { by_approve, by_department, by_meeting_area });
-
         let workbook = new ExcelJS.Workbook();
         const sheet1 = workbook.addWorksheet('Sheet1');
         const sheet2 = workbook.addWorksheet('Sheet2');
@@ -448,8 +426,8 @@ app.get('/get_vrf_reports', async (req, res) => {
             , 'Department'
             , 'Phone'
             , 'Navigator'
-            , 'พื้นที่เข้าพบ'
-            , 'ประเภทพื้นที่เข้าพบ'
+            , 'พื้นที่ทั่วไป'
+            , 'พื้นที่ความมั่นคง'
             , 'ผู้สร้าง VRF'
             , 'สถานะการอนุมัติ'
             , 'อนุมัติโดย'
@@ -462,30 +440,11 @@ app.get('/get_vrf_reports', async (req, res) => {
                 right: { style: 'thin' }
             };
         });
-        // sheet2.addRow(['no'
-        //     , 'ชื่อ-นามสกุล'
-        //     , 'Check In'
-        //     , 'Check Out'
-        //     , 'จากวันที่'
-        //     , 'ถึงวันที่'
-        //     , 'เหตุผลในการเข้าพื้นที่'
-        //     , 'Contactor'
-        //     , 'Requestor'
-        //     , 'Position'
-        //     , 'Department'
-        //     , 'Phone'
-        //     , 'Navigator'
-        //     , 'พื้นที่เข้าพบ'
-        //     , 'ประเภทพื้นที่เข้าพบ'
-        //     , 'ผู้สร้าง VRF'
-        //     , 'สถานะการอนุมัติ'
-        //     ,'อนุมัติโดย'
-        // ]);
         by_checkinout_is_null.forEach((item) => {
             //sheet2.addRow([item.no
             //  , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
             const row = sheet2.addRow([item.no
-                , item.fullname, item['check in'], item['check out'], item.date_from, item.date_to, item.reason, item.contactor, item.requestor, item.position, item.department, item.requestor_phone, item.navigator, item['พื้นที่'], item['ประเภทพื้นที่'], item['คนสร้าง'], item.approve_status, item.ApproveBy]);
+                , item.fullname, item['check in'], item['check out'], item.date_from, item.date_to, item.reason, item.contactor, item.requestor, item.position, item.department, item.requestor_phone, item.navigator, item['พื้นที่ทั่วไป'], item['พื้นที่ความมั่นคง'], item['คนสร้าง'], item.approve_status, item.ApproveBy]);
             row.eachCell({ includeEmpty: true }, (cell) => {
                 cell.border = {
                     top: { style: 'thin' },
@@ -512,8 +471,8 @@ app.get('/get_vrf_reports', async (req, res) => {
             , 'Department'
             , 'Phone'
             , 'Navigator'
-            , 'พื้นที่เข้าพบ'
-            , 'ประเภทพื้นที่เข้าพบ'
+            , 'พื้นที่ทั่วไป'
+            , 'พื้นที่ความมั่นคง'
             , 'ผู้สร้าง VRF'
             , 'สถานะการอนุมัติ'
             , 'อนุมัติโดย'
@@ -526,30 +485,11 @@ app.get('/get_vrf_reports', async (req, res) => {
                 right: { style: 'thin' }
             };
         });
-        // sheet3.addRow(['no'
-        //     , 'ชื่อ-นามสกุล'
-        //     , 'Check In'
-        //     , 'Check Out'
-        //     , 'จากวันที่'
-        //     , 'ถึงวันที่'
-        //     , 'เหตุผลในการเข้าพื้นที่'
-        //     , 'Contactor'
-        //     , 'Requestor'
-        //     , 'Position'
-        //     , 'Department'
-        //     , 'Phone'
-        //     , 'Navigator'
-        //     , 'พื้นที่เข้าพบ'
-        //     , 'ประเภทพื้นที่เข้าพบ'
-        //     , 'ผู้สร้าง VRF'
-        //     , 'สถานะการอนุมัติ'
-        //     ,'อนุมัติโดย'
-        // ]);
         by_checkinout_is_not_null.forEach((item) => {
             //sheet3.addRow([item.no
             //  , item.fullname, item['check in'], item['check out'],item.date_from,item.date_to,item.reason,item.contactor,item.requestor,item.position,item.department,item.requestor_phone,item.navigator,item['พื้นที่'],item['ประเภทพื้นที่'],item['คนสร้าง'],item.approve_status,item.ApproveBy]);
             const row = sheet3.addRow([item.no
-                , item.fullname, item['check in'], item['check out'], item.date_from, item.date_to, item.reason, item.contactor, item.requestor, item.position, item.department, item.requestor_phone, item.navigator, item['พื้นที่'], item['ประเภทพื้นที่'], item['คนสร้าง'], item.approve_status, item.ApproveBy]);
+                , item.fullname, item['check in'], item['check out'], item.date_from, item.date_to, item.reason, item.contactor, item.requestor, item.position, item.department, item.requestor_phone, item.navigator, item['พื้นที่ทั่วไป'], item['พื้นที่ความมั่นคง'], item['คนสร้าง'], item.approve_status, item.ApproveBy]);
             row.eachCell({ includeEmpty: true }, (cell) => {
                 cell.border = {
                     top: { style: 'thin' },
@@ -559,10 +499,8 @@ app.get('/get_vrf_reports', async (req, res) => {
                 };
             });
         });
-
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', 'attachment; filename=report.xlsx');
-
         // เขียนข้อมูลลงใน response และจบการทำงาน
         await workbook.xlsx.write(res);
         res.end();
@@ -697,8 +635,7 @@ app.get('/get_position', urlencodedParser, (req, res) => {
 });
 
 app.get('/get_user_by_branch', urlencodedParser, (req, res) => {
-    // //console.log('req.query[branch_id]: ', req.query['branch_id']);
-    handleDatabaseOperation(
+     handleDatabaseOperation(
         res,
         dboperations.get_user_by_branch,
         'get_user_by_branch',
@@ -756,20 +693,16 @@ const handleLDAPAuthentication = (config, jobid, password, res) => {
     try {
         const ad = new ActiveDirectory(config);
         ad.authenticate('gfcth\\' + jobid, password, (err, auth) => {
-            if (err) {
-                // //console.log('ERROR: ', JSON.stringify(err));
-                // //console.log('ERROR u: ', jobid, ' pw: ', password);
+            if (err) { 
                 return res.status(500).json({ error: err });
             }
             if (auth) {
-                //console.log('Authentication successful');
                 return res.json({ success: true, message: 'Authentication successful' });
             } else {
                 return res.status(401).json({ success: false, message: 'Authentication failed' });
             }
         });
     } catch (e) {
-        //console.log('Unexpected error: ', e);
         return res.status(500).json({ error: 'handleLDAPAuthentication have error' });
     }
 };
@@ -806,26 +739,21 @@ app.post("/generateCSV", urlencodedParser, async (req, res) => {
             obj = x
         }
         let obj_json = JSON.parse(obj)
-        ////console.log('data: ',data)
         let data_ = obj_json['data_'].split(':')
-        // //console.log('obj_json: ', obj_json)
         let customer = ''
         customer = checkcustomer(obj_json['customerID'])
         // obj_json['customerID'] === '2c164463-ef08-4cb6-a200-08e70aece9ae' ? customer = 'GSB' : customer = 'UOB'
         var path = req.query['JobDate'] + '/' + req.query['CCT_Data']
             + '/' + customer
-        // //console.log('req.query[customerID]: ', req.query['customerID'], 'path: ', path)
         var file = __dirname + '/reports/' + data_[0] + '/' + data_[1] + '/' + customer + '/' + data_[2] + '/' + data_[3];
         res.setHeader("Content-Type", "text/csv; charset=Windows-874;")
         res.setHeader('Content-Disposition', contentDisposition(file))
         var filestream = fs.createReadStream(file);
-        // //console.log('res: ', res)
         filestream.pipe(res);
         onFinished(res, () => {
             destroy(filestream)
         })
     } catch (error) {
-        //console.log('An error occurred:', error);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -841,11 +769,10 @@ app.post('/getuserinfo', urlencodedParser, (req, res) => {
             'jobid': obj_json['jobid'].toLowerCase(),
             'password': obj_json['password'],
         }
-        // //console.log('data_all: ', data_all)
         dboperations.getuserinfo(data_all).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -866,21 +793,17 @@ app.post("/gettemplatefile", urlencodedParser, async (req, res) => {
         }
         let obj_json = JSON.parse(obj)
         let filename = ''
-        // //console.log('obj_json[type]: ', obj_json['type'])
         obj_json['type'] === 'Deposit' ? filename = 'BranchtoCCTTemplate_deposit.xls' : filename = 'CCTToBranchTemplate_withdraw.xls'
 
         var file = __dirname + '/template/' + filename
-        //console.log('file: ', file)
         res.setHeader("Content-Type", "application/vnd.ms-excel; charset=Windows-874;")
         res.setHeader('Content-Disposition', contentDisposition(file))
         var filestream = fs.createReadStream(file);
-        // //console.log('res: ', res)
         filestream.pipe(res);
         onFinished(res, () => {
             destroy(filestream)
         })
     } catch (error) {
-        //console.log('Error:', error);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -892,26 +815,20 @@ app.post("/generateXLS", urlencodedParser, async (req, res) => {
             obj = x
         }
         let obj_json = JSON.parse(obj)
-        ////console.log('data: ',data)
         let data_ = obj_json['data_'].split(':')
-        // //console.log('obj_json: ', obj_json)
         let customer = ''
-        //obj_json['customerID'] === '2c164463-ef08-4cb6-a200-08e70aece9ae' ? customer = 'GSB' : customer = 'UOB'
         customer = checkcustomer(obj_json['customerID'])
         var path = req.query['JobDate'] + '/' + req.query['CCT_Data']
             + '/' + customer
         var file = __dirname + '/reports/' + data_[0] + '/' + data_[1] + '/' + customer + '/' + data_[2] + '/' + data_[4]
-        // //console.log('file: ', file)
         res.setHeader("Content-Type", "application/vnd.ms-excel; charset=Windows-874;")
         res.setHeader('Content-Disposition', contentDisposition(file))
         var filestream = fs.createReadStream(file);
-        // //console.log('res: ', res)
         filestream.pipe(res);
         onFinished(res, () => {
             destroy(filestream)
         })
     } catch (error) {
-        //console.log('Error:', error);
         res.status(500).send('Internal Server Error');
     }
 });
@@ -923,11 +840,9 @@ app.get('/getActitySelectd', urlencodedParser, async (req, res) => {
                 res.json(result[0]);
             })
             .catch(err => {
-                //console.log('error: ', err);
                 res.json({ error: err });
             });
-    } catch (error) {
-        //console.log('Error:', error);
+    } catch (error) {          
         res.status(500).send('Internal Server Error');
     }
 });
@@ -935,19 +850,23 @@ app.get('/getActitySelectd', urlencodedParser, async (req, res) => {
 app.get('/set_sendmail', urlencodedParser, async (req, res) => {
     // let id = req.body['id']
     let output
-    // //console.log('set_sendmail req.query[id]: ', req.query['id_']
-    //     , 'req.query[department_id]: ', req.query['department_id']
-    //     , 'req.query[branch_id]: ', req.query['branch_id']
-    //     , 'req.query[division_id]: ', req.query['division_id']
-    // )
+    let MeetingAreas_selectedItems = await getFilteredAreas(req.query['id_'], 'พื้นที่ทั่วไป');
+    let MeetingAreas_selectedControlItems = await getFilteredAreas(req.query['id_'], 'พื้นที่ความมั่นคง');
     try {
-
         if (req.query['role_id'] !== '8') {
-            let email_recipient = await getEmail_recipient(req.query['id_']);
-            // //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            let email_recipient = await getEmail_recipient(null
+                ,null
+                ,null
+                ,req.query['Id']
+                ,null);
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_next_approver(req.query['id_'], recipient.email, recipient.user_id, '');
+                    let result_sendmail = await setSendMail_next_approver(req.query['id_']
+                        , recipient.email
+                        , recipient.user_id
+                        , ''
+                        ,MeetingAreas_selectedItems
+                        ,MeetingAreas_selectedControlItems);
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -955,11 +874,21 @@ app.get('/set_sendmail', urlencodedParser, async (req, res) => {
             }
         }
         if (req.query['role_id'] === '8') {
-            let email_recipient = await getEmail_recipient(req.query['id_']);
-            // //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            let email_recipient = await getEmail_recipient(null
+                ,null
+                ,null
+                ,req.query['Id']
+                ,null);            
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_final_approve(req.query['id_'], recipient.email, recipient.user_id, '');
+                    let result_sendmail = await setSendMail_final_approve(
+                        req.query['id_']
+                        , recipient.email
+                        , recipient.user_id
+                        , ''
+                        ,MeetingAreas_selectedItems
+                        ,MeetingAreas_selectedControlItems
+                    );
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -978,7 +907,6 @@ app.get('/getrole', urlencodedParser, (req, res) => {
         dboperations.getRole(req.query['user_id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
             res.json({ error: err })
         })
     } catch (error) {
@@ -988,15 +916,12 @@ app.get('/getrole', urlencodedParser, (req, res) => {
 })
 app.get('/getactivity_authen', urlencodedParser, (req, res) => {
     // let type_ = ''
-    // type_ = req.query['type_']
-    // //console.log('req: ', req)
-    // //console.log('approve_setting_id: ', req.query['approve_setting_id'])
-    // //console.log('approve_setting_version: ', req.query['approve_setting_version'])
+    // type_ = req.query['type_']    
     try {
         dboperations.getactivity_authen(req.query['approve_setting_id'], req.query['approve_setting_version']).then((result) => {
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1005,33 +930,24 @@ app.get('/getactivity_authen', urlencodedParser, (req, res) => {
     }
 })
 app.get('/getuser', urlencodedParser, (req, res) => {
-    // let type_ = ''
-    // type_ = req.query['type_']
-    //console.log('req.query[user_id]', req.query['user_id'])
-    //console.log('req.query[CustomerID]', req.query['CustomerID'])
     try {
         dboperations.getUser(req.query['user_id'], req.query['CustomerID']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
         console.error('error: ', error);
         res.json({ error: error })
     }
-
 })
 app.get('/getuserEdit', urlencodedParser, (req, res) => {
-    // let type_ = ''
-    // type_ = req.query['type_']
-    //console.log('req.query[user_id]', req.query['user_id'])
-    //console.log('req.query[CustomerID]', req.query['CustomerID'])
     try {
         dboperations.getuserEdit(req.query['user_id'], req.query['CustomerID']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1048,7 +964,7 @@ app.get('/get_user_list', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1066,7 +982,7 @@ app.get('/get_user_list_by_dept', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1075,8 +991,6 @@ app.get('/get_user_list_by_dept', urlencodedParser, (req, res) => {
     }
 })
 app.get('/get_all_vrf_info', urlencodedParser, (req, res) => {
-    // //console.log('/get_vrf_list department_id: ', req.query['department_id']
-    //     , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_all_vrf_info(
             req.query['department_id']
@@ -1084,7 +998,7 @@ app.get('/get_all_vrf_info', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1093,8 +1007,6 @@ app.get('/get_all_vrf_info', urlencodedParser, (req, res) => {
     }
 })
 app.get('/get_all_vrf_list', urlencodedParser, (req, res) => {
-    //console.log('/get_all_vrf_list department_id: ', req.query['department_id']
-    // , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_all_vrf_list(
             req.query['department_id']
@@ -1102,7 +1014,7 @@ app.get('/get_all_vrf_list', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1111,8 +1023,6 @@ app.get('/get_all_vrf_list', urlencodedParser, (req, res) => {
     }
 })
 app.get('/get_vrf_list', urlencodedParser, (req, res) => {
-    // //console.log('/get_vrf_list department_id: ', req.query['department_id']
-    //     , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_vrf_list(
             req.query['department_id']
@@ -1121,7 +1031,7 @@ app.get('/get_vrf_list', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1131,11 +1041,6 @@ app.get('/get_vrf_list', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_vrf_lst_for_security', urlencodedParser, (req, res) => {
-    //console.log('/get_vrf_list department_id: ', req.query['department_id']
-    //     , 'branch_id: ', req.query['branch_id']
-    //     , 'role_id: ', req.query['role_id']
-    //     , 'division_id: ', req.query['division_id']
-    // )
     try {
         dboperations.get_vrf_lst_for_security(
             req.query['department_id']
@@ -1145,7 +1050,7 @@ app.get('/get_vrf_lst_for_security', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1155,11 +1060,7 @@ app.get('/get_vrf_lst_for_security', urlencodedParser, (req, res) => {
     }
 })
 app.get('/get_vrf_approve_list', urlencodedParser, (req, res) => {
-    //console.log('/get_vrf_approve_list department_id: ', req.query['department_id']
-    // , 'branch_id: ', req.query['branch_id']
-    // , 'role_id: ', req.query['role_id']
-    // , 'division_id: ', req.query['division_id']
-    // , 'user_id: ', req.query['user_id'])
+
     try {
         dboperations.get_vrf_approve_list(
             req.query['department_id']
@@ -1170,7 +1071,7 @@ app.get('/get_vrf_approve_list', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1179,11 +1080,7 @@ app.get('/get_vrf_approve_list', urlencodedParser, (req, res) => {
     }
 })
 app.get('/get_data_approve_list', urlencodedParser, (req, res) => {
-    //console.log('/get_data_approve_list department_id: ', req.query['department_id']
-    // , 'branch_id: ', req.query['branch_id']
-    // , 'role_id: ', req.query['role_id']
-    // , 'division_id: ', req.query['division_id']
-    // , 'Id: ', req.query['Id'])
+
     try {
         dboperations.get_data_approve_list(
             req.query['department_id']
@@ -1194,21 +1091,15 @@ app.get('/get_data_approve_list', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
         console.error('error: ', error);
         res.json({ error: error })
     }
-
 })
 app.get('/get_data_approve_list_for_security', urlencodedParser, (req, res) => {
-    //console.log('get_data_approve_list_for_security department_id: ', req.query['department_id']
-    // , 'branch_id: ', req.query['branch_id']
-    // , 'role_id: ', req.query['role_id']
-    // , 'division_id: ', req.query['division_id']
-    // , 'Id: ', req.query['Id'])
     try {
         dboperations.get_data_approve_list_for_security(
             req.query['department_id']
@@ -1219,7 +1110,7 @@ app.get('/get_data_approve_list_for_security', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1229,8 +1120,6 @@ app.get('/get_data_approve_list_for_security', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
-    //console.log('/get_templete_vrf_list department_id: ', req.query['department_id']
-    // , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_templete_vrf_list(
             req.query['department_id']
@@ -1238,7 +1127,7 @@ app.get('/get_templete_vrf_list', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1254,7 +1143,6 @@ app.get('/get_area_names', async (req, res) => {
         const request = pool.request();
         request.input('vrfId', sql.Int, vrfId);
         const result = await request.query("SELECT *,area_name as [name] FROM selected_areas WHERE vrf_id = @vrfId and [Status] = '1'");
-        //console.log('/get_area_names result.recordset: ', result.recordset)
         res.json(result.recordset);
     } catch (error) {
         console.error('Error fetching area names:', error);
@@ -1263,8 +1151,6 @@ app.get('/get_area_names', async (req, res) => {
 });
 
 app.get('/get_categoryControlAreas', urlencodedParser, (req, res) => {
-    //console.log('/get_categoryControlAreas: ', req.query['department_id']
-    // , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_categoryControlAreas(
             req.query['department_id']
@@ -1272,7 +1158,7 @@ app.get('/get_categoryControlAreas', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1282,8 +1168,6 @@ app.get('/get_categoryControlAreas', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_categoryAreas', urlencodedParser, (req, res) => {
-    //console.log('/get_categoryAreas department_id: ', req.query['department_id']
-    // , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_categoryAreas(
             req.query['department_id']
@@ -1291,7 +1175,7 @@ app.get('/get_categoryAreas', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1301,8 +1185,6 @@ app.get('/get_categoryAreas', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_Group_MeetingAreas', urlencodedParser, (req, res) => {
-    //console.log('/get_Group_MeetingAreas department_id: ', req.query['department_id']
-    // , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_group_categoryAreas(
             req.query['department_id']
@@ -1310,7 +1192,7 @@ app.get('/get_Group_MeetingAreas', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1320,8 +1202,6 @@ app.get('/get_Group_MeetingAreas', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_Group_MeetingControlAreas', urlencodedParser, (req, res) => {
-    //console.log('/get_Group_MeetingControlAreas department_id: ', req.query['department_id']
-    // , 'branch_id: ', req.query['branch_id'])
     try {
         dboperations.get_Group_MeetingControlAreas(
             req.query['department_id']
@@ -1329,7 +1209,7 @@ app.get('/get_Group_MeetingControlAreas', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1339,19 +1219,6 @@ app.get('/get_Group_MeetingControlAreas', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_search_vrf_for_guard', urlencodedParser, (req, res) => {
-    //console.log('/get_search_vrf_for_guard req.query[tbDateF]: ', req.query['tbDateF']
-    //     , 'req.query[tbDateT]: ', req.query['tbDateT']
-    //     , 'req.query[requestor_id]: ', req.query['requestor_id']
-    //     , 'req.query[area_id]: ', req.query['area_id']
-    //     , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']
-    //     , 'req.query[department_id]: ', req.query['department_id']
-    //     , 'req.query[branch_id]: ', req.query['branch_id']
-    //     , 'req.query[checkin_status]: ', req.query['checkin_status']
-    //     , 'req.query[approve_status]: ', req.query['approve_status']
-    //     , 'req.query[contactor]: ', req.query['contactor']
-    //     , 'req.query[requestor]: ', req.query['requestor']
-    //     , 'req.query[card_no]: ', req.query['card_no']
-    // )
     try {
         dboperations.get_search_vrf_for_guard(
             req.query['tbDateF']
@@ -1370,7 +1237,7 @@ app.get('/get_search_vrf_for_guard', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1380,16 +1247,6 @@ app.get('/get_search_vrf_for_guard', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_search_vrf_approve_trans', urlencodedParser, (req, res) => {
-    //console.log('/get_search_vrf_approve_trans req.query[tbDateF]: ', req.query['tbDateF']
-    //     , 'req.query[tbDateT]: ', req.query['tbDateT']
-    //     , 'req.query[requestor_id]: ', req.query['requestor_id']
-    //     , 'req.query[area_id]: ', req.query['area_id']
-    //     , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']
-    //     , 'req.query[department_id]: ', req.query['department_id']
-    //     , 'req.query[branch_id]: ', req.query['branch_id']
-    //     , 'req.query[checkin_status]: ', req.query['checkin_status']
-    //     , 'req.query[approve_status]: ', req.query['approve_status']
-    // )
     try {
         dboperations.get_search_vrf_approve_trans(
             req.query['tbDateF']
@@ -1405,7 +1262,7 @@ app.get('/get_search_vrf_approve_trans', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1415,15 +1272,6 @@ app.get('/get_search_vrf_approve_trans', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_search_vrf_list', urlencodedParser, (req, res) => {
-    //console.log('/get_search_vrf_list req.query[tbDateF]: ', req.query['tbDateF']
-    //     , 'req.query[tbDateT]: ', req.query['tbDateT']
-    //     , 'req.query[requestor_id]: ', req.query['requestor_id']
-    //     , 'req.query[area_id]: ', req.query['area_id']
-    //     , 'req.query[requestor_dept_id]: ', req.query['requestor_dept_id']
-    //     , 'req.query[branch_id]: ', req.query['branch_id']
-    //     , 'req.query[approve_status]: ', req.query['approve_status']
-    //     ,'req.query[contactor]:', req.query['contactor']
-    // )
     try {
         dboperations.get_search_vrf_list(
             req.query['tbDateF']
@@ -1438,7 +1286,7 @@ app.get('/get_search_vrf_list', urlencodedParser, (req, res) => {
             ////console.log('result: ', result)
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1464,7 +1312,7 @@ app.get('/get_search_user_vrf_by_dept', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1490,7 +1338,7 @@ app.get('/get_search_user_vrf', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1514,7 +1362,7 @@ app.get('/get_search_vrf_templete', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1536,7 +1384,7 @@ app.get('/get_search_vrf', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1546,12 +1394,6 @@ app.get('/get_search_vrf', urlencodedParser, (req, res) => {
 })
 app.get('/approvelist', urlencodedParser, (req, res) => {
     try {
-        //console.log('req.query[RoleId]: ', req.query['RoleId']
-        //     , '/approvelist ', req.query['CustomerID']
-        //     , 'req.query[user_id]: ', req.query['user_id']
-        //     , 'req.query[approve_setting_id]: ', req.query['approve_setting_id']
-        //     , 'req.query[approve_setting_version]: ', req.query['approve_setting_version']
-        // )
         dboperations.getApproveList(req.query['RoleId']
             , req.query['CustomerID']
             , req.query['user_id']
@@ -1560,7 +1402,7 @@ app.get('/approvelist', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1572,12 +1414,6 @@ app.get('/approvelist', urlencodedParser, (req, res) => {
 })
 app.get('/approvenlist', urlencodedParser, (req, res) => {
     try {
-        //console.log('req.query[RoleId]: ', req.query['RoleId']
-        //     , 'req.query[CustomerID]: ', req.query['CustomerID']
-        //     , 'req.query[user_id]: ', req.query['user_id']
-        //     , 'req.query[approve_setting_id]: ', req.query['approve_setting_id']
-        //     , 'req.query[approve_setting_version]: ', req.query['approve_setting_version']
-        // )
         dboperations.getApproveNList(req.query['RoleId']
             , req.query['CustomerID']
             , req.query['user_id']
@@ -1586,7 +1422,7 @@ app.get('/approvenlist', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -1599,7 +1435,7 @@ app.get('/approveProcList', urlencodedParser, (req, res) => {
         dboperations.getApproveProcList(req.query['user_id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1614,7 +1450,7 @@ app.get('/get_approveProcData', urlencodedParser, (req, res) => {
         dboperations.get_approveProcData(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1629,7 +1465,7 @@ app.get('/get_approveProcDataDet', urlencodedParser, (req, res) => {
         dboperations.get_approveProcDataDet(req.query['approve_setting_id'], req.query['version']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1644,7 +1480,7 @@ app.get('/set_cancel_approve_proc_data', urlencodedParser, (req, res) => {
         dboperations.set_cancel_approve_proc_data(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1655,14 +1491,12 @@ app.get('/set_cancel_approve_proc_data', urlencodedParser, (req, res) => {
 
 })
 app.get('/getdownloadlink', urlencodedParser, (req, res) => {
-    //console.log('req.query[user_id]: ', req.query['user_id'])
-
     try {
 
         dboperations.getDownloadLink(req.query['user_id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1680,12 +1514,9 @@ app.post('/add_approveProc', urlencodedParser, (req, res) => {
             obj = x
         }
         let obj_json = JSON.parse(obj)
-        //console.log('obj_json: ', obj_json)
-        //console.log('data_: ', data_)
         dboperations.add_approveProc(obj_json).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
             res.json({ error: err })
         })
 
@@ -1703,14 +1534,11 @@ app.post('/set_vrf_area', urlencodedParser, (req, res) => {
             obj = x
         }
         let obj_json = JSON.parse(obj)
-        //console.log('set_vrf_area obj_json: ', obj_json)
         // Check if area and controlarea have data before parsing
         let area = [];
         let controlarea = [];
-        if (obj_json.area && obj_json.area !== '[]') {
-
+        if (obj_json.area && obj_json.area !== '[]') { 
             area = JSON.parse(obj_json.area);
-            //console.log('/set_vrf_area Parsed area: ', area);
         } else {
             //console.log('No area data provided.');
         }
@@ -1728,7 +1556,7 @@ app.post('/set_vrf_area', urlencodedParser, (req, res) => {
         dboperations.set_vrf_area(area, controlarea).then((result) => {
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1739,15 +1567,13 @@ app.post('/set_vrf_area', urlencodedParser, (req, res) => {
 
 })
 app.post('/set_reject_vrf', bodyParser.json(), (req, res) => {
-    //console.log('req.body: ', req.body);
-    //console.log('req.body[reject_reason]: ', req.body.reject_reason);
     try {
         dboperations.set_reject_vrf(req.body.vrf_id_for_reject
             , req.body.reject_reason
             , req.body.RejectBy).then((result) => {
                 res.json({ message: 'success' })
             }).catch((err) => {
-                //console.log('error: ', err)
+                
                 res.json({ error: err })
             })
 
@@ -1757,15 +1583,13 @@ app.post('/set_reject_vrf', bodyParser.json(), (req, res) => {
     }
 });
 app.post('/set_su_cancel_vrf', bodyParser.json(), (req, res) => {
-    //console.log('req.body: ', req.body);
-    //console.log('req.body[reject_reason]: ', req.body.cancel_reason);
     try {
         dboperations.set_su_cancel_vrf(req.body.vrf_id_for_reject
             , req.body.cancel_reason
             , req.body.CancelBy).then((result) => {
                 res.json({ message: 'success' })
             }).catch((err) => {
-                //console.log('error: ', err)
+                
                 res.json({ error: err })
             })
 
@@ -1794,13 +1618,10 @@ app.post('/set_manual_add_vrf_trans_det', urlencodedParser, (req, res) => {
             //const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedItems']);
              MeetingAreas_selectedControlItems = JSON.parse(obj_json.controlarea);
         }
-        console.log('/set_manual_add_vrf_trans_det newid: ', newid)
-        console.log('/set_manual_add_vrf_trans_det area: ', MeetingAreas_selectedItems)
-        console.log('/set_manual_add_vrf_trans_det controlarea: ', MeetingAreas_selectedControlItems)
         dboperations.set_manual_add_vrf_trans_det(obj_json).then(async (result) => {
             if (role_id !== '8') {
                 let email_recipient = await getEmail_Manager(newid);
-                console.log('/set_manual_add_vrf_trans_det role not 3 and 8 email_recipient: ', email_recipient)
+                //console.log('/set_manual_add_vrf_trans_det email_recipient: ',email_recipient);
                 for (const recipient of email_recipient) {
                     try {
                         let result_sendmail = await setSendMail_next_approver(newid, recipient.email, recipient.user_id, '',MeetingAreas_selectedItems,MeetingAreas_selectedControlItems);
@@ -1811,7 +1632,6 @@ app.post('/set_manual_add_vrf_trans_det', urlencodedParser, (req, res) => {
             }
             if (role_id === '8') {
                 let email_recipient = await getEmail_Manager(newid);
-                //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
                 for (const recipient of email_recipient) {
                     try {
                         let result_sendmail = await setSendMail_final_approve(newid, recipient.email, recipient.user_id, '',MeetingAreas_selectedItems,MeetingAreas_selectedControlItems);
@@ -1823,7 +1643,7 @@ app.post('/set_manual_add_vrf_trans_det', urlencodedParser, (req, res) => {
             }
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1837,7 +1657,7 @@ process.on('uncaughtException', (err) => {
     console.error('There was an uncaught error', err);
     // ทำการ log ข้อผิดพลาดและอาจจะรีสตาร์ทการทำงานหรือทำการแก้ไขอื่นๆ
 });
-app.post('/update_urgentcase_vrf_det', urlencodedParser, (req, res) => {
+app.post('/update_urgentcase_vrf_det', urlencodedParser, async (req, res) => {
     try {
         let data_ = req.body
         let obj = null
@@ -1845,29 +1665,50 @@ app.post('/update_urgentcase_vrf_det', urlencodedParser, (req, res) => {
             obj = x
         }
         let obj_json = JSON.parse(obj)
-        // //console.log('/update_urgentcase_vrf_det obj_json.role_id: ', obj_json[0].role_id)
         //Type_: 'send_approve',
         let newid = obj_json[0].vrf_id;
         let role_id = obj_json[0].role_id;
+        let MeetingAreas_selectedItems = await getFilteredAreas(newid, 'พื้นที่ทั่วไป');
+        let MeetingAreas_selectedControlItems = await getFilteredAreas(newid, 'พื้นที่ความมั่นคง');
         dboperations.set_update_urgentcase_vrf_det(obj_json).then(async (result) => {
             let updateResult = await updateVrfTransApproveStatus(obj_json, io);
             if (role_id !== '8') {
-                let email_recipient = await getEmail_recipient(newid);
-                //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+                let email_recipient = await getEmail_recipient(null
+                    ,null
+                    ,null
+                    ,newid
+                    ,null);
                 for (const recipient of email_recipient) {
                     try {
-                        let result_sendmail = await setSendMail_next_approver(newid, recipient.email, recipient.user_id, 'urgentcase');
+                        let result_sendmail = await setSendMail_next_approver(
+                            newid
+                            , recipient.email
+                            , recipient.user_id
+                            , 'urgentcase'
+                            ,MeetingAreas_selectedItems
+                            ,MeetingAreas_selectedControlItems                        
+                        );
                     } catch (err) {
                         console.error('Error sending email:', err);
                     }
                 }
             }
             if (role_id === '8') {
-                let email_recipient = await getEmail_recipient(newid);
-                //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+                let email_recipient = await getEmail_recipient(null
+                    ,null
+                    ,null
+                    ,newid
+                    ,null);
                 for (const recipient of email_recipient) {
                     try {
-                        let result_sendmail = await setSendMail_final_approve(newid, recipient.email, recipient.user_id, 'urgentcase');
+                        let result_sendmail = await setSendMail_final_approve(
+                            newid
+                            , recipient.email
+                            , recipient.user_id
+                            , 'urgentcase'
+                            ,MeetingAreas_selectedItems
+                            ,MeetingAreas_selectedControlItems
+                        );
                         // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                     } catch (err) {
                         console.error('Error sending email:', err);
@@ -1876,7 +1717,7 @@ app.post('/update_urgentcase_vrf_det', urlencodedParser, (req, res) => {
             }
             res.json(updateResult)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1887,7 +1728,6 @@ app.post('/update_urgentcase_vrf_det', urlencodedParser, (req, res) => {
 })
 // สร้างฟังก์ชันใหม่ด้วย arrow function
 const updateVrfTransApproveStatus = async (queryParams, io) => {
-    //console.log('/updateVrfTransApproveStatus queryParams[0].role_id: ', queryParams[0].role_id)
     try {
         const result = await dboperations.update_vrf_trans_approve_status(
             queryParams[0].vrf_id,//vrf_id
@@ -1900,13 +1740,25 @@ const updateVrfTransApproveStatus = async (queryParams, io) => {
             queryParams[0].division_id,
             io
         );
+        let MeetingAreas_selectedItems = await getFilteredAreas(queryParams[0].vrf_id, 'พื้นที่ทั่วไป');
+        let MeetingAreas_selectedControlItems = await getFilteredAreas(queryParams[0].vrf_id, 'พื้นที่ความมั่นคง');
         // ... โค้ดส่วนที่เหลือสำหรับการส่งอีเมล
         if (queryParams[0].role_id !== '8') {
-            let email_recipient = await getEmail_recipient(queryParams[0].vrf_id);
-            //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
+            let email_recipient = await getEmail_recipient(null
+                ,null
+                ,null
+                ,queryParams[0].vrf_id
+                ,null);
             for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_next_approver(queryParams[0].vrf_id, recipient.email, recipient.user_id, '');
+                    let result_sendmail = await setSendMail_next_approver(
+                        queryParams[0].vrf_id
+                        , recipient.email
+                        , recipient.user_id
+                        , ''
+                        ,MeetingAreas_selectedItems
+                        ,MeetingAreas_selectedControlItems                    
+                    );
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -1914,11 +1766,21 @@ const updateVrfTransApproveStatus = async (queryParams, io) => {
             }
         }
         if (queryParams[0].role_id === '8') {
-            let email_recipient = await getEmail_recipient(queryParams[0].vrf_id);
-            //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
-            for (const recipient of email_recipient) {
+            let email_recipient = await getEmail_recipient(null
+                ,null
+                ,null
+                ,queryParams[0].vrf_id
+                ,null);
+              for (const recipient of email_recipient) {
                 try {
-                    let result_sendmail = await setSendMail_final_approve(queryParams[0].vrf_id, recipient.email, recipient.user_id, '');
+                    let result_sendmail = await setSendMail_final_approve(
+                        queryParams[0].vrf_id
+                        , recipient.email
+                        , recipient.user_id
+                        , ''
+                        ,MeetingAreas_selectedItems
+                        ,MeetingAreas_selectedControlItems
+                    );
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -1939,12 +1801,11 @@ app.post('/set_update_urgentcase_vrf', urlencodedParser, (req, res) => {
         for (let x in data_) {
             obj = x
         }
-        ////console.log('/set_update_urgentcase_vrf obj: ', obj)
         let obj_json = JSON.parse(obj)
         dboperations.set_update_urgentcase_vrf(obj_json).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1960,12 +1821,11 @@ app.post('/set_manual_update_vrf_det_trans', urlencodedParser, (req, res) => {
         for (let x in data_) {
             obj = x
         }
-        //console.log('/set_manual_update_vrf_det_trans obj: ', obj)
         let obj_json = JSON.parse(obj)
         dboperations.set_manual_update_vrf_det_trans(obj_json).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -1987,7 +1847,6 @@ app.post('/set_update_vrf_template', urlencodedParser, (req, res) => {
         let Id
         if (obj_json.area && obj_json.area !== '[]') {
             area = JSON.parse(obj_json.area);
-            console.log('/set_update_vrf_template area: ', area);
         } else {
             //console.log('No area data provided.');
         }
@@ -1996,25 +1855,23 @@ app.post('/set_update_vrf_template', urlencodedParser, (req, res) => {
             if (controlarea.length === 0) {
                 //console.log('No controlarea data provided.');
             } else {
-                console.log('/set_update_vrf_template controlarea: ', controlarea);
+                //console.log('/set_update_vrf_template controlarea: ', controlarea);
             }
         } else {
             //console.log('No controlarea data provided.');
         }
         //update vrf_template and vrf_area
         dboperations.set_update_vrf_template(obj_json).then((result) => {
-            //Id=result
-            //console.log('set_update_vrf_template Id: ', obj_json.id)
             dboperations.set_update_vrf_area(area, controlarea, obj_json.id, obj_json.user_id, 'template').then((result) => {
-                //console.log('set_update_vrf_area result: ', result)
+            //
             }).catch((err) => {
-                //console.log('error: ', err)
+                
                 res.json({ error: err })
             })
             // res.json(Id)
             res.json({ success: "success" })
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2029,13 +1886,11 @@ app.post('/set_update_vrf_template_det', urlencodedParser, (req, res) => {
         for (let x in data_) {
             obj = x
         }
-        //console.log('obj.length: ', obj.length)
         let obj_json = JSON.parse(obj)
-        //console.log('obj_json 0 : ', obj_json)
         dboperations.set_update_vrf_template_det(obj_json).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -2059,7 +1914,6 @@ app.post('/set_manual_add_vrf_template', urlencodedParser, (req, res) => {
         let Id
         if (obj_json.area && obj_json.area !== '[]') {
             area = JSON.parse(obj_json.area);
-            //console.log('/set_manual_add_vrf_template Parsed area: ', area);
         } else {
             //console.log('No area data provided.');
         }
@@ -2074,20 +1928,18 @@ app.post('/set_manual_add_vrf_template', urlencodedParser, (req, res) => {
             //console.log('No controlarea data provided.');
         }
         //add vrf_template and vrf_area
-        console.log('/set_manual_add_vrf_template area: ',area,'controlarea: ', controlarea)
         dboperations.set_manual_add_vrf_template(obj_json).then((result) => {
             Id = result
-            console.log('set_manual_add_vrf_template Id: ', Id)
-            dboperations.set_vrf_area(area, controlarea, Id, obj_json.user_id, 'template').then((result) => {
-                //console.log('set_vrf_area result: ', result)
+            dboperations.set_vrf_area(area, controlarea, Id, obj_json.user_id, 'template').then((result) => { 
+                //
             }).catch((err) => {
-                //console.log('error: ', err)
+                
                 console.error('set_manual_add_vrf_template Id error: ', err);
                 res.json({ error: err })
             })
             res.json(Id)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2103,12 +1955,11 @@ app.post('/set_manual_add_vrf_template_det', urlencodedParser, (req, res) => {
             obj = x
         }
         let obj_json = JSON.parse(obj)
-        //console.log('set_manual_add_vrf_template_det obj_json: ', obj_json)
         // res.json({ success: "success" })
         dboperations.set_manual_add_vrf_template_det(obj_json).then((result) => {
             res.json(result)
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2117,12 +1968,11 @@ app.post('/set_manual_add_vrf_template_det', urlencodedParser, (req, res) => {
     }
 })
 app.get('/get_templete_vrf', urlencodedParser, (req, res) => {
-    ////console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
         dboperations.get_templete_vrf(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -2133,12 +1983,12 @@ app.get('/get_templete_vrf', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_MeetingAreas_selectedItems', urlencodedParser, (req, res) => {
-    ////console.log('/getcashorder req.query[Id] :', req.query['Id'])
+
     try {
         dboperations.get_MeetingAreas_selectedItems(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -2149,12 +1999,11 @@ app.get('/get_MeetingAreas_selectedItems', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_vrf_apprve_page', urlencodedParser, (req, res) => {
-    ////console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
         dboperations.get_vrf_apprve_page(req.query['Id'], req.query['user_id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2164,12 +2013,11 @@ app.get('/get_vrf_apprve_page', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_vrf', urlencodedParser, (req, res) => {
-    ////console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
         dboperations.get_vrf(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2179,12 +2027,11 @@ app.get('/get_vrf', urlencodedParser, (req, res) => {
 
 })
 app.get('/get_uservrf_info', urlencodedParser, (req, res) => {
-    ////console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
         dboperations.get_uservrf_info(req.query['user_id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2204,12 +2051,11 @@ app.get('/get_vrf_file/:name', (req, res) => {
 
 });
 app.get('/get_currentDateTime', urlencodedParser, (req, res) => {
-    ////console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
         dboperations.get_currentDateTime(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -2219,12 +2065,11 @@ app.get('/get_currentDateTime', urlencodedParser, (req, res) => {
     }
 })
 app.get('/get_vrf_security_det', urlencodedParser, (req, res) => {
-    ////console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
         dboperations.get_vrf_security_det(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -2234,12 +2079,11 @@ app.get('/get_vrf_security_det', urlencodedParser, (req, res) => {
     }
 })
 app.get('/get_vrf_det', urlencodedParser, (req, res) => {
-    ////console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
         dboperations.get_vrf_det(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
 
@@ -2249,12 +2093,11 @@ app.get('/get_vrf_det', urlencodedParser, (req, res) => {
     }
 })
 app.get('/get_templete_vrf_det', urlencodedParser, (req, res) => {
-    ////console.log('/getcashorder req.query[Id] :', req.query['Id'])
     try {
         dboperations.get_templete_vrf_det(req.query['Id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2273,7 +2116,7 @@ app.get('/update_user_vrf_status_all', urlencodedParser, (req, res) => {
             ).then((result) => {
                 output = result[0]
             }).catch((err) => {
-                //console.log('error: ', err)
+                
                 res.json({ error: err })
             })
         })
@@ -2290,9 +2133,7 @@ app.get('/update_vrf_requester_trans_status_all', urlencodedParser, (req, res) =
     let type_ = req.query['Type_']
     //---tpe_ = 'approve' หรือ 'cancel'
     try {
-        //console.log('req.query: ', req.query)
         req.query['Id'].forEach((item) => {
-            //console.log('item: ', item)
             dboperations.update_vrf_requester_trans_status_all(parseInt(item)
                 , req.query['Type_']
                 , req.query['user_id']
@@ -2308,17 +2149,16 @@ app.get('/update_vrf_requester_trans_status_all', urlencodedParser, (req, res) =
                 }
 
             }).catch((err) => {
-                //console.log('error: ', err)
+                
                 res.json({ error: err })
             })
 
             if (type_ === 'cancel') {
                 dboperations.get_upload_filename(parseInt(item)).then((result, err) => {
                     if (err) {
-                        //console.log('error: ', err)
+                        
                     }
                     else {
-                        //console.log('result[0]: ', result[0][0].attach_file)
                         if ((result[0][0].attach_file !== '')
                             && (result[0][0].attach_file !== null)
                             && (result[0][0].attach_file !== undefined)
@@ -2330,8 +2170,7 @@ app.get('/update_vrf_requester_trans_status_all', urlencodedParser, (req, res) =
                                     //console.log(`ไม่พบไฟล์: ${result[0][0].attach_file}`);
                                 } else {
                                     fs.unlink('./uploads/' + result[0][0].attach_file, (err) => {
-                                        if (err) throw err;
-                                        //console.log(result[0][0].attach_file + ' ถูกลบแล้ว')
+                                        if (err) throw err;                                        
                                     });
                                 }
                             });
@@ -2381,19 +2220,16 @@ app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
                 , lastrow
                 , io
             ).then((result) => {
-                output = result[0]
-            }).catch((err) => {
-                //console.log('error: ', err)
+                output = result[0]                 
+            }).catch((err) => {                 
                 res.json({ error: err })
             })
-
             if (type_ === 'cancel') {
                 dboperations.get_upload_filename(parseInt(item)).then((result, err) => {
                     if (err) {
-                        //console.log('error: ', err)
+                        
                     }
                     else {
-                        //console.log('result[0]: ', result[0][0].attach_file)
                         if ((result[0][0].attach_file !== '')
                             && (result[0][0].attach_file !== null)
                             && (result[0][0].attach_file !== undefined)
@@ -2415,7 +2251,6 @@ app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
                     }
                 })
             }
-
         })
         res.json(output)
 
@@ -2426,18 +2261,13 @@ app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
 
 })
 app.get('/update_vrfstatus_all', urlencodedParser, (req, res) => {
-    //console.log('update_vrfstatus_all req.query[Id]:', req.query['Id'])
-    //console.log('update_vrfstatus_all req.query[Id].length:', req.query['Id'].length)
-    //console.log('update_vrfstatus_all req.query[Type_]:', req.query['Type_'])
     let output = null
     try {
         req.query['Id'].forEach((item) => {
-            // //console.log(item)
-            //console.log('update_vrfstatus_all in array Id: ', parseInt(item))
             dboperations.update_vrfstatus(parseInt(item), req.query['Type_'], req.query['user_id']).then((result) => {
                 output = result[0]
             }).catch((err) => {
-                //console.log('error: ', err)
+                
                 res.json({ error: err })
             })
         })
@@ -2451,7 +2281,7 @@ app.get('/update_vrfstatus_all', urlencodedParser, (req, res) => {
 
     // dboperations.update_vrfstatus(req.query['Id'], req.query['Type_'], req.query['user_id']).then((result, err) => {
     //     if (err) {
-    //         //console.log('error: ', err)
+    //         
     //     }
     //     else {
     //         res.json(result[0])
@@ -2459,74 +2289,146 @@ app.get('/update_vrfstatus_all', urlencodedParser, (req, res) => {
     // })
 })
 app.get('/update_vrf_approve_status_from_mail', urlencodedParser, async (req, res) => {
-    //console.log('update_vrf_approve_status_from_mail req.query[userId]:', req.query['user_id']
-    //     , 'req.query[vrf_id]:', req.query['vrf_id']
-    //     , 'req.query[type]:', req.query['type']
-    // )
+    //---update status
     try {
         const result = await dboperations.update_vrf_approve_status_from_mail(req.query['user_id']
             , req.query['vrf_id']
             , req.query['type']
             , io
         );
-        //console.log('/update_vrf_approve_status_from_mail result: ', result)
         let type_ = req.query['req_urgentcase_by'] ? 'urgentcase' : ''
         if (result[0][0].role_id_approver) {
             if (result[0][0].approve_status !== 'approved') {
                 let role_id_approver = result[0][0].role_id_approver;
-                if (role_id_approver !== '8') {
-                    let email_recipient = await getEmail_recipient(req.query['vrf_id']);
-                    //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
-                    for (const recipient of email_recipient) {
-                        try {
-                            let result_sendmail = await setSendMail_next_approver(req.query['vrf_id'], recipient.email
-                                , recipient.user_id
-                                , type_);
-                            // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
-                        } catch (err) {
-                            console.error('Error sending email:', err);
+                let MeetingAreas_selectedItems = await getFilteredAreas(req.query['Id'], 'พื้นที่ทั่วไป');
+                let MeetingAreas_selectedControlItems = await getFilteredAreas(req.query['Id'], 'พื้นที่ความมั่นคง');
+                for (let i = 0; i < getSelected_areas_all_flat.length; i++) { ////////หาพื้นที่
+                    try {
+                        const getSelected_areas_all_= getSelected_areas_all_flat[i];
+                        if( result[0][0].approve_status > 2 && i===0 )
+                        {
+                            if (role_id_approver !== '8') { 
+                                let email_recipient = await getEmail_recipient(getSelected_areas_all_.area_id
+                                    ,getSelected_areas_all_.area_type
+                                    ,getSelected_areas_all_.is_area_group
+                                    ,req.query['vrf_id']
+                                    ,getSelected_areas_all_.area_name);//หาอีเมล์ผู้รับผิดชอบในพื้นที่นั้นๆ                                
+                                if(email_recipient)//พบอีเมล์ไหม
+                                    {
+                                        for (let j = 0; j < email_recipient.length; j++) {
+                                           const recipient = email_recipient[j];
+                                            try { 
+                                                if(recipient.email)
+                                                { 
+                                                    if( result[0][0].approve_status > 2 && j===0 )
+                                                        {
+                                                            let result_sendmail = await setSendMail_next_approver(req.query['vrf_id'], recipient.email
+                                                                , recipient.user_id
+                                                                , type_
+                                                                ,MeetingAreas_selectedItems
+                                                                ,MeetingAreas_selectedControlItems
+                                                            );
+                                                        }                                                         
+                                                }                                                
+                                            } catch (err) {
+                                                console.error('Error sending email:', err);
+                                            }
+                                        }
+                                    }   
+                            }
+                            if (role_id_approver === '8') {
+                                let email_recipient = await getEmail_recipient(null
+                                    ,null
+                                    ,null
+                                    ,req.query['vrf_id']
+                                    ,null);                                
+                                for (const recipient of email_recipient) {
+                                    try {
+                                        let result_sendmail = await setSendMail_final_approve(
+                                            req.query['vrf_id']
+                                            , recipient.email
+                                            , recipient.user_id
+                                            , type_
+                                            ,MeetingAreas_selectedItems
+                                            ,MeetingAreas_selectedControlItems                                        
+                                        );
+                                        // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                                    } catch (err) {
+                                        console.error('Error sending email:', err);
+                                    }
+                                }
+                            }
                         }
-                    }
-                }
-                if (role_id_approver === '8') {
-                    let email_recipient = await getEmail_recipient(req.query['vrf_id']);
-                    //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
-                    for (const recipient of email_recipient) {
-                        try {
-                            let result_sendmail = await setSendMail_final_approve(req.query['vrf_id'], recipient.email, recipient.user_id, type_);
-                            // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
-                        } catch (err) {
-                            console.error('Error sending email:', err);
+                        if( result[0][0].approve_status === 2 )
+                        {
+                            if (role_id_approver !== '8') { 
+                                let email_recipient = await getEmail_recipient(getSelected_areas_all_.area_id
+                                    ,getSelected_areas_all_.area_type
+                                    ,getSelected_areas_all_.is_area_group
+                                    ,req.query['vrf_id']
+                                    ,getSelected_areas_all_.area_name);//หาอีเมล์ผู้รับผิดชอบในพื้นที่นั้นๆ                                    
+                                if(email_recipient)//พบอีเมล์ไหม
+                                    {
+                                        for (const recipient of email_recipient) {
+                                            try { 
+                                                if(recipient.email)
+                                                { 
+                                                    if( result[0][0].approve_status <= 2 )
+                                                    {
+                                                        let result_sendmail = await setSendMail_next_approver(req.query['vrf_id'], recipient.email
+                                                            , recipient.user_id
+                                                            , type_
+                                                            ,MeetingAreas_selectedItems
+                                                            ,MeetingAreas_selectedControlItems
+                                                        );
+                                                    }
+                                                }                                                
+                                            } catch (err) {
+                                                console.error('Error sending email:', err);
+                                            }
+                                        }
+                                    }   
+                            }
+                            if (role_id_approver === '8') {
+                                let email_recipient = await getEmail_recipient(null
+                                    ,null
+                                    ,null
+                                    ,req.query['vrf_id']
+                                    ,null);                                
+                                for (const recipient of email_recipient) {
+                                    try {
+                                        let result_sendmail = await setSendMail_final_approve(
+                                            req.query['vrf_id']
+                                            , recipient.email
+                                            , recipient.user_id
+                                            , type_
+                                            ,MeetingAreas_selectedItems
+                                            ,MeetingAreas_selectedControlItems
+                                        );
+                                        // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                                    } catch (err) {
+                                        console.error('Error sending email:', err);
+                                    }
+                                }
+                            }
                         }
+                    } catch (err) {
+                        console.error('Error sending email:', err);
                     }
-                }
-
+                }/////////////////
             }
-
             res.json(result[0])
         }
         else {
             res.json({ error: 'error' })
         }
-
-
-
     } catch (err) {
         console.error('error: ', err);
         res.json({ error: err.message || err });
     }
 });
 app.get('/update_vrf_trans_approve_status', urlencodedParser, async (req, res) => { 
-    // console.log('update_vrf_trans_approve_status Id: ', req.query['Id']
-    //     , 'Type: ', req.query['Type_']
-    //     , 'user_id: ', req.query['user_id']
-    //     , 'role_id: ', req.query['role_id']
-    //     , 'work_flow_id: ', req.query['work_flow_id']
-    //     , 'department_id: ', req.query['department_id']
-    //     , 'branch_id: ', req.query['branch_id']
-    //     , 'division_id: ', req.query['division_id']
-    // )
-    const result = await dboperations.update_vrf_trans_approve_status(req.query['Id']
+    const update_vrf_trans_approve_status_result = await dboperations.update_vrf_trans_approve_status(req.query['Id']
         , req.query['Type_']
         , req.query['user_id']
         , req.query['role_id']
@@ -2536,6 +2438,9 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, async (req, res) =
         , req.query['division_id']
         , io
     );
+    console.log('/update_vrf_trans_approve_status update_vrf_trans_approve_status_result: ', update_vrf_trans_approve_status_result);
+    const approveStatus = update_vrf_trans_approve_status_result[0][0].approve_status;
+    console.log('approve_status:', approveStatus); // จะได้ค่า 2
     let MeetingAreas_selectedItems = [];
     let MeetingAreas_selectedControlItems = [];
     try {       
@@ -2547,29 +2452,41 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, async (req, res) =
             const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedControlItems']);
             MeetingAreas_selectedControlItems = JSON.parse(decodedControlData);
         }
-        //console.log('/update_vrf_trans_approve_status MeetingAreas_selectedItems: ',MeetingAreas_selectedItems );
-        // console.log('/update_vrf_trans_approve_status MeetingAreas_selectedControlItems: ',MeetingAreas_selectedControlItems );   
-        console.log('/update_vrf_trans_approve_status MeetingAreas_selectedControlItems.length: ', MeetingAreas_selectedControlItems.length)    
-        for (const MeetingControlArea of MeetingAreas_selectedControlItems) { 
-            let result = await setSearch_and_send_email(req.query['role_id']
-                , MeetingControlArea.area_id
-                ,MeetingControlArea.area_type
-                ,MeetingControlArea.is_area_group
-                ,MeetingControlArea.vrf_id
-                ,MeetingControlArea.name
-                ,MeetingAreas_selectedItems
-                ,MeetingAreas_selectedControlItems
-            );            
-            // console.log('MeetingAreas id : ', MeetingControlArea.id)
-            // console.log('MeetingAreas vrf_id : ', MeetingControlArea.vrf_id)
-            // console.log('MeetingAreas area_id : ', MeetingControlArea.area_id)
-            // console.log('MeetingAreas name : ', MeetingControlArea.name)
-            // console.log('MeetingAreas area_type:', MeetingControlArea.area_type)
-            // console.log('MeetingAreas is_area_group : ', MeetingControlArea.is_area_group)
-            // console.log('MeetingAreas Status:', MeetingControlArea.Status)
-        } 
-        //res.json(result[0])
-        res.json({ approve_status: 'approved' })
+        
+        let index = 0; // ตัวนับสำหรับตรวจสอบแถวแรก
+        let result;
+        for (const MeetingControlArea of MeetingAreas_selectedControlItems) {
+            if (index === 0 && approveStatus > 2) {
+                // Logic สำหรับแถวแรกที่ต้องการ
+                result = await setSearch_and_send_email(
+                    req.query['role_id'],
+                    MeetingControlArea.area_id,
+                    MeetingControlArea.area_type,
+                    MeetingControlArea.is_area_group,
+                    MeetingControlArea.vrf_id,
+                    MeetingControlArea.name,
+                    MeetingAreas_selectedItems,
+                    MeetingAreas_selectedControlItems
+                );        
+                break; // ออกจาก loop ทันที
+            } else {
+                result = await setSearch_and_send_email(
+                    req.query['role_id'],
+                    MeetingControlArea.area_id,
+                    MeetingControlArea.area_type,
+                    MeetingControlArea.is_area_group,
+                    MeetingControlArea.vrf_id,
+                    MeetingControlArea.name,
+                    MeetingAreas_selectedItems,
+                    MeetingAreas_selectedControlItems
+                );
+            }
+            index++; // เพิ่มตัวนับสำหรับแถวถัดไป
+        }
+        
+         
+        res.json({ approve_status: update_vrf_trans_approve_status_result[0][0].approve_status })
+        // res.json({ approve_status: 'approved' })
     } catch (err) {
         console.error('error: ', err);
         res.json({ error: err.message || err });
@@ -2582,19 +2499,9 @@ const setSearch_and_send_email = async (role_id, area_id, area_type, is_area_gro
         //------role = 8 = SU/NCC Manager     
         if (role_id !== '8') { //--no SU/NCC Manager
             //--หาอีเมล์ผู้อนุมัติ
-            // let email_recipient = await getEmail_recipient(req.query['Id']);
-            console.log('setSearch_and_send_email area_id: ',area_id,'area_type: ',area_type,'is_area_group: ',is_area_group,'vrf_id: ',vrf_id,'name: ',name)
-            let email_recipient = await getEmail_recipient( area_id, area_type, is_area_group, vrf_id,name );
-            console.log('email_recipient.length: ',email_recipient.length)
+             let email_recipient = await getEmail_recipient( area_id, area_type, is_area_group, vrf_id,name );
             for (const recipient of email_recipient) {
                 try { //VRFszaam@guardforcecash.co.th,VRFszaam@guardforcecash.co.th
-                    console.log( 'setSearch_and_send_email : area_id ',   area_id
-                        , 'recipient.email: ',  recipient.email
-                        , 'recipient.user_id: ',recipient.user_id
-                        , ''
-                        // ,'MeetingAreas_selectedItems: ',MeetingAreas_selectedItems
-                        // ,'MeetingAreas_selectedControlItems: ',MeetingAreas_selectedControlItems
-                    )      
                     let result_sendmail = await setSendMail_next_approver(
                         vrf_id
                         , recipient.email
@@ -2610,11 +2517,17 @@ const setSearch_and_send_email = async (role_id, area_id, area_type, is_area_gro
         }
         if (role_id === '8') { // SU/NCC Manager
             let email_recipient = await getEmail_recipient( area_id, area_type, is_area_group, vrf_id,name  );
-            //--หาอีเมล์ผู้อนุมัติ
+            //--หาอีเมล์ผู้อนุมัติgetEmail_recipient
             for (const recipient of email_recipient) {
                 try {
                     //--ส่งเมล์
-                    let result_sendmail = await setSendMail_final_approve(area_id, recipient.email, recipient.user_id, '');
+                    let result_sendmail = await setSendMail_final_approve(vrf_id
+                        , recipient.email
+                        , recipient.user_id
+                        , ''
+                        ,MeetingAreas_selectedItems
+                        ,MeetingAreas_selectedControlItems
+                    );
                     // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
                 } catch (err) {
                     console.error('Error sending email:', err);
@@ -2624,15 +2537,19 @@ const setSearch_and_send_email = async (role_id, area_id, area_type, is_area_gro
         //return({result:'success'})
         //res.json({ success: 'success' })
     } catch (e) {
-        console.log('Unexpected error: ', e); 
-        //return res.status(500).json({ error: 'handleLDAPAuthentication have error' });
-        return({result:`fail ${error}`})
+        return({result:`fail ${e.message}`})
     }
+};
+const getFilteredAreas = async (id, areaType) => {
+    let getSelected_areas_all = await dboperations.getSelected_areas_all(id); // ดึงข้อมูล
+    return getSelected_areas_all
+        .flat() // แปลงข้อมูลเป็น flat array
+        .filter(area => area.area_type === areaType) // กรองข้อมูลตามประเภท
+        .map(area => ({ ...area, name: area.area_name, area_name: area.area_name })); // เพิ่ม property
 };
 const getEmail_recipient = async ( area_id, area_type, is_area_group, vrf_id,name ) => {
     try {
         const result = await dboperations.getEmail_recipient( area_id, area_type, is_area_group, vrf_id,name ) ;
-        // console.log('getEmail_recipient result: ', result);
         return result[0]; // คืนกลับข้อมูลที่ต้องการ
     } catch (error) {
         console.error('error: ', error);
@@ -2667,12 +2584,8 @@ const setSendMail_next_approver = async (
     ,MeetingAreas_selectedControlItems
 ) => {
     try {
-        // console.log('MeetingAreas_selectedItems: ',MeetingAreas_selectedItems );
-        // console.log('MeetingAreas_selectedControlItems: ',MeetingAreas_selectedControlItems );
-        let result = await dboperations.get_mail_info_next_approve(id);
+          let result = await dboperations.get_mail_info_next_approve(id);
         let output = result[0];
-        //console.log('setSendMail_next_approver output[0].email_next_approver: ', email_next_approver);
-        // console.log('setSendMail_next_approver output: ', output);
         let tbDateF_, formattedtbDateF, tbDateT_, formattedtbDateT;
 
         // สร้าง moment object จาก UTC โดยตรงโดยไม่ใช้เวลา
@@ -2736,8 +2649,7 @@ const setSendMail_next_approver = async (
                 if (error) {
                     console.log('Email sent: ',error);
                     reject(error);
-                } else {
-                    //console.log('Email sent: ' + info.response);
+                } else {                    
                     resolve(true);
                 }
             });
@@ -2746,12 +2658,15 @@ const setSendMail_next_approver = async (
         console.error('setSendMail_next_approver error: ', err);
     }
 };
-const setSendMail_final_approve = async (id, email_next_approver, user_id, type_) => {
+const setSendMail_final_approve = async (id
+    , email_next_approver
+    , user_id
+    , type_
+    ,MeetingAreas_selectedItems
+    ,MeetingAreas_selectedControlItems) => {
     try {
         let result = await dboperations.get_mail_info_final_approve(id);
-        //console.log('setSendMail_final_approve result: ', result);
         let output = result[0][0];
-        //console.log('setSendMail_final_approve output: ', output);
 
         let tbDateF_, formattedtbDateF, tbDateT_, formattedtbDateT;
 
@@ -2765,7 +2680,11 @@ const setSendMail_final_approve = async (id, email_next_approver, user_id, type_
         let link = `${process.env.CLIENT_URL}/requestvrflst?vrf_id=${id}&user_id=${user_id}`;
         let subject = `[VRF] ขออนุมัติเข้าพื้นที่ GFC อนุมัติแล้ว ${type_ ? ` (เคสด่วน)` : ``}`;
         let body = `วันที่: ${formattedtbDateF} - ${formattedtbDateT} ${type_ ? ` (เคสด่วน)` : ``}<br>
-        พื้นที่ขอเข้าพบ: ${output.meeting_area}<br>
+        ----------------<br>
+        พื้นที่ขอเข้าพบ<br>
+        พื้นที่ทั่วไป:  ${(MeetingAreas_selectedItems?.length ? MeetingAreas_selectedItems.map(item => item.name).join(', ') : '-')}<br>
+        พื้นที่มั่นคง: ${(MeetingAreas_selectedControlItems?.length ? MeetingAreas_selectedControlItems.map(item => item.name).join(', ') : '-')}<br>
+        ----------------<br>
         ชื่อบริษัทผู้มาติดต่อ: ${output.contactor}<br>
         เหตุผลในการเข้าพบ: ${output.reason}<br>
         ผู้ร้องขอ: ${output.requestor}<br>
@@ -2811,7 +2730,6 @@ const setSendMail_final_approve = async (id, email_next_approver, user_id, type_
                     //console.log(error);
                     reject(error);
                 } else {
-                    //console.log('Email sent: ' + info.response);
                     resolve(true);
                 }
             });
@@ -2822,36 +2740,66 @@ const setSendMail_final_approve = async (id, email_next_approver, user_id, type_
     }
 };
 app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
-    //console.log('/setSendMail_next_approver req.query[Id]:', req.query['Id']
-    //     , 'req.query[department_id]:', req.query['department_id']
-    //     , 'req.query[branch_id]:', req.query['branch_id']
-    //     , 'req.query[role_id]:', req.query['role_id']
-    //     , 'req.query[division_id]:', req.query['division_id']
-    // )
+
     try {
         let result_sendmail
+        let MeetingAreas_selectedItems = await getFilteredAreas(req.query['Id'], 'พื้นที่ทั่วไป');
+        let MeetingAreas_selectedControlItems = await getFilteredAreas(req.query['Id'], 'พื้นที่ความมั่นคง');
         if ((req.query['role_id'] !== '3') && (req.query['role_id'] !== '8')) { 
-            let email_recipient = await getEmail_recipient(req.query['Id']);
-            //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
-            for (const recipient of email_recipient) {
-                try {
-                    let result_sendmail = await setSendMail_next_approver(req.query['Id'], recipient.email, recipient.user_id, '');
-                } catch (err) {
-                    console.error('Error sending email:', err);
+            let email_recipient = await getEmail_recipient(null
+                ,null
+                ,null
+                ,req.query['Id']
+                ,null);
+            if(email_recipient)
+            { 
+                for (const recipient of email_recipient) {
+                    try { 
+                        let result_sendmail = await setSendMail_next_approver(req.query['Id'], recipient.email
+                            , recipient.user_id
+                            , ''
+                            ,MeetingAreas_selectedItems
+                            ,MeetingAreas_selectedControlItems
+                        );
+                        //let result_sendmail = await setSendMail_next_approver(req.query['Id'], recipient.email, recipient.user_id, '');
+                    } catch (err) {
+                        console.error('Error sending email:', err);
+                    }
                 }
             }
+
         }
         if (req.query['role_id'] === '8') {
-            let email_recipient = await getEmail_recipient(req.query['Id']);
-            //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
-            for (const recipient of email_recipient) {
-                try {
-                    let result_sendmail = await setSendMail_final_approve(req.query['Id'], recipient.email, recipient.user_id, '');
-                    // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
-                } catch (err) {
-                    console.error('Error sending email:', err);
+            let email_recipient = await getEmail_recipient(null
+                ,null
+                ,null
+                ,req.query['Id']
+                ,null
+            );
+            console.log('setSendMail_final_approve email_recipient: ',email_recipient);
+            if(email_recipient)
+                { 
+                    for (const recipient of email_recipient) {
+                        try { 
+                            // let result_sendmail = await setSendMail_next_approver(req.query['Id'], recipient.email
+                            //     , recipient.user_id
+                            //     , ''
+                            //     ,MeetingAreas_selectedItems
+                            //     ,MeetingAreas_selectedControlItems
+                            // );
+                            let result_sendmail = await setSendMail_final_approve(req.query['Id']
+                                , recipient.email
+                                , recipient.user_id
+                                , ''
+                                ,MeetingAreas_selectedItems
+                                ,MeetingAreas_selectedControlItems);
+                            // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
+                            console.log('setSendMail_final_approve: ',result_sendmail);
+                        } catch (err) {
+                            console.error('Error sending email:', err);
+                        }
+                    }
                 }
-            }
         }
         //role_id=8 is ncc_manager
         res.json({ message: 'success' })
@@ -2861,10 +2809,7 @@ app.get('/setSendMail_next_approver', urlencodedParser, async (req, res) => {
     }
 })
 app.get('/set_update_vrf_det_cancelcheckinout', urlencodedParser, (req, res) => {
-    //console.log('req.query[Id] ',req.query['Id']
-    // ,'req.query[Type_] ',req.query['Type_']
-    // ,'req.query[user_id] ',req.query['user_id']
-    // ,'req.query[checkincheckout_det_id] ',req.query['checkincheckout_det_id'])
+
     try {
         dboperations.set_update_vrf_det_cancelcheckinout(req.query['Id']
             , req.query['Type_']
@@ -2873,7 +2818,7 @@ app.get('/set_update_vrf_det_cancelcheckinout', urlencodedParser, (req, res) => 
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2891,7 +2836,7 @@ app.get('/set_sp_update_vrf_det_checkinout', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2908,7 +2853,7 @@ app.get('/set_sp_update_vrf_checkinount', urlencodedParser, (req, res) => {
         ).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2944,7 +2889,7 @@ app.get('/update_vrf_trans_status', urlencodedParser, (req, res) => {
                     // ใช้ fs.stat
                     fs.stat('./uploads/' + attach_file_primitive, (err, stats) => {
                         if (err) {
-                            //console.log(`ไม่พบไฟล์: ${attach_file_primitive}`);
+
                         } else {
                             fs.unlink('./uploads/' + attach_file_primitive, (err) => {
                                 if (err) {
@@ -2952,7 +2897,7 @@ app.get('/update_vrf_trans_status', urlencodedParser, (req, res) => {
                                     res.status(500).send("Error while deleting the file");
                                     return;
                                 }
-                                //console.log(attach_file_primitive + ' ถูกลบแล้ว');
+                           
                             });
                         }
                     });
@@ -2973,7 +2918,7 @@ app.get('/update_vrfstatus', urlencodedParser, (req, res) => {
         dboperations.update_vrfstatus(req.query['Id'], req.query['Type_'], req.query['user_id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2987,7 +2932,7 @@ app.get('/delete_app_proc_det', urlencodedParser, (req, res) => {
         dboperations.delete_app_proc_det(req.query['Id'], req.query['user_id']).then((result) => {
             res.json(result[0])
         }).catch((err) => {
-            //console.log('error: ', err)
+            
             res.json({ error: err })
         })
     } catch (error) {
@@ -2996,86 +2941,6 @@ app.get('/delete_app_proc_det', urlencodedParser, (req, res) => {
     }
 
 })
-// app.get('/update_vrf_trans_approve_status', urlencodedParser, async (req, res) => {
-//     // const result = await dboperations.update_vrf_trans_approve_status(req.query['Id']
-//     //     , req.query['Type_']
-//     //     , req.query['user_id']
-//     //     , req.query['role_id']
-//     //     , req.query['work_flow_id']
-//     //     , req.query['department_id']
-//     //     , req.query['branch_id']
-//     //     , req.query['division_id']
-//     //     , io
-//     // );
-//     let MeetingAreas_selectedItems = [];
-//     let MeetingAreas_selectedControlItems = [];
-//     try {       
-//         if (req.query['MeetingAreas_selectedControlItems'] && req.query['MeetingAreas_selectedControlItems'] !== '[]') {
-//             const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedControlItems']);
-//             MeetingAreas_selectedControlItems = JSON.parse(decodedControlData);
-//         }
-//         if (req.query['MeetingAreas_selectedItems'] && req.query['MeetingAreas_selectedItems'] !== '[]') {
-//             const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedItems']);
-//             MeetingAreas_selectedItems = JSON.parse(decodedControlData);
-//         }        
-//         for (const MeetingAreas of MeetingAreas_selectedControlItems) { 
-//             let result = await setSearch_and_send_email(req.query['role_id']
-//                 , MeetingAreas.area_id
-//                 ,MeetingAreas.area_type
-//                 ,MeetingAreas.is_area_group
-//                 ,MeetingAreas.vrf_id
-//                 ,MeetingAreas_selectedItems
-//                 ,MeetingAreas_selectedControlItems
-//             );            
-//             // console.log('MeetingAreas id : ', MeetingAreas.id)
-//             // console.log('MeetingAreas vrf_id : ', MeetingAreas.vrf_id)
-//             // console.log('MeetingAreas area_id : ', MeetingAreas.area_id)
-//             // console.log('MeetingAreas name : ', MeetingAreas.name)
-//             // console.log('MeetingAreas area_type:', MeetingAreas.area_type)
-//             // console.log('MeetingAreas is_area_group : ', MeetingAreas.is_area_group)
-//             // console.log('MeetingAreas Status:', MeetingAreas.Status)
-//         } 
-//         // console.log('/update_vrf_trans_approve_status req.query[Id]:', req.query['Id']
-//         //     , 'req.query[department_id]:', req.query['department_id']
-//         //     , 'req.query[branch_id]:', req.query['branch_id']
-//         //     , 'req.query[division_id]:', req.query['division_id']
-//         //     , 'MeetingAreas_selectedItems:', MeetingAreas_selectedItems
-//         //     , 'MeetingAreas_selectedControlItems:', MeetingAreas_selectedControlItems
-//         // )
-//         // //------role = 8 = SU/NCC Manager     
-//         // if (req.query['role_id'] !== '8') { //--no SU/NCC Manager
-//         //     //--หาอีเมล์ผู้อนุมัติ
-//         //     let email_recipient = await getEmail_recipient(req.query['Id']);
-//         //     for (const recipient of email_recipient) {
-//         //         try {
-//         //             //--ส่งเมล์
-//         //             let result_sendmail = await setSendMail_next_approver(req.query['Id'], recipient.email, recipient.user_id, '');
-//         //         } catch (err) {
-//         //             console.error('Error sending email:', err);
-//         //         }
-//         //     }
-//         // }
-//         // if (req.query['role_id'] === '8') {
-//         //     let email_recipient = await getEmail_recipient(req.query['Id']);
-//         //     //console.log('in role not 3 and 8 email_recipient: ', email_recipient)
-//         //     //--หาอีเมล์ผู้อนุมัติ
-//         //     for (const recipient of email_recipient) {
-//         //         try {
-//         //             //--ส่งเมล์
-//         //             let result_sendmail = await setSendMail_final_approve(req.query['Id'], recipient.email, recipient.user_id, '');
-//         //             // ทำอะไรก็ตามที่ต้องการกับ result_sendmail
-//         //         } catch (err) {
-//         //             console.error('Error sending email:', err);
-//         //         }
-//         //     }
-//         // }
-//         //res.json(result[0])
-//         res.json({ success: 'success' })
-//     } catch (err) {
-//         console.error('error: ', err);
-//         res.json({ error: err.message || err });
-//     }
-// });
 
 server.listen(process.env.PORT, () => {
     console.log(`Server running on https://localhost:${process.env.PORT}`);
