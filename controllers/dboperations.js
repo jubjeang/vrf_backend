@@ -1277,7 +1277,6 @@ async function get_vrf_list(
 ) {
   try {
     let pool = await sql.connect(config);
-    // let products = await pool.request().query("select o.*,(SELECT top 1 b.gfc_cct from [dbo].[T_Branch] b where gfc_cct is not null and b.branch_id = o.branch_code ) as cash_center from gfccp_order o where LTRIM(RTRIM(row_type))<>'summary' and ( convert(varchar, order_date, 105)  = convert(varchar, GETDATE(), 105) or convert(varchar, order_date, 105)  = convert(varchar, DATEADD(day,1,GETDATE()), 105) ) and o.[status]='Y' order by AutoID desc");
     let spGet_vrf_list = await pool
       .request()
       .input("department_id", sql.Int, department_id)
@@ -1879,6 +1878,7 @@ async function set_update_urgentcase_vrf_det(obj_json) {
         let sp_add_urgentcase_person_vrf = await pool
           .request()
           .input("vrf_id", sql.Int, obj_json[index].vrf_id)
+          .input("prefix", sql.Int, obj_json[index].prefix)
           .input("fullname", sql.NVarChar, obj_json[index].fullname)
           .input("vehicle_brand", sql.Int, obj_json[index].vehicle_brand_id)
           .input("vehicle_color", sql.Int, obj_json[index].vehicle_color_id)
