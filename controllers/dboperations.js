@@ -1704,10 +1704,28 @@ async function set_vrf_area(area, controlarea, vrf_id, user_id, type) {
       for (let areaItem of area) {
         let areaItem_id;
         let is_area_group;
-        areaItem_id = (!('id' in areaItem) || areaItem.id === null || areaItem.id === undefined) ? areaItem.area_id : areaItem.id
-        areaItem.area_id && areaItem.id && (areaItem_id = areaItem.area_id);
-        areaItem_id = String(areaItem_id);
-        is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
+        // ตรวจสอบว่ามี property `id` และค่าของ `id` ไม่เป็น null หรือ undefined
+        if (!('id' in areaItem) || areaItem.id === null || areaItem.id === undefined) {    // ไม่มี id
+          areaItem_id = areaItem.name.includes("ทั้งหมด") ? removeWord(areaItem.name, " ทั้งหมด") : areaItem.area_id;
+          is_area_group = 1; // กำหนดค่าเป็น 1 เมื่อเป็นกลุ่มพื้นที่
+        } else {
+          if (type === 'template') {
+            areaItem_id = areaItem.id
+          }
+          else {
+            areaItem_id = (!('area_id' in areaItem) || areaItem.area_id === null || areaItem.area_id === undefined) ? areaItem.id : areaItem.area_id
+          }
+          is_area_group = areaItem.name.includes("ทั้งหมด") ? 1 : 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
+        }
+        // ตรวจสอบว่า areaItem_id เป็นสตริงที่ถูกต้อง
+        if (typeof areaItem_id !== 'string' || areaItem_id.trim() === '') {
+          areaItem_id = String(areaItem_id);
+          //continue; // ข้ามการประมวลผลหากค่าไม่ถูกต้อง
+        }
+        // console.log('areaItem_id: ', areaItem_id);
+        // console.log('areaItem.name: ', areaItem.name);
+        // console.log('lArea is_area_group: ', areaItem.is_area_group);
+        //is_area_group = 0; // กำหนดค่าเป็น 0 เมื่อเป็นพื้นที่ธรรมดา
         let spAdd_vrf_area = await pool
           .request()
           .input("vrf_id", sql.Int, vrf_id)
@@ -1746,6 +1764,9 @@ async function set_vrf_area(area, controlarea, vrf_id, user_id, type) {
           controlAreaItem_id = String(controlAreaItem_id);
           //continue; // ข้ามการประมวลผลหากค่าไม่ถูกต้อง
         }
+        // console.log('controlAreaItem_id: ', controlAreaItem_id);
+        // console.log('controlAreaItem.name: ', controlAreaItem.name);
+        // console.log('controlAreaItem is_area_group: ', is_area_group);
         let spAdd_vrf_area = await pool
           .request()
           .input("vrf_id", sql.Int, vrf_id)
@@ -3248,43 +3269,99 @@ async function update_vrf_trans_status(Id
     return ({ error: err })
   }
 }
-async function update_vrf_trans_approve_status(Id, Type_
-  , user_id
-  , role_id
-  , work_flow_id
-  , department_id
-  , branch_id
-  , division_id
-  , io
-) { 
-  try { 
-    let pool = await sql.connect(config);
-    let type_new_vrf_send_approve = parseInt(role_id) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
-    let sp_update_vrf_trans_approve_status = await pool
-      .request()
-      .input("Id_", sql.Int, Id)
-      .input("Type_", sql.NVarChar, Type_)
-      .input("user_id", sql.Int, user_id)
-      .input("role_id", sql.Int, role_id)
-      .input("work_flow_id", sql.Int, work_flow_id)
-      .input("department_id", sql.Int, department_id)
-      .input("branch_id", sql.Int, branch_id)
-      .input("division_id", sql.Int, division_id)
-      .execute("sp_update_vrf_trans_approve_status");
-    let approveStatus = sp_update_vrf_trans_approve_status.recordsets[0][0].approve_status;
-    io.emit(type_new_vrf_send_approve, {
-      message: type_new_vrf_send_approve,
-      Id: Id,
-      user_id: user_id,
-      role_id: role_id,
-      approve_status: approveStatus
-    });
-     return sp_update_vrf_trans_approve_status.recordsets;
+async function update_vrf_trans_approve_status(
+  Id, Type_,
+  user_id, role_id, work_flow_id,
+  department_id, branch_id, division_id, io
+) {
+  try {
+      let pool = await sql.connect(config);
+
+      // ตรวจสอบว่า role_id = 8 หรือไม่
+      let type_new_vrf_send_approve = parseInt(role_id) === 8
+          ? 'new_vrf_for_security'
+          : 'new_vrf_send_approve';
+
+      // เรียก Stored Procedure
+      let sp_update_vrf_trans_approve_status = await pool
+          .request()
+          .input("Id_", sql.Int, Id)
+          .input("Type_", sql.NVarChar, Type_)
+          .input("user_id", sql.Int, user_id)
+          .input("role_id", sql.Int, role_id)
+          .input("work_flow_id", sql.Int, work_flow_id)
+          .input("department_id", sql.Int, department_id)
+          .input("branch_id", sql.Int, branch_id)
+          .input("division_id", sql.Int, division_id)
+          .execute("sp_update_vrf_trans_approve_status");
+
+      // ตรวจสอบว่าผลลัพธ์มีข้อมูลหรือไม่
+      if (!sp_update_vrf_trans_approve_status.recordsets
+          || sp_update_vrf_trans_approve_status.recordsets.length === 0
+          || sp_update_vrf_trans_approve_status.recordsets[0].length === 0
+      ) {
+          throw new Error('Stored Procedure returned no data');
+      }
+
+      let approveStatus = sp_update_vrf_trans_approve_status.recordsets[0][0].approve_status;
+
+      // ตรวจสอบว่า io ถูกส่งเข้ามาหรือไม่ก่อนเรียก emit
+      if (io) {
+          io.emit(type_new_vrf_send_approve, {
+              message: type_new_vrf_send_approve,
+              Id: Id,
+              user_id: user_id,
+              role_id: role_id,
+              approve_status: approveStatus
+          });
+      } else {
+          console.warn('io is not defined. Skipping io.emit.');
+      }
+
+      return sp_update_vrf_trans_approve_status.recordsets;
   } catch (err) {
-    //////console.log({ error: err });
-    return ({ error: err })
+      console.error('Error in update_vrf_trans_approve_status:', err);
+      return { error: err.message || 'Unknown error occurred' };
   }
 }
+
+// async function update_vrf_trans_approve_status(Id, Type_
+//   , user_id
+//   , role_id
+//   , work_flow_id
+//   , department_id
+//   , branch_id
+//   , division_id
+//   , io
+// ) { 
+//   try { 
+//     let pool = await sql.connect(config);
+//     let type_new_vrf_send_approve = parseInt(role_id) === 8 ? 'new_vrf_for_security' : 'new_vrf_send_approve';
+//     let sp_update_vrf_trans_approve_status = await pool
+//       .request()
+//       .input("Id_", sql.Int, Id)
+//       .input("Type_", sql.NVarChar, Type_)
+//       .input("user_id", sql.Int, user_id)
+//       .input("role_id", sql.Int, role_id)
+//       .input("work_flow_id", sql.Int, work_flow_id)
+//       .input("department_id", sql.Int, department_id)
+//       .input("branch_id", sql.Int, branch_id)
+//       .input("division_id", sql.Int, division_id)
+//       .execute("sp_update_vrf_trans_approve_status");
+//     let approveStatus = sp_update_vrf_trans_approve_status.recordsets[0][0].approve_status;
+//     io.emit(type_new_vrf_send_approve, {
+//       message: type_new_vrf_send_approve,
+//       Id: Id,
+//       user_id: user_id,
+//       role_id: role_id,
+//       approve_status: approveStatus
+//     });
+//      return sp_update_vrf_trans_approve_status.recordsets;
+//   } catch (err) {
+//     //////console.log({ error: err });
+//     return ({ error: err })
+//   }
+// }
 async function get_upload_filename(Id, Type_, user_id) {
   try {
     let pool = await sql.connect(config);

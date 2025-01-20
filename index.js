@@ -23,9 +23,14 @@ const ExcelJS = require('exceljs');
 require('dotenv').config()
 const moment = require('moment-timezone');
 
+// app.use(cors({
+//     origin: process.env.CLIENT_URL,
+//     credentials: true
+// }));
 app.use(cors({
-    origin: process.env.CLIENT_URL,//'https://localhost:84', // replace with your Vue app domain
-    credentials: true
+    origin: process.env.CLIENT_URL,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    credentials: true,
 }));
 // app.use(cors())
 const server = http.createServer(app);
@@ -115,10 +120,12 @@ app.post('/set_manual_add_vrf_trans', upload.single('file'), async (req, res) =>
         if (data_.controlarea && data_.controlarea !== '[]') {
             controlarea = JSON.parse(data_.controlarea);
         }
+        // console.log('/set_manual_add_vrf_trans area: ', area);
+        // console.log('/set_manual_add_vrf_trans controlarea: ', controlarea);
+        // console.log('/set_manual_add_vrf_trans data_: ', data_);
         //---end area
         let file_originalname_ = req.file === undefined ? '' : req.file.originalname;
         let filename_ = req.file === undefined ? '' : req.file.filename;
-
         let data = {
             reason: req.body.reason,
             file_originalname: file_originalname_,
@@ -135,6 +142,7 @@ app.post('/set_manual_add_vrf_trans', upload.single('file'), async (req, res) =>
             date_from: adjustDate(req.body.date_from),
             date_to: adjustDate(req.body.date_to),
         };
+        //console.log('/set_manual_add_vrf_trans data: ', data);
         try {
             const result = await dboperations.set_manual_add_vrf_trans(data, io);
             Id = result
@@ -145,7 +153,6 @@ app.post('/set_manual_add_vrf_trans', upload.single('file'), async (req, res) =>
                 console.error('set_manual_add_vrf_template Id error: ', err);
                 res.json({ error: err })
             })
-
             res.json(result);
         }
         catch (err) {
@@ -1547,7 +1554,7 @@ app.post('/set_vrf_area', urlencodedParser, (req, res) => {
             if (controlarea.length === 0) {
                 //console.log('No controlarea data provided.');
             } else {
-                //console.log('/set_vrf_area Parsed controlarea: ', controlarea);
+                //
             }
         } else {
             //console.log('No controlarea data provided.');
@@ -2257,7 +2264,6 @@ app.get('/update_vrf_trans_status_all', urlencodedParser, (req, res) => {
         console.error('error: ', error);
         res.json({ error: error })
     }
-
 })
 app.get('/update_vrfstatus_all', urlencodedParser, (req, res) => {
     let output = null
@@ -2566,6 +2572,68 @@ app.get('/update_vrf_approve_status_from_mail_20250102', urlencodedParser, async
         res.json({ error: err.message || err });
     }
 });
+// app.get('/update_vrf_trans_approve_status',urlencodedParser, async (req, res) => {
+//     try {
+//         console.log('Incoming request query:', req.query);
+
+//         const updateResult = await dboperations.update_vrf_trans_approve_status(
+//             req.query['Id'],
+//             req.query['Type_'],
+//             req.query['user_id'],
+//             req.query['role_id'],
+//             req.query['work_flow_id'],
+//             req.query['department_id'],
+//             req.query['branch_id'],
+//             req.query['division_id'],
+//             null // สมมติว่า `io` ไม่จำเป็น
+//         );
+
+//         console.log('Database update result:', updateResult);
+
+//         const approveStatus = updateResult[0][0]?.approve_status || 'undefined';
+//         console.log('Approve status:', approveStatus);
+
+//         let MeetingAreas_selectedItems = [];
+//         let MeetingAreas_selectedControlItems = [];
+
+//         if (req.query['MeetingAreas_selectedItems'] && req.query['MeetingAreas_selectedItems'] !== '[]') {
+//             const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedItems']);
+//             MeetingAreas_selectedItems = JSON.parse(decodedControlData);
+//             console.log('Parsed MeetingAreas_selectedItems:', MeetingAreas_selectedItems);
+//         }
+
+//         if (req.query['MeetingAreas_selectedControlItems'] && req.query['MeetingAreas_selectedControlItems'] !== '[]') {
+//             const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedControlItems']);
+//             MeetingAreas_selectedControlItems = JSON.parse(decodedControlData);
+//             console.log('Parsed MeetingAreas_selectedControlItems:', MeetingAreas_selectedControlItems);
+//         }
+
+//         // Process MeetingAreas_selectedControlItems
+//         let index = 0;
+//         let result;
+//         for (const item of MeetingAreas_selectedControlItems) {
+//             console.log('Processing item:', item);
+//             result = await setSearch_and_send_email(
+//                 req.query['role_id'],
+//                 item.area_id,
+//                 item.area_type,
+//                 item.is_area_group,
+//                 item.vrf_id,
+//                 item.name,
+//                 MeetingAreas_selectedItems,
+//                 MeetingAreas_selectedControlItems
+//             );
+//             if (index === 0 && approveStatus > 2) break;
+//             index++;
+//         }
+
+//         res.json({ approve_status: approveStatus });
+//     } catch (err) {
+//         console.error('Error in /update_vrf_trans_approve_status:', err);
+//         res.status(500).json({ error: err.message });
+//     }
+// });
+
 app.get('/update_vrf_trans_approve_status', urlencodedParser, async (req, res) => { 
     const update_vrf_trans_approve_status_result = await dboperations.update_vrf_trans_approve_status(req.query['Id']
         , req.query['Type_']
@@ -2577,20 +2645,22 @@ app.get('/update_vrf_trans_approve_status', urlencodedParser, async (req, res) =
         , req.query['division_id']
         , io
     );
-    //console.log('/update_vrf_trans_approve_status update_vrf_trans_approve_status_result: ', update_vrf_trans_approve_status_result);
+    console.log('/update_vrf_trans_approve_status update_vrf_trans_approve_status_result: ', update_vrf_trans_approve_status_result);
     const approveStatus = update_vrf_trans_approve_status_result[0][0].approve_status;
     console.log('approve_status:', approveStatus); // จะได้ค่า 2
-    let MeetingAreas_selectedItems = [];
-    let MeetingAreas_selectedControlItems = [];
+    // let MeetingAreas_selectedItems = [];
+    // let MeetingAreas_selectedControlItems = [];
+    let MeetingAreas_selectedItems = await getFilteredAreas(req.query['Id'], 'พื้นที่ทั่วไป');
+    let MeetingAreas_selectedControlItems = await getFilteredAreas(req.query['Id'], 'พื้นที่ความมั่นคง');
     try {       
-        if (req.query['MeetingAreas_selectedItems'] && req.query['MeetingAreas_selectedItems'] !== '[]') {
-            const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedItems']);
-            MeetingAreas_selectedItems = JSON.parse(decodedControlData);
-        } 
-        if (req.query['MeetingAreas_selectedControlItems'] && req.query['MeetingAreas_selectedControlItems'] !== '[]') {
-            const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedControlItems']);
-            MeetingAreas_selectedControlItems = JSON.parse(decodedControlData);
-        }
+        // if (req.query['MeetingAreas_selectedItems'] && req.query['MeetingAreas_selectedItems'] !== '[]') {
+        //     const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedItems']);
+        //     MeetingAreas_selectedItems = JSON.parse(decodedControlData);
+        // } 
+        // if (req.query['MeetingAreas_selectedControlItems'] && req.query['MeetingAreas_selectedControlItems'] !== '[]') {
+        //     const decodedControlData = decodeURIComponent(req.query['MeetingAreas_selectedControlItems']);
+        //     MeetingAreas_selectedControlItems = JSON.parse(decodedControlData);
+        // }
         
         let index = 0; // ตัวนับสำหรับตรวจสอบแถวแรก
         let result;
