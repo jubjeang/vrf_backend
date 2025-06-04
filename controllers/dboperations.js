@@ -1289,6 +1289,19 @@ async function get_vrf_list(
     return [{ error: error }];
   }
 }
+async function get_vrf_approve_info(Id) {
+  try {
+    let pool = await sql.connect(config);
+    let sp_Get_vrf_approve_info = await pool
+      .request()
+      .input("id", sql.Int, Id)
+      .execute("sp_Get_vrf_approve_info");
+    return sp_Get_vrf_approve_info.recordsets;
+  } catch (error) {
+    console.error("error: ", error);
+    return [{ error: error }];
+  }
+}
 async function get_vrf_det(Id) {
   try {
     let pool = await sql.connect(config);
@@ -1406,8 +1419,7 @@ async function get_mail_info_final_approve(Id) {
     console.error("error: ", error);
     return [{ error: error }];
   }
-}
-async function get_mail_vrf_info(Id
+}async function get_mail_vrf_info(Id
   , department_id
   , branch_id
   , division_id) {
@@ -1439,7 +1451,6 @@ async function getEmail_Manager(Id) {
     return [{ error: error }];
   }
 }
-
 async function getSelected_areas_all(vrf_id) {
   try {
     let pool = await sql.connect(config);
@@ -1471,20 +1482,6 @@ async function getEmail_recipient(area_id, area_type, is_area_group, vrf_id, nam
     return [{ error: error }];
   }
 }
-//--------20240917
-// async function getEmail_recipient(Id) {
-//   try {
-//     let pool = await sql.connect(config);
-//     let spGetEmail_recipient = await pool
-//       .request()
-//       .input("id", sql.Int, Id)
-//       .execute("spGetEmail_recipient");
-//     return spGetEmail_recipient.recordsets;
-//   } catch (error) {
-//     console.error("error: ", error);
-//     return [{ error: error }];
-//   }
-// }
 async function get_MeetingAreas_selectedItems(Id) {
   try {
     let pool = await sql.connect(config);
@@ -3376,6 +3373,7 @@ async function get_upload_filename(Id, Type_, user_id) {
   }
 }
 module.exports = { 
+  get_vrf_approve_info: get_vrf_approve_info,
   getSelected_areas_all: getSelected_areas_all,
   getEmail_Manager: getEmail_Manager,
   removeWord: removeWord,

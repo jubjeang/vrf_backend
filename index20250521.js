@@ -1,4 +1,3 @@
-require('dotenv').config()
 const xlsxFile = require('read-excel-file/node');
 const dboperations = require('./controllers/dboperations');
 const path = require('path');
@@ -21,35 +20,13 @@ const { format } = require('date-fns')
 // var bodyParser = require('body-parser');
 const nodemailer = require("nodemailer");
 const ExcelJS = require('exceljs');
-
+require('dotenv').config()
 const moment = require('moment-timezone');
 
 // app.use(cors({
 //     origin: process.env.CLIENT_URL,
 //     credentials: true
 // }));
-// const allowedOrigins = [
-//     process.env.CLIENT_URL,
-//     'https://192.168.100.105:84'
-// ];
-// app.use(cors({
-//     origin: function (origin, callback) {
-//         if (!origin || allowedOrigins.includes(origin)) {
-//             callback(null, true);
-//         } else {
-//             callback(new Error('Not allowed by CORS'));
-//         }
-//     },
-//     methods: ['GET', 'POST', 'OPTIONS'],
-//     credentials: true,
-// }));
-// ⛔ ใส่ middleware กัน cache ที่นี่
-app.use((req, res, next) => {
-    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '-1');
-    next();
-});
 app.use(cors({
     origin: process.env.CLIENT_URL,
     methods: ['GET', 'POST', 'OPTIONS'],
@@ -1115,8 +1092,7 @@ app.get('/get_vrf_lst_for_security', urlencodedParser, (req, res) => {
             , req.query['division_id']
         ).then((result) => {
             res.json(result[0])
-        }).catch((err) => {
-            
+        }).catch((err) => {             
             res.json({ error: err })
         })
 
